@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ export function AdminLessonDetail({
   subjectId,
   subjectName,
   lesson,
-  questions,
+  questions: initialQuestions,
 }: {
   subjectId: string;
   subjectName: string;
@@ -39,10 +39,20 @@ export function AdminLessonDetail({
   const router = useRouter();
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [questions, setQuestions] = useState(initialQuestions);
+  const [, startTransition] = useTransition();
 
   const handleDeleteQuestion = async (id: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) return;
-    await deleteQuestion(id);
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+    startTransition(async () => {
+      await deleteQuestion(id);
+    });
+  };
+
+  const handleQuestionDone = () => {
+    setShowEditor(false);
+    setEditingQuestion(null);
     router.refresh();
   };
 
@@ -73,11 +83,7 @@ export function AdminLessonDetail({
           <QuestionEditor
             lessonId={lesson.id}
             question={editingQuestion}
-            onDone={() => {
-              setShowEditor(false);
-              setEditingQuestion(null);
-              router.refresh();
-            }}
+            onDone={handleQuestionDone}
             onCancel={() => {
               setShowEditor(false);
               setEditingQuestion(null);

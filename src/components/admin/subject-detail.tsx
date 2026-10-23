@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -33,12 +33,14 @@ type Lesson = {
   status: string;
 };
 
-export function AdminSubjectDetail({ subject, lessons }: { subject: Subject; lessons: Lesson[] }) {
+export function AdminSubjectDetail({ subject, lessons: initialLessons }: { subject: Subject; lessons: Lesson[] }) {
   const router = useRouter();
   const { profile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lessons, setLessons] = useState(initialLessons);
+  const [, startTransition] = useTransition();
 
   const handleUpdateSubject = async (data: any) => {
     await updateSubject(subject.id, data);
@@ -56,23 +58,29 @@ export function AdminSubjectDetail({ subject, lessons }: { subject: Subject; les
     e.preventDefault();
     if (!newLessonTitle.trim()) return;
     setLoading(true);
-    await createLesson(subject.id, { title: newLessonTitle });
+    const title = newLessonTitle;
     setNewLessonTitle('');
-    setLoading(false);
-    router.refresh();
+    startTransition(async () => {
+      const lesson = await createLesson(subject.id, { title });
+      setLessons((prev) => [...prev, { id: lesson.id, title, sort_order: prev.length + 1, status: 'draft' }]);
+      setLoading(false);
+    });
   };
 
   const handleToggleLessonStatus = async (lesson: Lesson) => {
-    await updateLesson(lesson.id, {
-      status: lesson.status === 'published' ? 'draft' : 'published',
+    const newStatus = lesson.status === 'published' ? 'draft' : 'published';
+    setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, status: newStatus } : l));
+    startTransition(async () => {
+      await updateLesson(lesson.id, { status: newStatus });
     });
-    router.refresh();
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
     if (!confirm('هل أنت متأكد من حذف هذا الدرس؟')) return;
-    await deleteLesson(lessonId);
-    router.refresh();
+    setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    startTransition(async () => {
+      await deleteLesson(lessonId);
+    });
   };
 
   const moveLesson = async (index: number, direction: -1 | 1) => {
@@ -80,8 +88,10 @@ export function AdminSubjectDetail({ subject, lessons }: { subject: Subject; les
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= ordered.length) return;
     [ordered[index], ordered[targetIndex]] = [ordered[targetIndex], ordered[index]];
-    await reorderLessons(subject.id, ordered.map((l) => l.id));
-    router.refresh();
+    setLessons(ordered);
+    startTransition(async () => {
+      await reorderLessons(subject.id, ordered.map((l) => l.id));
+    });
   };
 
   if (editing) {

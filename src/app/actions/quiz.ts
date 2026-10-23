@@ -45,51 +45,45 @@ export async function submitAnswer(
   response: any,
 ) {
   const supabase = await createClient();
+
+  // Fetch attempt and question in parallel to reduce latency
+  const [{ data: attempt }, { data: question }] = await Promise.all([
+    supabase
+      .from('attempts')
+      .select('id, mode, student_id')
+      .eq('id', attemptId)
+      .single(),
+    supabase
+      .from('questions')
+      .select('type, content, explanation')
+      .eq('id', questionId)
+      .single(),
+  ]);
+
+  if (!attempt) throw new Error('المحاولة غير موجودة');
+
+  // Verify via RLS (the query already filters by what the user can see)
+  // but also check student_id for safety
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('غير مسجل الدخول');
-
-  // Verify attempt belongs to user
-  const { data: attempt } = await supabase
-    .from('attempts')
-    .select('id, mode, student_id')
-    .eq('id', attemptId)
-    .single();
-
-  if (!attempt || attempt.student_id !== user.id) throw new Error('غير مصرح');
-
-  // Get the actual question with correct answer from DB
-  const { data: question } = await supabase
-    .from('questions')
-    .select('type, content, explanation')
-    .eq('id', questionId)
-    .single();
-
+  if (!user || attempt.student_id !== user.id) throw new Error('غير مصرح');
   if (!question) throw new Error('السؤال غير موجود');
 
   const content = question.content as Record<string, any>;
   const isCorrect = gradeQuestion(question.type, content, response);
 
-  // Upsert answer
-  const { data: existingAnswer } = await supabase
+  // Delete any existing answer then insert the new one
+  await supabase
     .from('answers')
-    .select('id')
+    .delete()
     .eq('attempt_id', attemptId)
-    .eq('question_id', questionId)
-    .maybeSingle();
+    .eq('question_id', questionId);
 
-  if (existingAnswer) {
-    await supabase
-      .from('answers')
-      .update({ response, is_correct: isCorrect, answered_at: new Date().toISOString() })
-      .eq('id', existingAnswer.id);
-  } else {
-    await supabase.from('answers').insert({
-      attempt_id: attemptId,
-      question_id: questionId,
-      response,
-      is_correct: isCorrect,
-    });
-  }
+  await supabase.from('answers').insert({
+    attempt_id: attemptId,
+    question_id: questionId,
+    response,
+    is_correct: isCorrect,
+  });
 
   // In practice mode, return immediate feedback
   if (attempt.mode === 'practice') {
@@ -109,42 +103,38 @@ export async function finishAttempt(attemptId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('غير مسجل الدخول');
 
-  const { data: attempt } = await supabase
-    .from('attempts')
-    .select('id, student_id, lesson_id')
-    .eq('id', attemptId)
-    .single();
+  // Fetch attempt and answers in parallel
+  const [{ data: attempt }, { data: answers }] = await Promise.all([
+    supabase
+      .from('attempts')
+      .select('id, student_id, lesson_id')
+      .eq('id', attemptId)
+      .single(),
+    supabase
+      .from('answers')
+      .select('question_id, response, is_correct')
+      .eq('attempt_id', attemptId),
+  ]);
 
   if (!attempt || attempt.student_id !== user.id) throw new Error('غير مصرح');
-
-  // Calculate score
-  const { data: answers } = await supabase
-    .from('answers')
-    .select('question_id, is_correct')
-    .eq('attempt_id', attemptId);
 
   const total = answers?.length ?? 0;
   const score = answers?.filter((a) => a.is_correct).length ?? 0;
 
-  await supabase
-    .from('attempts')
-    .update({ score, total, finished_at: new Date().toISOString() })
-    .eq('id', attemptId);
+  // Update attempt score and get questions for review in parallel
+  const questionIds = (answers ?? []).map((a) => a.question_id);
+  const [, { data: questions }] = await Promise.all([
+    supabase
+      .from('attempts')
+      .update({ score, total, finished_at: new Date().toISOString() })
+      .eq('id', attemptId),
+    supabase
+      .from('questions')
+      .select('id, type, content, explanation')
+      .in('id', questionIds),
+  ]);
 
-  // Return full review data
-  const { data: fullAnswers } = await supabase
-    .from('answers')
-    .select('question_id, response, is_correct')
-    .eq('attempt_id', attemptId);
-
-  // Get questions with correct answers for review
-  const questionIds = (fullAnswers ?? []).map((a) => a.question_id);
-  const { data: questions } = await supabase
-    .from('questions')
-    .select('id, type, content, explanation')
-    .in('id', questionIds);
-
-  const review = (fullAnswers ?? []).map((answer) => {
+  const review = (answers ?? []).map((answer) => {
     const q = questions?.find((q) => q.id === answer.question_id);
     const content = q?.content as Record<string, any>;
     return {

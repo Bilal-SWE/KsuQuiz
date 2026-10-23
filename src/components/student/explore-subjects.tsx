@@ -38,25 +38,21 @@ export function ExploreSubjects({
 
   const toggleEnroll = async (subjectId: string) => {
     const supabase = createClient();
-    if (enrolled.has(subjectId)) {
-      await supabase.from('enrollments').delete().match({
-        student_id: (await supabase.auth.getUser()).data.user!.id,
-        subject_id: subjectId,
-      });
-      setEnrolled((prev) => {
-        const next = new Set(prev);
-        next.delete(subjectId);
-        return next;
-      });
+    const userId = (await supabase.auth.getUser()).data.user!.id;
+    const wasEnrolled = enrolled.has(subjectId);
+
+    // Optimistic update
+    setEnrolled((prev) => {
+      const next = new Set(prev);
+      wasEnrolled ? next.delete(subjectId) : next.add(subjectId);
+      return next;
+    });
+
+    if (wasEnrolled) {
+      await supabase.from('enrollments').delete().match({ student_id: userId, subject_id: subjectId });
     } else {
-      const userId = (await supabase.auth.getUser()).data.user!.id;
-      await supabase.from('enrollments').insert({
-        student_id: userId,
-        subject_id: subjectId,
-      });
-      setEnrolled((prev) => new Set(prev).add(subjectId));
+      await supabase.from('enrollments').insert({ student_id: userId, subject_id: subjectId });
     }
-    startTransition(() => router.refresh());
   };
 
   return (
