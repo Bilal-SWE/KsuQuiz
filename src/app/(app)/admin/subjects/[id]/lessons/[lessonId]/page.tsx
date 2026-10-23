@@ -1,14 +1,14 @@
-import { connection } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { AdminLessonDetail } from '@/components/admin/lesson-detail';
+
+export const instant = false;
 
 export default async function AdminLessonPage({
   params,
 }: {
   params: Promise<{ id: string; lessonId: string }>;
 }) {
-  await connection();
   const { id: subjectId, lessonId } = await params;
   const supabase = await createClient();
 

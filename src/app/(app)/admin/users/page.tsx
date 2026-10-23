@@ -1,10 +1,10 @@
-import { connection } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { UserManagement } from '@/components/admin/user-management';
 
+export const instant = false;
+
 export default async function UsersPage() {
-  await connection();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
