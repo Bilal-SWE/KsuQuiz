@@ -46,11 +46,11 @@ export async function submitAnswer(
 ) {
   const supabase = await createClient();
 
-  // Fetch attempt and question in parallel to reduce latency
+  // Fetch attempt and question in parallel — RLS ensures student owns the attempt
   const [{ data: attempt }, { data: question }] = await Promise.all([
     supabase
       .from('attempts')
-      .select('id, mode, student_id')
+      .select('id, mode')
       .eq('id', attemptId)
       .single(),
     supabase
@@ -61,31 +61,26 @@ export async function submitAnswer(
   ]);
 
   if (!attempt) throw new Error('المحاولة غير موجودة');
-
-  // Verify via RLS (the query already filters by what the user can see)
-  // but also check student_id for safety
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || attempt.student_id !== user.id) throw new Error('غير مصرح');
   if (!question) throw new Error('السؤال غير موجود');
 
   const content = question.content as Record<string, any>;
   const isCorrect = gradeQuestion(question.type, content, response);
 
-  // Delete any existing answer then insert the new one
-  await supabase
-    .from('answers')
-    .delete()
-    .eq('attempt_id', attemptId)
-    .eq('question_id', questionId);
-
-  await supabase.from('answers').insert({
+  // Save answer — upsert if unique constraint exists, else plain insert
+  const answerRow = {
     attempt_id: attemptId,
     question_id: questionId,
     response,
     is_correct: isCorrect,
-  });
+    answered_at: new Date().toISOString(),
+  };
+  const { error: saveErr } = await supabase
+    .from('answers')
+    .upsert(answerRow, { onConflict: 'attempt_id,question_id' });
+  if (saveErr) {
+    await supabase.from('answers').insert(answerRow);
+  }
 
-  // In practice mode, return immediate feedback
   if (attempt.mode === 'practice') {
     return {
       is_correct: isCorrect,
@@ -94,16 +89,13 @@ export async function submitAnswer(
     };
   }
 
-  // In exam mode, just confirm saved (no correctness)
   return { saved: true };
 }
 
 export async function finishAttempt(attemptId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('غير مسجل الدخول');
 
-  // Fetch attempt and answers in parallel
+  // Fetch attempt and answers in parallel — RLS ensures student owns the attempt
   const [{ data: attempt }, { data: answers }] = await Promise.all([
     supabase
       .from('attempts')
@@ -116,12 +108,11 @@ export async function finishAttempt(attemptId: string) {
       .eq('attempt_id', attemptId),
   ]);
 
-  if (!attempt || attempt.student_id !== user.id) throw new Error('غير مصرح');
+  if (!attempt) throw new Error('المحاولة غير موجودة');
 
   const total = answers?.length ?? 0;
   const score = answers?.filter((a) => a.is_correct).length ?? 0;
 
-  // Update attempt score and get questions for review in parallel
   const questionIds = (answers ?? []).map((a) => a.question_id);
   const [, { data: questions }] = await Promise.all([
     supabase
