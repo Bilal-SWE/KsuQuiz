@@ -82,9 +82,9 @@ create table public.subjects (
   updated_at timestamptz not null default now()
 );
 
+-- Enable trigram extension for search (available on Supabase by default)
+create extension if not exists pg_trgm;
 create index subjects_name_normalized_idx on public.subjects using gin (name_normalized gin_trgm_ops);
--- Note: requires pg_trgm extension. If not available, fall back to btree:
--- create index subjects_name_normalized_idx on public.subjects (name_normalized);
 
 -- Lessons
 create table public.lessons (

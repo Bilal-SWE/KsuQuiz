@@ -36,9 +36,13 @@ export default function SignupPage() {
     });
 
     if (authError) {
-      setError(authError.message === 'User already registered'
-        ? 'هذا البريد الإلكتروني مسجل بالفعل'
-        : 'حدث خطأ أثناء إنشاء الحساب');
+      if (authError.message === 'User already registered') {
+        setError('هذا البريد الإلكتروني مسجل بالفعل');
+      } else if (authError.message.includes('email') && authError.message.includes('confirm')) {
+        setError('تم إنشاء الحساب. يرجى تأكيد بريدك الإلكتروني');
+      } else {
+        setError(authError.message);
+      }
       setLoading(false);
       return;
     }

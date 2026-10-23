@@ -198,9 +198,9 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
         </Button>
 
         <div className="flex gap-2">
-          {mode === 'exam' && answeredCount === shuffledQuestions.length && (
+          {answeredCount === shuffledQuestions.length && (
             <Button onClick={handleFinish} loading={loading}>
-              إنهاء الاختبار
+              {mode === 'exam' ? 'إنهاء الاختبار' : 'إنهاء التمرين'}
             </Button>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { LessonPage } from '@/components/student/lesson-page';
@@ -7,6 +8,7 @@ export default async function LessonRoute({
 }: {
   params: Promise<{ id: string; lessonId: string }>;
 }) {
+  await connection();
   const { id: subjectId, lessonId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
