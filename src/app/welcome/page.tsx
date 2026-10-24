@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Logo } from '@/components/ui/logo';
+import { SiteFooter } from '@/components/shell/site-footer';
 import { APP_NAME } from '@/lib/constants';
 
 export const metadata: Metadata = {
@@ -278,12 +279,7 @@ export default async function WelcomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-surface/60">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted">
-          <Logo markClassName="h-7 w-7" textClassName="text-base" />
-          <p>© {new Date().getFullYear()} {APP_NAME}</p>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

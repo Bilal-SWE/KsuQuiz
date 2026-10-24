@@ -43,7 +43,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (!user && !path.startsWith('/auth') && path !== '/welcome') {
+  const isPublic = ['/welcome', '/about', '/contact', '/privacy', '/refund'].includes(path);
+
+  if (!user && !path.startsWith('/auth') && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);

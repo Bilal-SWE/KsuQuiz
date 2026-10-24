@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, FolderOpen, Plus } from 'lucide-react';
+import { ChevronLeft, FolderOpen, Inbox, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -43,6 +43,13 @@ export function AdminSubjectsList({ subjects }: { subjects: Subject[] }) {
             >
               <FolderOpen className="h-4 w-4" />
               التصنيفات
+            </Link>
+            <Link
+              href="/admin/messages"
+              className="press inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
+            >
+              <Inbox className="h-4 w-4" />
+              الرسائل
             </Link>
           </div>
         </div>

@@ -22,6 +22,21 @@ async function requireAdmin() {
   return { supabase, userId: session.user.id, role: profile.role };
 }
 
+// =================== CONTACT MESSAGES ===================
+
+export async function setContactMessageRead(id: string, isRead: boolean) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from('contact_messages').update({ is_read: isRead }).eq('id', id);
+  if (error) throw new Error('فشل في تحديث الرسالة');
+}
+
+export async function deleteContactMessage(id: string) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from('contact_messages').delete().eq('id', id);
+  if (error) throw new Error('فشل في حذف الرسالة');
+  revalidatePath('/admin/messages');
+}
+
 // =================== CATEGORIES ===================
 
 const CATEGORY_COLOR_KEYS = ['violet', 'sky', 'emerald', 'orange', 'amber', 'pink'];
