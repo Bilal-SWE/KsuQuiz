@@ -2,9 +2,9 @@ type Variant = 'default' | 'primary' | 'success' | 'warning' | 'error';
 
 const variants: Record<Variant, string> = {
   default: 'bg-surface-hover text-muted',
-  primary: 'bg-primary-light text-primary',
-  success: 'bg-success-light text-success',
-  warning: 'bg-warning-light text-warning',
+  primary: 'bg-primary-light text-primary-ink',
+  success: 'bg-success-light text-success-ink',
+  warning: 'bg-warning-light text-warning-ink',
   error: 'bg-error-light text-error',
 };
 

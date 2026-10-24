@@ -99,7 +99,7 @@ export default function SignupPage() {
 
       <p className="text-sm text-muted text-center mt-6">
         {t.auth.haveAccount}{' '}
-        <Link href="/auth/login" className="text-primary hover:underline">
+        <Link href="/auth/login" className="text-primary-ink hover:underline">
           {t.auth.loginButton}
         </Link>
       </p>

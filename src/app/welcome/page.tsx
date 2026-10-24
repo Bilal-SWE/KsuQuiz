@@ -29,12 +29,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const featureStyles = [
-  { icon: BookOpenCheck, tint: 'from-emerald-500 to-teal-500' },
-  { icon: Clock, tint: 'from-violet-500 to-fuchsia-500' },
-  { icon: Trophy, tint: 'from-amber-400 to-orange-500' },
-  { icon: Crown, tint: 'from-orange-400 to-rose-500' },
-  { icon: ListChecks, tint: 'from-sky-500 to-indigo-500' },
-  { icon: Smartphone, tint: 'from-pink-500 to-purple-500' },
+  { icon: BookOpenCheck, tint: 'bg-success text-ink' },
+  { icon: Clock, tint: 'bg-primary text-ink' },
+  { icon: Trophy, tint: 'bg-accent text-ink' },
+  { icon: Crown, tint: 'bg-ink text-background' },
+  { icon: ListChecks, tint: 'bg-sky text-ink' },
+  { icon: Smartphone, tint: 'bg-primary-light text-primary-ink' },
 ];
 
 const stepIcons = [UserPlus, Sparkles, Medal];
@@ -60,9 +60,9 @@ function PreviewCard({ p }: { p: Dictionary['landing']['preview'] }) {
 
       <div className="relative z-10 rounded-3xl bg-surface p-4 text-foreground shadow-2xl">
         <div className="mb-3 h-2.5 overflow-hidden rounded-full bg-surface-hover">
-          <div className="h-full w-3/5 rounded-full bg-gradient-to-l from-primary to-fuchsia-500" />
+          <div className="h-full w-3/5 rounded-full bg-primary" />
         </div>
-        <div className="rounded-2xl bg-gradient-to-br from-primary via-violet-600 to-fuchsia-600 p-4 text-white">
+        <div className="rounded-2xl bg-ink p-4 text-white">
           <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-[11px]">{p.questionOf}</span>
           <p className="mt-2 font-bold">{p.question}</p>
         </div>
@@ -85,14 +85,14 @@ function PreviewCard({ p }: { p: Dictionary['landing']['preview'] }) {
             </div>
           ))}
         </div>
-        <div className="mt-3 flex gap-2 rounded-xl bg-success-light p-2.5 text-xs text-success">
-          <Lightbulb className="h-4 w-4 shrink-0 text-warning" />
+        <div className="mt-3 flex gap-2 rounded-xl bg-success-light p-2.5 text-xs text-success-ink">
+          <Lightbulb className="h-4 w-4 shrink-0 text-warning-ink" />
           {p.feedback}
         </div>
       </div>
 
       <div className="absolute -bottom-5 -right-3 z-20 flex items-center gap-2 rounded-2xl bg-surface px-3 py-2 text-foreground shadow-xl animate-float [animation-delay:1.2s]">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-xs font-bold text-white">92%</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-xs font-bold text-ink">92%</span>
         <span className="text-xs font-bold">{p.great}</span>
       </div>
     </div>
@@ -131,7 +131,7 @@ export default async function WelcomePage() {
             </Link>
             <Link
               href="/auth/signup"
-              className="press rounded-xl bg-gradient-to-l from-primary to-violet-500 px-4 py-2 text-sm font-medium text-white shadow-[0_6px_16px_-6px_rgb(109_40_217/0.6)] hover:brightness-110"
+              className="press rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-[0_6px_16px_-6px_rgb(255_90_54/0.45)] hover:brightness-110"
             >
               {t.common.startFree}
             </Link>
@@ -156,14 +156,14 @@ export default async function WelcomePage() {
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
                   href="/auth/signup"
-                  className="press inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-primary shadow-lg hover:bg-white/90"
+                  className="press inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90"
                 >
                   {L.ctaCreate}
                   <ArrowLeft className="h-4 w-4 ltr:-scale-x-100" />
                 </Link>
                 <Link
                   href="/auth/login"
-                  className="press inline-flex items-center gap-2 rounded-xl bg-white/15 px-5 py-3 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
+                  className="press inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-3 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
                 >
                   {L.ctaHaveAccount}
                 </Link>
@@ -198,7 +198,7 @@ export default async function WelcomePage() {
               return (
                 <div key={f.title} className="card card-hover group p-6">
                   <span
-                    className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${style.tint} text-white shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ${style.tint} shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}
                   >
                     <style.icon className="h-6 w-6" />
                   </span>
@@ -220,12 +220,12 @@ export default async function WelcomePage() {
               const Icon = stepIcons[i] ?? Sparkles;
               return (
                 <div key={s.title} className="card overflow-hidden">
-                  <div className="relative flex h-28 items-center justify-center bg-gradient-to-br from-primary via-violet-600 to-fuchsia-600">
+                  <div className="relative flex h-28 items-center justify-center bg-ink">
                     <span className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-white/15" />
                     <span className="relative text-4xl font-bold text-white/95">{i + 1}</span>
                   </div>
                   <div className="flex items-start gap-3 p-5">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-ink">
                       <Icon className="h-5 w-5" />
                     </span>
                     <div>
@@ -247,7 +247,7 @@ export default async function WelcomePage() {
             <p className="mt-2 text-white/85">{L.finalText}</p>
             <Link
               href="/auth/signup"
-              className="press mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-primary shadow-lg hover:bg-white/90"
+              className="press mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90"
             >
               {L.finalCta}
               <ArrowLeft className="h-4 w-4 ltr:-scale-x-100" />

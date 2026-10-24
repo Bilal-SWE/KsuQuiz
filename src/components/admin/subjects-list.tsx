@@ -32,21 +32,21 @@ export function AdminSubjectsList({ subjects }: { subjects: Subject[] }) {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/subjects/new"
-              className="press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-primary shadow-lg hover:bg-white/90"
+              className="press inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90"
             >
               <Plus className="h-4 w-4" />
               إضافة مادة
             </Link>
             <Link
               href="/admin/categories"
-              className="press inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
+              className="press inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
             >
               <FolderOpen className="h-4 w-4" />
               التصنيفات
             </Link>
             <Link
               href="/admin/messages"
-              className="press inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
+              className="press inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
             >
               <Inbox className="h-4 w-4" />
               الرسائل

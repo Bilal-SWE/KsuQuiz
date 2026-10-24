@@ -19,7 +19,7 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
           title={c.label}
           aria-label={c.label}
           onClick={() => onChange(key)}
-          className={`flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br ${c.gradient} text-white transition press cursor-pointer ${
+          className={`flex h-8 w-8 items-center justify-center rounded-full ${c.fill} transition press cursor-pointer ${
             value === key ? 'ring-4 ring-primary/25 scale-110' : 'opacity-80 hover:opacity-100'
           }`}
         >
@@ -103,7 +103,7 @@ export function CategoryManager({ initial, counts }: { initial: Category[]; coun
   return (
     <div className="mx-auto max-w-2xl space-y-6 animate-fade-up">
       <div>
-        <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary">
+        <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
           <ArrowRight className="h-3.5 w-3.5" />
           لوحة التحكم
         </Link>
@@ -179,7 +179,7 @@ export function CategoryManager({ initial, counts }: { initial: Category[]; coun
                         <ArrowDown className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${col.gradient} text-white`}>
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${col.fill}`}>
                       <FolderOpen className="h-5 w-5" />
                     </span>
                     <div className="min-w-0 flex-1">
@@ -189,7 +189,7 @@ export function CategoryManager({ initial, counts }: { initial: Category[]; coun
                     <button
                       onClick={() => startEdit(c)}
                       aria-label="تعديل"
-                      className="rounded-xl p-2 text-muted hover:bg-surface-hover hover:text-primary press cursor-pointer"
+                      className="rounded-xl p-2 text-muted hover:bg-surface-hover hover:text-primary-ink press cursor-pointer"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>

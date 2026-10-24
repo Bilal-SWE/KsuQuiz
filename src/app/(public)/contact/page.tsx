@@ -20,7 +20,7 @@ export default async function ContactPage() {
             href={`mailto:${CONTACT_EMAIL}`}
             className="flex items-center gap-3 rounded-2xl bg-surface-hover p-4 no-underline! hover:bg-primary-light transition-colors"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-ink">
               <Mail className="h-5 w-5" />
             </span>
             <span>
@@ -32,7 +32,7 @@ export default async function ContactPage() {
           </a>
         )}
         <div className="flex items-center gap-3 rounded-2xl bg-surface-hover p-4">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-light text-accent">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-light text-accent-ink">
             <Clock className="h-5 w-5" />
           </span>
           <span>

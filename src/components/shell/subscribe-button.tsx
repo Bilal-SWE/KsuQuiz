@@ -64,7 +64,7 @@ export function SubscribeButton({
               <p className="mt-2 text-sm text-muted leading-relaxed">{t.subscribe.soonText}</p>
               <button
                 onClick={() => setOpen(false)}
-                className="press mt-5 w-full rounded-xl bg-gradient-to-l from-primary to-violet-500 px-4 py-2.5 text-sm font-medium text-white cursor-pointer hover:brightness-110"
+                className="press mt-5 w-full rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-on-primary cursor-pointer hover:brightness-110"
               >
                 {t.subscribe.ok}
               </button>

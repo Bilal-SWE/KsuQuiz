@@ -21,7 +21,7 @@ export default async function PublicLayout({ children }: { children: React.React
             </Link>
             <Link
               href="/auth/signup"
-              className="press rounded-xl bg-gradient-to-l from-primary to-violet-500 px-4 py-2 text-sm font-medium text-white shadow-[0_6px_16px_-6px_rgb(109_40_217/0.6)] hover:brightness-110"
+              className="press rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-[0_6px_16px_-6px_rgb(255_90_54/0.45)] hover:brightness-110"
             >
               {t.common.startFree}
             </Link>

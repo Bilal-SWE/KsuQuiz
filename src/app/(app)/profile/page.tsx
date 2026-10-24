@@ -66,7 +66,7 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-xl space-y-6 animate-fade-up">
       <div className="card flex items-center gap-4 p-5">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent text-2xl font-bold text-white">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-on-primary">
           {initials}
         </div>
         <div className="min-w-0">
@@ -75,7 +75,7 @@ export default function ProfilePage() {
             {user?.email}
           </p>
           {profile && (
-            <span className="mt-1 inline-block rounded-full bg-primary-light px-2.5 py-0.5 text-xs font-medium text-primary">
+            <span className="mt-1 inline-block rounded-full bg-primary-light px-2.5 py-0.5 text-xs font-medium text-primary-ink">
               {P.roles[profile.role] ?? profile.role}
             </span>
           )}
@@ -90,7 +90,7 @@ export default function ProfilePage() {
           <Button onClick={saveName} loading={savingName}>
             {P.save}
           </Button>
-          {nameStatus && <p className={`text-sm ${nameStatus.ok ? 'text-success' : 'text-error'}`}>{nameStatus.msg}</p>}
+          {nameStatus && <p className={`text-sm ${nameStatus.ok ? 'text-success-ink' : 'text-error'}`}>{nameStatus.msg}</p>}
         </div>
       </section>
 
@@ -116,7 +116,7 @@ export default function ProfilePage() {
           <Button onClick={savePassword} loading={savingPw}>
             {P.changePassword}
           </Button>
-          {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success' : 'text-error'}`}>{pwStatus.msg}</p>}
+          {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success-ink' : 'text-error'}`}>{pwStatus.msg}</p>}
         </div>
       </section>
     </div>

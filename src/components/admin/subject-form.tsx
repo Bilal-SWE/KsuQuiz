@@ -78,7 +78,7 @@ export function SubjectForm({ onSubmit, loading, initial }: Props) {
               </option>
             ))}
           </select>
-          <Link href="/admin/categories" className="mt-1 inline-block text-xs text-primary hover:underline">
+          <Link href="/admin/categories" className="mt-1 inline-block text-xs text-primary-ink hover:underline">
             إدارة التصنيفات
           </Link>
         </div>

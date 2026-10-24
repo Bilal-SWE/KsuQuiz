@@ -38,14 +38,14 @@ export function StudentHome({ subjects }: { subjects: Subject[] }) {
           <div className="mt-5 flex flex-wrap gap-2">
             <Link
               href="/explore"
-              className="press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-primary shadow-lg hover:bg-white/90"
+              className="press inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90"
             >
               <Compass className="h-4 w-4" />
               {H.browse}
             </Link>
             <Link
               href="/leaderboard"
-              className="press inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
+              className="press inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2.5 text-sm font-medium text-white ring-1 ring-white/30 hover:bg-white/25"
             >
               <Trophy className="h-4 w-4" />
               {H.overallRank}

@@ -80,7 +80,7 @@ export default async function AboutPage() {
           const Icon = valueIcons[i];
           return (
             <div key={v.title} className="rounded-2xl bg-surface-hover p-4">
-              <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary">
+              <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary-ink">
                 <Icon className="h-5 w-5" />
               </span>
               <p className="mb-1! font-bold text-foreground">{v.title}</p>
@@ -92,7 +92,7 @@ export default async function AboutPage() {
 
       <h2>{c.goalTitle}</h2>
       <p className="flex gap-2">
-        <Target className="mt-1.5 h-5 w-5 shrink-0 text-primary" />
+        <Target className="mt-1.5 h-5 w-5 shrink-0 text-primary-ink" />
         <span>{c.goal}</span>
       </p>
 

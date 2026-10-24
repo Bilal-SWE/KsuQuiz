@@ -61,7 +61,7 @@ export function Navbar() {
                   key={href}
                   href={href}
                   className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? 'bg-primary-light text-primary' : 'text-muted hover:bg-surface-hover hover:text-foreground'
+                    active ? 'bg-primary-light text-primary-ink' : 'text-muted hover:bg-surface-hover hover:text-foreground'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -73,7 +73,7 @@ export function Navbar() {
 
           <div className="flex items-center gap-1">
             {!isAdmin && (
-              <SubscribeButton className="me-1 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-l from-amber-400 to-orange-500 px-3 py-2 text-sm font-bold text-white shadow-[0_6px_16px_-6px_rgb(249_115_22/0.6)] hover:brightness-110">
+              <SubscribeButton className="me-1 inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-sm font-bold text-ink shadow-[0_6px_16px_-6px_rgb(255_201_60/0.6)] hover:brightness-110">
                 <Crown className="h-4 w-4" />
                 <span className="hidden sm:inline">{t.nav.subscribe}</span>
               </SubscribeButton>
@@ -86,7 +86,7 @@ export function Navbar() {
                 pathname === '/profile' ? 'bg-primary-light' : 'hover:bg-surface-hover'
               }`}
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-rose-500 text-sm font-bold text-white">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-ink">
                 {initial}
               </span>
               <span dir="auto" className="hidden sm:inline max-w-28 truncate text-sm font-medium">
@@ -113,12 +113,12 @@ export function Navbar() {
               <Link key={href} href={href} className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium press">
                 <span
                   className={`flex h-8 w-12 items-center justify-center rounded-full transition-colors ${
-                    active ? 'bg-primary-light text-primary' : 'text-muted'
+                    active ? 'bg-primary-light text-primary-ink' : 'text-muted'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
                 </span>
-                <span className={active ? 'text-primary' : 'text-muted'}>{label}</span>
+                <span className={active ? 'text-primary-ink' : 'text-muted'}>{label}</span>
               </Link>
             );
           })}

@@ -15,9 +15,9 @@ export type LeaderboardRow = {
 };
 
 const rankStyle: Record<number, string> = {
-  1: 'bg-gradient-to-br from-amber-300 to-yellow-500 text-white',
-  2: 'bg-gradient-to-br from-slate-300 to-slate-400 text-white',
-  3: 'bg-gradient-to-br from-orange-300 to-orange-500 text-white',
+  1: 'bg-accent text-ink',
+  2: 'bg-sky text-ink',
+  3: 'bg-primary text-ink',
 };
 
 export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; currentUserId: string }) {
@@ -29,13 +29,13 @@ export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; curren
     <div className="card flex items-end justify-center gap-3 px-4 pt-6 pb-0 sm:gap-6 animate-fade-up">
       {order.map((r) => (
         <div key={r.student_id} className="flex w-24 flex-col items-center sm:w-28">
-          {r.rank === 1 && <Crown className="mb-1 h-6 w-6 text-amber-400 animate-float" />}
+          {r.rank === 1 && <Crown className="mb-1 h-6 w-6 text-accent animate-float" />}
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold shadow-lg ring-4 ring-surface ${rankStyle[r.rank] ?? 'bg-primary-light text-primary'}`}
+            className={`flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold shadow-lg ring-4 ring-surface ${rankStyle[r.rank] ?? 'bg-primary-light text-primary-ink'}`}
           >
             {(r.full_name || '?').charAt(0)}
           </div>
-          <p className={`mt-2 w-full truncate text-center text-sm font-bold ${r.student_id === currentUserId ? 'text-primary' : ''}`}>
+          <p className={`mt-2 w-full truncate text-center text-sm font-bold ${r.student_id === currentUserId ? 'text-primary-ink' : ''}`}>
             <bdi>{r.full_name || B.studentFallback}</bdi>
           </p>
           <p className="text-xs text-muted">
@@ -43,7 +43,7 @@ export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; curren
           </p>
           <div
             className={`mt-2 flex w-full items-start justify-center rounded-t-xl pt-2 text-lg font-bold ${heights[r.rank] ?? 'h-12'} ${
-              r.rank === 1 ? 'bg-amber-100 text-amber-600' : r.rank === 2 ? 'bg-slate-100 text-slate-500' : 'bg-orange-100 text-orange-600'
+              r.rank === 1 ? 'bg-accent-light text-accent-ink' : r.rank === 2 ? 'bg-sky/15 text-ink' : 'bg-primary-light text-primary-ink'
             }`}
           >
             {r.rank}
@@ -106,12 +106,12 @@ export function LeaderboardTable({
                 </td>
                 <td className="py-2.5 px-3">
                   <div className="flex items-center gap-2">
-                    <span className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary">
+                    <span className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary-ink">
                       {(r.full_name || '?').charAt(0)}
                     </span>
                     <span className="font-medium truncate max-w-[9rem] sm:max-w-none">
                       <bdi>{r.full_name || B.studentFallback}</bdi>
-                      {isMe && <span className="ms-1 text-xs text-primary">{B.you}</span>}
+                      {isMe && <span className="ms-1 text-xs text-primary-ink">{B.you}</span>}
                     </span>
                   </div>
                 </td>

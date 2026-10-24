@@ -11,19 +11,19 @@ type Subject = {
   cover_image: string | null;
 };
 
-export const GRADIENTS = [
-  'from-violet-500 to-fuchsia-500',
-  'from-sky-500 to-indigo-500',
-  'from-emerald-500 to-teal-500',
-  'from-orange-400 to-rose-500',
-  'from-amber-400 to-orange-500',
-  'from-pink-500 to-purple-500',
+// Flat brand fills (coral, sky, mint, sun, navy) with text that keeps 4.5:1 on each.
+export const FILLS = [
+  'bg-primary text-ink',
+  'bg-sky text-ink',
+  'bg-success text-ink',
+  'bg-accent text-ink',
+  'bg-ink text-background',
 ];
 
-export function subjectGradient(name: string) {
+export function subjectFill(name: string) {
   let h = 0;
   for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return GRADIENTS[h % GRADIENTS.length];
+  return FILLS[h % FILLS.length];
 }
 
 export function SubjectCover({ subject, className = '' }: { subject: Subject; className?: string }) {
@@ -31,10 +31,10 @@ export function SubjectCover({ subject, className = '' }: { subject: Subject; cl
     return <img src={subject.cover_image} alt={subject.name} className={`h-full w-full object-cover ${className}`} />;
   }
   return (
-    <div className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${subjectGradient(subject.name)} ${className}`}>
-      <span className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-white/15" />
-      <span className="absolute -bottom-8 right-6 h-20 w-20 rounded-full bg-white/10" />
-      <span className="relative text-4xl font-bold text-white/95">
+    <div className={`relative flex h-full w-full items-center justify-center ${subjectFill(subject.name)} ${className}`}>
+      <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
+      <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
+      <span className="relative text-4xl font-bold">
         {(subject.name.trim().replace(/^ال(?=\S{2})/, '') || subject.name).charAt(0)}
       </span>
     </div>
@@ -56,7 +56,7 @@ export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?
             {subject.name}
           </h3>
           {enrolled && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-light px-2 py-0.5 text-xs font-medium text-success">
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-light px-2 py-0.5 text-xs font-medium text-success-ink">
               <Check className="h-3 w-3" />
               {t.subjectCard.enrolled}
             </span>
@@ -67,7 +67,7 @@ export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?
             {subject.description}
           </p>
         )}
-        <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
           <BookOpen className="h-3.5 w-3.5" />
           {t.subjectCard.startStudying}
         </span>

@@ -8,7 +8,7 @@ export function EmptyState({ icon, title, description, action }: {
 }) {
   return (
     <div className="card flex flex-col items-center justify-center py-14 px-4 text-center animate-fade-up">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-primary animate-float">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-primary-ink animate-float">
         {icon ?? <Sparkles className="h-7 w-7" />}
       </div>
       <h3 className="text-lg font-bold text-foreground mb-1">{title}</h3>

@@ -14,7 +14,7 @@ export async function SiteFooter({ className = '' }: { className?: string }) {
         </Link>
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
           {PUBLIC_PAGES.map((p) => (
-            <Link key={p.href} href={p.href} className="hover:text-primary transition-colors">
+            <Link key={p.href} href={p.href} className="hover:text-primary-ink transition-colors">
               {t.footer[p.key]}
             </Link>
           ))}

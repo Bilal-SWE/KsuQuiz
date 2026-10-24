@@ -193,7 +193,7 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
               key={t.value}
               onClick={() => setType(t.value)}
               className={`rounded-lg px-3 py-2 text-sm font-medium border transition-colors cursor-pointer ${
-                type === t.value ? 'border-primary bg-primary-light text-primary' : 'border-border'
+                type === t.value ? 'border-primary bg-primary-light text-primary-ink' : 'border-border'
               }`}
             >
               {t.label}
@@ -287,7 +287,7 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
                 key={String(value)}
                 onClick={() => setCorrectBool(value)}
                 className={`rounded-lg px-6 py-2 border font-medium cursor-pointer ${
-                  correctBool === value ? 'border-primary bg-primary-light text-primary' : 'border-border'
+                  correctBool === value ? 'border-primary bg-primary-light text-primary-ink' : 'border-border'
                 }`}
               >
                 {label}

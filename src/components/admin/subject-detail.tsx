@@ -173,7 +173,7 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
                   </div>
                   <Link
                     href={`/admin/subjects/${subject.id}/lessons/${lesson.id}`}
-                    className="font-medium hover:text-primary transition-colors"
+                    className="font-medium hover:text-primary-ink transition-colors"
                   >
                     {lesson.title}
                   </Link>

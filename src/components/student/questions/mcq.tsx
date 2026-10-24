@@ -2,7 +2,7 @@
 
 import { Check, X } from 'lucide-react';
 import { ImageZoom } from '@/components/ui/image-zoom';
-import { GRADIENTS } from '@/components/student/subject-card';
+import { FILLS } from '@/components/student/subject-card';
 import { useI18n } from '@/i18n/client';
 
 type Props = {
@@ -27,17 +27,18 @@ export function McqQuestion({ content, onAnswer, feedback, disabled, selectedOpt
 
   const cardStyles = {
     idle: 'card-hover',
-    selected: 'border-primary ring-4 ring-primary/15',
+    selected: 'border-sky ring-4 ring-sky/20',
     correct: 'border-success bg-success-light animate-pop',
     wrong: 'border-error bg-error-light animate-shake',
     dim: 'opacity-55',
   };
 
   const badge = (s: keyof typeof cardStyles, i: number) => {
-    if (s === 'correct') return 'bg-success';
-    if (s === 'wrong') return 'bg-error';
-    if (s === 'dim') return 'bg-muted/40';
-    return `bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]}`;
+    if (s === 'correct') return 'bg-success text-ink';
+    if (s === 'wrong') return 'bg-error text-white';
+    if (s === 'dim') return 'bg-surface-hover text-muted';
+    if (s === 'selected') return 'bg-sky text-ink';
+    return FILLS[i % FILLS.length];
   };
 
   return (
@@ -61,7 +62,7 @@ export function McqQuestion({ content, onAnswer, feedback, disabled, selectedOpt
               disabled={disabled}
               className={`card flex w-full items-center gap-3 p-3 text-start transition duration-200 press ${cardStyles[s]} ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
             >
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white ${badge(s, i)}`}>
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-bold ${badge(s, i)}`}>
                 {s === 'correct' ? <Check className="h-5 w-5" /> : s === 'wrong' ? <X className="h-5 w-5" /> : LETTERS[i] ?? i + 1}
               </span>
               <span className="flex-1">

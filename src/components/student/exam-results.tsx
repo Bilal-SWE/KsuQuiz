@@ -21,7 +21,7 @@ type Question = {
   content: Record<string, any>;
 };
 
-const CONFETTI_COLORS = ['#8b5cf6', '#f97316', '#10b981', '#ec4899', '#facc15', '#3b82f6'];
+const CONFETTI_COLORS = ['#FF5A36', '#FFC93C', '#2EC4A0', '#4C8DFF', '#1B1B2F'];
 
 function Confetti() {
   const pieces = Array.from({ length: 36 }, (_, i) => ({
@@ -53,6 +53,7 @@ function ScoreRing({ pct }: { pct: number }) {
   const r = 52;
   const c = 2 * Math.PI * r;
   const color = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
+  const textColor = pct >= 70 ? 'var(--success-ink)' : pct >= 50 ? 'var(--warning-ink)' : 'var(--error)';
 
   return (
     <div className="relative h-40 w-40">
@@ -72,7 +73,7 @@ function ScoreRing({ pct }: { pct: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold" style={{ color }}>
+        <span className="text-4xl font-bold" style={{ color: textColor }}>
           {pct}%
         </span>
       </div>
@@ -120,7 +121,7 @@ export function ExamResults({
         <p className="mt-1 text-sm text-muted">{v.sub}</p>
 
         <div className="mt-5 grid w-full max-w-xs grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-success-light p-3 text-success">
+          <div className="rounded-2xl bg-success-light p-3 text-success-ink">
             <p className="text-2xl font-bold">{result.score}</p>
             <p className="text-xs font-medium">{R.correct}</p>
           </div>
@@ -155,7 +156,7 @@ export function ExamResults({
               >
                 <div className="mb-2 flex items-start gap-2">
                   {item.is_correct ? (
-                    <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                    <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-success-ink" />
                   ) : (
                     <CircleX className="mt-0.5 h-5 w-5 shrink-0 text-error" />
                   )}
@@ -167,11 +168,11 @@ export function ExamResults({
 
                 {q.type === 'mcq' && (
                   <div className="ms-7 space-y-1 text-sm">
-                    <p className={item.is_correct ? 'text-success' : 'text-error'}>
+                    <p className={item.is_correct ? 'text-success-ink' : 'text-error'}>
                       {R.yourAnswer} {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}
                     </p>
                     {!item.is_correct && (
-                      <p className="text-success">
+                      <p className="text-success-ink">
                         {R.correctAnswer} {q.content.options?.find((o: any) => o.id === item.correct_answer)?.text ?? item.correct_answer}
                       </p>
                     )}
@@ -180,11 +181,11 @@ export function ExamResults({
 
                 {q.type === 'true_false' && (
                   <div className="ms-7 space-y-1 text-sm">
-                    <p className={item.is_correct ? 'text-success' : 'text-error'}>
+                    <p className={item.is_correct ? 'text-success-ink' : 'text-error'}>
                       {R.yourAnswer} {item.response ? t.question.true : t.question.false}
                     </p>
                     {!item.is_correct && (
-                      <p className="text-success">
+                      <p className="text-success-ink">
                         {R.correctAnswer} {item.correct_answer ? t.question.true : t.question.false}
                       </p>
                     )}
@@ -208,7 +209,7 @@ export function ExamResults({
 
                 {(item.explanation || item.option_explanation) && (
                   <div className="ms-7 mt-3 flex gap-2 rounded-xl bg-warning-light/60 p-3 text-sm text-foreground/80">
-                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" />
                     <div className="space-y-1">
                       {item.option_explanation && <p dir="auto">{item.option_explanation}</p>}
                       {item.explanation && <p dir="auto">{item.explanation}</p>}

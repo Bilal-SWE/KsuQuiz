@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, RotateCcw } from 'lucide-react';
-import { GRADIENTS } from '@/components/student/subject-card';
+import { FILLS } from '@/components/student/subject-card';
 import { useI18n } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
 
@@ -76,9 +76,9 @@ export function SubjectDetail({
                 best === null
                   ? { text: S.notStarted, cls: 'bg-surface-hover text-muted' }
                   : best >= 70
-                    ? { text: `${best}%`, cls: 'bg-success-light text-success' }
+                    ? { text: `${best}%`, cls: 'bg-success-light text-success-ink' }
                     : best >= 50
-                      ? { text: `${best}%`, cls: 'bg-warning-light text-warning' }
+                      ? { text: `${best}%`, cls: 'bg-warning-light text-warning-ink' }
                       : { text: `${best}%`, cls: 'bg-error-light text-error' };
               return (
                 <Link
@@ -88,13 +88,13 @@ export function SubjectDetail({
                 >
                   <div className="aspect-[16/8] overflow-hidden">
                     <div
-                      className={`relative flex h-full w-full items-center justify-center bg-gradient-to-br ${GRADIENTS[i % GRADIENTS.length]} transition-transform duration-500 group-hover:scale-105`}
+                      className={`relative flex h-full w-full items-center justify-center ${FILLS[i % FILLS.length]} transition-transform duration-500 group-hover:scale-105`}
                     >
-                      <span className="absolute -left-6 -top-6 h-24 w-24 rounded-full bg-white/15" />
-                      <span className="absolute -bottom-8 right-6 h-20 w-20 rounded-full bg-white/10" />
-                      <span className="relative text-4xl font-bold text-white/95">{i + 1}</span>
+                      <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
+                      <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
+                      <span className="relative text-4xl font-bold">{i + 1}</span>
                       {best !== null && (
-                        <span className="absolute top-3 left-3 flex h-7 w-7 items-center justify-center rounded-full bg-white text-success shadow">
+                        <span className="absolute top-3 end-3 flex h-7 w-7 items-center justify-center rounded-full bg-white text-success-ink shadow">
                           <Check className="h-4 w-4" />
                         </span>
                       )}
@@ -117,7 +117,7 @@ export function SubjectDetail({
                         S.firstAttempt
                       )}
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
                       <BookOpen className="h-3.5 w-3.5" />
                       {best === null ? S.startLesson : S.continue}
                     </span>

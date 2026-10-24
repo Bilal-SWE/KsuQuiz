@@ -50,12 +50,12 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
   const blankStyle = (blankId: string) => {
     if (feedback) {
       return textById.get(filled[blankId]) === feedback.correct_answer?.[blankId]
-        ? 'border-success bg-success-light text-success animate-pop'
+        ? 'border-success bg-success-light text-success-ink animate-pop'
         : 'border-error bg-error-light text-error animate-shake';
     }
-    if (active === blankId) return 'border-primary bg-primary-light ring-4 ring-primary/15';
-    if (filled[blankId]) return 'border-primary bg-surface text-primary animate-pop';
-    return 'border-dashed border-muted/40 text-muted hover:border-primary/60';
+    if (active === blankId) return 'border-sky bg-sky/10 ring-4 ring-sky/20';
+    if (filled[blankId]) return 'border-sky bg-surface text-ink animate-pop';
+    return 'border-dashed border-muted/40 text-muted hover:border-sky';
   };
 
   return (
@@ -70,7 +70,7 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
       )}
 
       <div className="mb-5 overflow-hidden rounded-2xl border-2 border-primary/15">
-        <div className="bg-primary-light px-3 py-2 text-xs font-bold text-primary">{Q.wordBank}</div>
+        <div className="bg-primary-light px-3 py-2 text-xs font-bold text-primary-ink">{Q.wordBank}</div>
         <div className="grid grid-cols-2 sm:grid-cols-3">
           {words.map((w) => {
             const used = usedWordIds.has(w.id);
@@ -80,7 +80,7 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
                 onClick={() => pickWord(w.id)}
                 disabled={disabled || used}
                 className={`border-t border-s border-primary/10 px-3 py-3 text-sm font-medium transition press ${
-                  used ? 'text-muted line-through opacity-40' : disabled ? '' : 'hover:bg-primary hover:text-white cursor-pointer'
+                  used ? 'text-muted line-through opacity-40' : disabled ? '' : 'hover:bg-primary hover:text-ink cursor-pointer'
                 }`}
               >
                 <span dir="auto">{w.text}</span>

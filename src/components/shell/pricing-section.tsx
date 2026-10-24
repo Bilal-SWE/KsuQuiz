@@ -18,7 +18,7 @@ export async function PricingSection() {
 
       <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2 stagger">
         <div className="card flex flex-col p-6 sm:p-8">
-          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-primary">
+          <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light text-primary-ink">
             <Sparkles className="h-6 w-6" />
           </span>
           <h3 className="text-xl font-bold">{P.freeName}</h3>
@@ -29,22 +29,22 @@ export async function PricingSection() {
           <ul className="mt-6 flex-1 space-y-3">
             {P.freeFeatures.map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-success-ink" />
                 {f}
               </li>
             ))}
           </ul>
           <Link
             href="/auth/signup"
-            className="press mt-8 inline-flex items-center justify-center rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium hover:bg-surface-hover hover:border-primary/30"
+            className="press mt-8 inline-flex items-center justify-center rounded-full border border-border bg-surface px-4 py-3 text-sm font-medium hover:bg-surface-hover hover:border-primary/30"
           >
             {P.freeCta}
           </Link>
         </div>
 
-        <div className="relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-violet-600 to-fuchsia-600 p-6 text-white shadow-[0_20px_50px_-20px_rgb(109_40_217/0.6)] sm:p-8">
-          <span className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-white/10" />
-          <span className="absolute top-5 end-5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold ring-1 ring-white/30">{P.soon}</span>
+        <div className="relative flex flex-col overflow-hidden rounded-3xl bg-ink p-6 text-white shadow-[0_20px_50px_-20px_rgb(255_90_54/0.45)] sm:p-8">
+          <span className="pointer-events-none absolute -end-12 -top-12 h-36 w-36 rounded-full bg-primary" />
+          <span className="absolute top-5 end-5 rounded-full bg-accent px-3 py-1 text-xs font-bold text-ink">{P.soon}</span>
           <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30">
             <Crown className="h-6 w-6" />
           </span>
@@ -62,13 +62,13 @@ export async function PricingSection() {
               </li>
             ))}
           </ul>
-          <SubscribeButton className="relative mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-primary shadow-lg hover:bg-white/90" />
+          <SubscribeButton className="relative mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90" />
         </div>
       </div>
 
       <p className="mt-6 text-center text-xs text-muted">
         {P.refundNote}{' '}
-        <Link href="/refund" className="text-primary hover:underline">
+        <Link href="/refund" className="text-primary-ink hover:underline">
           {t.footer.refund}
         </Link>
         .

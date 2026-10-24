@@ -58,7 +58,7 @@ export function MessagesInbox({ initial }: { initial: ContactMessage[] }) {
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-fade-up">
       <div>
-        <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary">
+        <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
           <ArrowRight className="h-3.5 w-3.5" />
           لوحة التحكم
         </Link>
@@ -79,7 +79,7 @@ export function MessagesInbox({ initial }: { initial: ContactMessage[] }) {
                 <button onClick={() => toggleOpen(m)} className="flex w-full items-center gap-3 p-4 text-start cursor-pointer">
                   <span
                     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                      m.is_read ? 'bg-surface-hover text-muted' : 'bg-primary-light text-primary'
+                      m.is_read ? 'bg-surface-hover text-muted' : 'bg-primary-light text-primary-ink'
                     }`}
                   >
                     {m.is_read ? <MailOpen className="h-5 w-5" /> : <Mail className="h-5 w-5" />}
@@ -101,7 +101,7 @@ export function MessagesInbox({ initial }: { initial: ContactMessage[] }) {
                   <div className="border-t border-border p-4 animate-slide-in">
                     <p className="mb-3 whitespace-pre-wrap text-sm leading-relaxed">{m.message}</p>
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <a href={`mailto:${m.email}`} dir="ltr" className="text-sm font-medium text-primary hover:underline">
+                      <a href={`mailto:${m.email}`} dir="ltr" className="text-sm font-medium text-primary-ink hover:underline">
                         {m.email}
                       </a>
                       <div className="flex gap-1">

@@ -34,7 +34,7 @@ export async function LegalPage({
         </div>
       </section>
 
-      <article className="card p-6 sm:p-8 leading-loose text-foreground/90 animate-fade-up [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-foreground [&_h2:first-child]:mt-0 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-6 [&_a]:text-primary [&_a]:font-medium hover:[&_a]:underline">
+      <article className="card p-6 sm:p-8 leading-loose text-foreground/90 animate-fade-up [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-foreground [&_h2:first-child]:mt-0 [&_p]:mb-3 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:ps-6 [&_a]:text-primary-ink [&_a]:font-medium hover:[&_a]:underline">
         {children}
       </article>
     </div>

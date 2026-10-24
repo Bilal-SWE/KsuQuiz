@@ -179,7 +179,7 @@ export function LessonPage({
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-accent" />
+              <Trophy className="h-6 w-6 text-accent-ink" />
               {L.rankTitle}
             </h1>
             <p className="text-sm text-muted">{lesson.title}</p>
@@ -191,7 +191,7 @@ export function LessonPage({
         </div>
         {leaderboard.length >= 3 && <Podium rows={leaderboard.slice(0, 3)} currentUserId={currentUserId} />}
         {myRow && (
-          <p className="rounded-xl bg-primary-light px-4 py-2.5 text-sm font-medium text-primary">
+          <p className="rounded-xl bg-primary-light px-4 py-2.5 text-sm font-medium text-primary-ink">
             {fmt(L.rankSummary, { rank: myRow.rank, total: leaderboard.length, score: myRow.score, questions: myRow.total })}
           </p>
         )}
@@ -208,7 +208,7 @@ export function LessonPage({
         title: L.practice,
         desc: L.practiceDesc,
         icon: BookOpenCheck,
-        tint: 'from-emerald-500 to-teal-500',
+        tint: 'bg-success text-ink',
         onClick: () => handleStart('practice'),
       },
       {
@@ -216,7 +216,7 @@ export function LessonPage({
         title: L.exam,
         desc: L.examDesc,
         icon: ClipboardList,
-        tint: 'from-primary to-fuchsia-600',
+        tint: 'bg-primary text-ink',
         onClick: () => handleStart('exam'),
       },
       {
@@ -226,7 +226,7 @@ export function LessonPage({
           ? fmt(L.rankMine, { rank: myRow.rank, total: leaderboard.length })
           : fmt(L.rankCount, { n: leaderboard.length }),
         icon: Trophy,
-        tint: 'from-amber-400 to-orange-500',
+        tint: 'bg-accent text-ink',
         onClick: () => setShowRank(true),
       },
     ];
@@ -263,7 +263,7 @@ export function LessonPage({
               disabled={!!loading || (m.key !== 'rank' && questions.length === 0)}
               className="card card-hover press group flex flex-col items-start gap-3 p-5 text-start cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${m.tint} text-white shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}>
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${m.tint} shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}>
                 {loading === m.key ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                 ) : (
@@ -294,8 +294,8 @@ export function LessonPage({
     const fb = feedback[q.id];
     const a = answers[q.id];
     const base = i === currentIndex ? 'ring-2 ring-primary ring-offset-2 ring-offset-background ' : '';
-    if (mode === 'practice' && fb) return base + (fb.is_correct ? 'bg-success text-white' : 'bg-error text-white');
-    if (a) return base + 'bg-primary text-white';
+    if (mode === 'practice' && fb) return base + (fb.is_correct ? 'bg-success text-ink' : 'bg-error text-white');
+    if (a) return base + 'bg-sky text-ink';
     return base + 'bg-surface text-muted border border-border';
   };
 
@@ -312,7 +312,7 @@ export function LessonPage({
         <div className="flex-1">
           <div className="h-3 overflow-hidden rounded-full bg-surface-hover">
             <div
-              className="h-full rounded-full bg-gradient-to-l from-primary to-fuchsia-500 transition-[width] duration-500 ease-out"
+              className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -324,7 +324,7 @@ export function LessonPage({
         <span dir="auto" className="font-bold truncate">
           {lesson.title}
         </span>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${mode === 'exam' ? 'bg-primary-light text-primary' : 'bg-success-light text-success'}`}>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${mode === 'exam' ? 'bg-primary-light text-primary-ink' : 'bg-success-light text-success-ink'}`}>
           {mode === 'exam' ? L.examBadge : L.practiceBadge}
         </span>
       </div>
@@ -414,7 +414,7 @@ export function LessonPage({
         {mode === 'practice' && hasFeedback && (
           <div
             className={`card p-4 text-sm animate-slide-in ${
-              hasFeedback.is_correct ? 'bg-success-light text-success' : 'bg-error-light text-error'
+              hasFeedback.is_correct ? 'bg-success-light text-success-ink' : 'bg-error-light text-error'
             }`}
           >
             <p className="flex items-center gap-2 text-base font-bold">
@@ -423,7 +423,7 @@ export function LessonPage({
             </p>
             {(hasFeedback.option_explanation || hasFeedback.explanation) && (
               <div className="mt-2 flex gap-2 text-foreground/80">
-                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" />
                 <div className="space-y-1">
                   {hasFeedback.option_explanation && <p dir="auto">{hasFeedback.option_explanation}</p>}
                   {hasFeedback.explanation && <p dir="auto">{hasFeedback.explanation}</p>}

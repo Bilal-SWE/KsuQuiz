@@ -69,9 +69,9 @@ export function AdminLessonDetail({
   return (
     <div>
       <div className="text-sm text-muted mb-2">
-        <Link href="/admin" className="hover:text-primary">المواد</Link>
+        <Link href="/admin" className="hover:text-primary-ink">المواد</Link>
         {' / '}
-        <Link href={`/admin/subjects/${subjectId}`} className="hover:text-primary">{subjectName}</Link>
+        <Link href={`/admin/subjects/${subjectId}`} className="hover:text-primary-ink">{subjectName}</Link>
         {' / '}
         <span>{lesson.title}</span>
       </div>

@@ -35,7 +35,7 @@ export function ContactForm() {
   if (sent) {
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center animate-fade-up">
-        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success-light text-success animate-pop">
+        <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success-light text-success-ink animate-pop">
           <CircleCheck className="h-8 w-8" />
         </span>
         <h3 className="text-lg font-bold">{t.contact.sentTitle}</h3>

@@ -91,7 +91,7 @@ export function UserManagement({
         {visible.map((user) => (
           <div key={user.id} className="card card-hover flex flex-wrap items-center justify-between gap-3 p-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light font-bold text-primary">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-light font-bold text-primary-ink">
                 {(user.full_name || '?').charAt(0)}
               </div>
               <div className="min-w-0">

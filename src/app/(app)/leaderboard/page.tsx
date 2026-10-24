@@ -29,10 +29,10 @@ export default async function LeaderboardPage() {
 
   const stats = me
     ? [
-        { label: B.yourRank, value: `${me.rank}`, sub: fmt(B.ofN, { n: rows.length }), icon: Trophy, tone: 'bg-amber-100 text-amber-600', ltr: false },
-        { label: B.correctAnswers, value: `${me.score}`, sub: fmt(B.ofN, { n: me.total }), icon: ListChecks, tone: 'bg-success-light text-success', ltr: false },
-        { label: B.accuracy, value: `${accuracy}%`, sub: fmt(B.examsCount, { n: me.exams ?? 0 }), icon: Target, tone: 'bg-primary-light text-primary', ltr: false },
-        { label: B.totalTime, value: formatDuration(me.seconds), sub: B.inExams, icon: Clock, tone: 'bg-accent-light text-accent', ltr: true },
+        { label: B.yourRank, value: `${me.rank}`, sub: fmt(B.ofN, { n: rows.length }), icon: Trophy, tone: 'bg-accent-light text-accent-ink', ltr: false },
+        { label: B.correctAnswers, value: `${me.score}`, sub: fmt(B.ofN, { n: me.total }), icon: ListChecks, tone: 'bg-success-light text-success-ink', ltr: false },
+        { label: B.accuracy, value: `${accuracy}%`, sub: fmt(B.examsCount, { n: me.exams ?? 0 }), icon: Target, tone: 'bg-primary-light text-primary-ink', ltr: false },
+        { label: B.totalTime, value: formatDuration(me.seconds), sub: B.inExams, icon: Clock, tone: 'bg-accent-light text-accent-ink', ltr: true },
       ]
     : [];
 
