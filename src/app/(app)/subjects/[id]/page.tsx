@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { SubjectDetail } from '@/components/student/subject-detail';
 
-export const instant = false;
-
 export default async function SubjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();

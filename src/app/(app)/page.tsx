@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { StudentHome } from '@/components/student/student-home';
 
-export const instant = false;
-
 export default async function HomePage() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();

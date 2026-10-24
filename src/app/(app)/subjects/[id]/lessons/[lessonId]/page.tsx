@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { LessonPage } from '@/components/student/lesson-page';
 
-export const instant = false;
-
 export default async function LessonRoute({
   params,
 }: {

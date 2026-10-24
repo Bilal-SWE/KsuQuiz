@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { ExploreSubjects } from '@/components/student/explore-subjects';
 
-export const instant = false;
-
 export default async function ExplorePage({
   searchParams,
 }: {

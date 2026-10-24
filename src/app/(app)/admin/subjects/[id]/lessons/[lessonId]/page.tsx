@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
 import { AdminLessonDetail } from '@/components/admin/lesson-detail';
 
-export const instant = false;
-
 export default async function AdminLessonPage({
   params,
 }: {
