@@ -8,13 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { QuestionEditor } from '@/components/admin/question-editor';
 import { QuestionPreview } from '@/components/admin/question-preview';
-import { deleteQuestion } from '@/app/actions/admin';
+import { deleteQuestion, updateLessonSettings } from '@/app/actions/admin';
 
 type Lesson = {
   id: string;
   title: string;
   status: string;
   subject_id: string;
+  shuffle_questions: boolean;
+  shuffle_options: boolean;
 };
 
 type Question = {
@@ -40,6 +42,8 @@ export function AdminLessonDetail({
   const [showEditor, setShowEditor] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [questions, setQuestions] = useState(initialQuestions);
+  const [shuffleQuestions, setShuffleQuestions] = useState(lesson.shuffle_questions ?? false);
+  const [shuffleOptions, setShuffleOptions] = useState(lesson.shuffle_options ?? false);
   const [, startTransition] = useTransition();
 
   const handleDeleteQuestion = async (id: string) => {
@@ -82,6 +86,39 @@ export function AdminLessonDetail({
         <Button onClick={() => { setEditingQuestion(null); setShowEditor(true); }}>
           إضافة سؤال
         </Button>
+      </div>
+
+      {/* Lesson Settings */}
+      <div className="mb-6 rounded-xl border border-border bg-surface p-4">
+        <h3 className="font-bold text-sm mb-3">إعدادات الدرس</h3>
+        <div className="flex flex-wrap gap-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={shuffleQuestions}
+              onChange={(e) => {
+                const val = e.target.checked;
+                setShuffleQuestions(val);
+                startTransition(() => updateLessonSettings(lesson.id, { shuffle_questions: val }));
+              }}
+              className="accent-primary w-4 h-4"
+            />
+            <span className="text-sm">لخبطة ترتيب الأسئلة</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={shuffleOptions}
+              onChange={(e) => {
+                const val = e.target.checked;
+                setShuffleOptions(val);
+                startTransition(() => updateLessonSettings(lesson.id, { shuffle_options: val }));
+              }}
+              className="accent-primary w-4 h-4"
+            />
+            <span className="text-sm">لخبطة ترتيب الخيارات</span>
+          </label>
+        </div>
       </div>
 
       {showEditor && (

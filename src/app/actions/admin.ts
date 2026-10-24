@@ -82,6 +82,20 @@ export async function deleteSubject(id: string) {
 
 // =================== LESSONS ===================
 
+export async function updateLessonSettings(
+  lessonId: string,
+  settings: { shuffle_questions?: boolean; shuffle_options?: boolean },
+) {
+  const { supabase, userId } = await requireAdmin();
+  const updates: Record<string, any> = { updated_by: userId };
+  if (settings.shuffle_questions !== undefined) updates.shuffle_questions = settings.shuffle_questions;
+  if (settings.shuffle_options !== undefined) updates.shuffle_options = settings.shuffle_options;
+
+  const { error } = await supabase.from('lessons').update(updates).eq('id', lessonId);
+  if (error) throw new Error('فشل في تحديث إعدادات الدرس');
+  revalidatePath('/admin');
+}
+
 export async function createLesson(subjectId: string, data: { title: string; status?: string }) {
   const { supabase, userId } = await requireAdmin();
 

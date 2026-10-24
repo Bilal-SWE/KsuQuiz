@@ -26,6 +26,9 @@ export function Navbar() {
         </Link>
 
         <nav className="flex items-center gap-2">
+          <Link href="/leaderboard" className="text-sm text-muted hover:text-foreground transition-colors px-3 py-1.5">
+            الترتيب
+          </Link>
           {isAdmin && (
             <Link href="/admin" className="text-sm text-muted hover:text-foreground transition-colors px-3 py-1.5">
               لوحة التحكم

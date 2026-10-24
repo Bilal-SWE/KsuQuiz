@@ -38,14 +38,14 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
   const [error, setError] = useState('');
 
   // MCQ state
-  const [options, setOptions] = useState<{ id: string; text: string; image: string }[]>(
+  const [options, setOptions] = useState<{ id: string; text: string; image: string; explanation: string }[]>(
     question?.type === 'mcq' && question.content.options
-      ? question.content.options
+      ? question.content.options.map((o: any) => ({ id: o.id, text: o.text, image: o.image ?? '', explanation: o.explanation ?? '' }))
       : [
-          { id: 'a', text: '', image: '' },
-          { id: 'b', text: '', image: '' },
-          { id: 'c', text: '', image: '' },
-          { id: 'd', text: '', image: '' },
+          { id: 'a', text: '', image: '', explanation: '' },
+          { id: 'b', text: '', image: '', explanation: '' },
+          { id: 'c', text: '', image: '', explanation: '' },
+          { id: 'd', text: '', image: '', explanation: '' },
         ],
   );
   const [correctOption, setCorrectOption] = useState(
@@ -88,7 +88,12 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
       case 'mcq':
         content = {
           question: { text: questionText, image: questionImage || null },
-          options: options.map((o) => ({ id: o.id, text: o.text, image: o.image || null })),
+          options: options.map((o) => ({
+            id: o.id,
+            text: o.text,
+            image: o.image || null,
+            explanation: o.explanation || null,
+          })),
           correct: correctOption,
         };
         break;
@@ -124,7 +129,7 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
 
   const addOption = () => {
     const id = String.fromCharCode(97 + options.length);
-    setOptions([...options, { id, text: '', image: '' }]);
+    setOptions([...options, { id, text: '', image: '', explanation: '' }]);
   };
 
   const removeOption = (index: number) => {
@@ -215,6 +220,15 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
                     newOptions[index] = { ...option, image: url };
                     setOptions(newOptions);
                   }}
+                />
+                <Input
+                  value={option.explanation}
+                  onChange={(e) => {
+                    const newOptions = [...options];
+                    newOptions[index] = { ...option, explanation: e.target.value };
+                    setOptions(newOptions);
+                  }}
+                  placeholder="شرح هذا الخيار (اختياري)"
                 />
               </div>
               {options.length > 2 && (

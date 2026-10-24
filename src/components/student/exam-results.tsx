@@ -8,6 +8,7 @@ type ReviewItem = {
   is_correct: boolean | null;
   correct_answer: any;
   explanation: string | null;
+  option_explanation: string | null;
 };
 
 type Question = {
@@ -21,11 +22,13 @@ export function ExamResults({
   result,
   questions,
   onBack,
+  onRetry,
 }: {
   lessonTitle: string;
   result: { score: number; total: number; review: ReviewItem[] };
   questions: Question[];
   onBack: () => void;
+  onRetry: () => void;
 }) {
   const pct = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
 
@@ -85,18 +88,20 @@ export function ExamResults({
                 <p className="text-sm text-green-700 ms-8">بعض المطابقات كانت خاطئة</p>
               )}
 
-              {item.explanation && (
-                <p className="text-sm text-muted mt-2 ms-8 border-t border-border/50 pt-2">
-                  {item.explanation}
-                </p>
+              {(item.explanation || item.option_explanation) && (
+                <div className="text-sm text-muted mt-2 ms-8 border-t border-border/50 pt-2 space-y-1">
+                  {item.option_explanation && <p>{item.option_explanation}</p>}
+                  {item.explanation && <p>{item.explanation}</p>}
+                </div>
               )}
             </div>
           );
         })}
       </div>
 
-      <div className="mt-6 text-center">
-        <Button onClick={onBack}>العودة للدروس</Button>
+      <div className="mt-6 flex justify-center gap-3">
+        <Button onClick={onRetry}>إعادة المحاولة</Button>
+        <Button variant="secondary" onClick={onBack}>العودة للدروس</Button>
       </div>
     </div>
   );

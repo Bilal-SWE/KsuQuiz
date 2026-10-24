@@ -82,10 +82,16 @@ export async function submitAnswer(
   }
 
   if (attempt.mode === 'practice') {
+    let optionExplanation: string | null = null;
+    if (question.type === 'mcq' && content.options) {
+      const selectedOption = content.options.find((o: any) => o.id === response);
+      if (selectedOption?.explanation) optionExplanation = selectedOption.explanation;
+    }
     return {
       is_correct: isCorrect,
       correct_answer: content.correct ?? content.pairs ?? null,
       explanation: question.explanation,
+      option_explanation: optionExplanation,
     };
   }
 
@@ -128,12 +134,18 @@ export async function finishAttempt(attemptId: string) {
   const review = (answers ?? []).map((answer) => {
     const q = questions?.find((q) => q.id === answer.question_id);
     const content = q?.content as Record<string, any>;
+    let optionExplanation: string | null = null;
+    if (q?.type === 'mcq' && content?.options) {
+      const selectedOption = content.options.find((o: any) => o.id === answer.response);
+      if (selectedOption?.explanation) optionExplanation = selectedOption.explanation;
+    }
     return {
       question_id: answer.question_id,
       response: answer.response,
       is_correct: answer.is_correct,
       correct_answer: content?.correct ?? content?.pairs ?? null,
       explanation: q?.explanation,
+      option_explanation: optionExplanation,
     };
   });
 

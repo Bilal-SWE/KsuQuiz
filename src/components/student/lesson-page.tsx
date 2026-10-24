@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { startAttempt, submitAnswer, finishAttempt } from '@/app/actions/quiz';
@@ -8,6 +8,7 @@ import { McqQuestion } from '@/components/student/questions/mcq';
 import { TrueFalseQuestion } from '@/components/student/questions/true-false';
 import { MatchingQuestion } from '@/components/student/questions/matching';
 import { ExamResults } from '@/components/student/exam-results';
+import { LeaderboardTable, type LeaderboardRow } from '@/components/student/leaderboard-table';
 
 type Question = {
   id: string;
@@ -23,18 +24,19 @@ type Props = {
   questions: Question[];
   unfinishedAttempt: { id: string; mode: string } | null;
   existingAnswers: { question_id: string; response: any; is_correct: boolean | null }[];
+  leaderboard: LeaderboardRow[];
+  currentUserId: string;
 };
 
-function shuffleArray<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, existingAnswers }: Props) {
+export function LessonPage({
+  subjectId,
+  lesson,
+  questions,
+  unfinishedAttempt,
+  existingAnswers,
+  leaderboard,
+  currentUserId,
+}: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<'select' | 'exam' | 'practice'>(
     unfinishedAttempt ? (unfinishedAttempt.mode as 'exam' | 'practice') : 'select',
@@ -50,26 +52,22 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
   const [feedback, setFeedback] = useState<Record<string, any>>({});
   const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[] } | null>(null);
 
-  const shuffledQuestions = useMemo(() => {
-    const shuffled = shuffleArray(questions);
-    return shuffled.map((q) => {
-      const content = { ...q.content };
-      if (q.type === 'mcq' && content.options) {
-        content.options = shuffleArray(content.options);
-      }
-      if (q.type === 'matching' && content.right) {
-        content.right = shuffleArray(content.right);
-      }
-      return { ...q, content };
-    });
-  }, [questions]);
-
   const handleStart = async (selectedMode: 'exam' | 'practice') => {
     setLoading(true);
     const attempt = await startAttempt(lesson.id, selectedMode);
     setAttemptId(attempt.id);
     setMode(selectedMode);
     setLoading(false);
+  };
+
+  const handleRetry = () => {
+    setExamResult(null);
+    setMode('select');
+    setAttemptId(null);
+    setCurrentIndex(0);
+    setAnswers({});
+    setFeedback({});
+    router.refresh();
   };
 
   const handleAnswer = useCallback(async (questionId: string, response: any) => {
@@ -96,33 +94,50 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
       <ExamResults
         lessonTitle={lesson.title}
         result={examResult}
-        questions={shuffledQuestions}
+        questions={questions}
         onBack={() => router.push(`/subjects/${subjectId}`)}
+        onRetry={handleRetry}
       />
     );
   }
 
   if (mode === 'select') {
+    const myRow = leaderboard.find((r) => r.student_id === currentUserId);
     return (
-      <div className="max-w-md mx-auto text-center py-12">
-        <h1 className="text-xl font-bold mb-2">{lesson.title}</h1>
-        <p className="text-sm text-muted mb-8">{questions.length} سؤال</p>
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="max-w-md mx-auto text-center">
+          <h1 className="text-xl font-bold mb-2">{lesson.title}</h1>
+          <p className="text-sm text-muted mb-8">{questions.length} سؤال</p>
 
-        <div className="space-y-3">
-          <Button onClick={() => handleStart('practice')} loading={loading} className="w-full py-3">
-            وضع التمرين
-            <span className="block text-xs opacity-75 font-normal">اعرف الإجابة بعد كل سؤال</span>
-          </Button>
-          <Button onClick={() => handleStart('exam')} loading={loading} variant="secondary" className="w-full py-3">
-            وضع الاختبار
-            <span className="block text-xs opacity-75 font-normal">اعرف النتيجة في النهاية</span>
-          </Button>
+          <div className="space-y-3">
+            <Button onClick={() => handleStart('practice')} loading={loading} className="w-full py-3">
+              وضع التمرين
+              <span className="block text-xs opacity-75 font-normal">اعرف الإجابة بعد كل سؤال</span>
+            </Button>
+            <Button onClick={() => handleStart('exam')} loading={loading} variant="secondary" className="w-full py-3">
+              وضع الاختبار
+              <span className="block text-xs opacity-75 font-normal">اعرف النتيجة في النهاية</span>
+            </Button>
+          </div>
         </div>
+
+        <section className="mt-10">
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="font-bold">ترتيب الاختبار</h2>
+            {myRow && <span className="text-sm text-primary">ترتيبك: {myRow.rank}</span>}
+          </div>
+          <LeaderboardTable
+            rows={leaderboard}
+            currentUserId={currentUserId}
+            emptyText="لم يكمل أي طالب هذا الاختبار بعد. كن الأول!"
+          />
+          <p className="text-xs text-muted mt-2">تُحسب أول محاولة اختبار فقط لكل طالب.</p>
+        </section>
       </div>
     );
   }
 
-  const currentQ = shuffledQuestions[currentIndex];
+  const currentQ = questions[currentIndex];
   if (!currentQ) return null;
 
   const answeredCount = Object.keys(answers).length;
@@ -134,7 +149,7 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-bold">{lesson.title}</h2>
         <span className="text-sm text-muted">
-          {currentIndex + 1} / {shuffledQuestions.length}
+          {currentIndex + 1} / {questions.length}
         </span>
       </div>
 
@@ -142,7 +157,7 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
       <div className="h-1.5 bg-gray-200 rounded-full mb-6">
         <div
           className="h-full bg-primary rounded-full transition-all"
-          style={{ width: `${((currentIndex + 1) / shuffledQuestions.length) * 100}%` }}
+          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
         />
       </div>
 
@@ -183,6 +198,9 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
             {hasFeedback.explanation && (
               <p className="mt-1 opacity-80">{hasFeedback.explanation}</p>
             )}
+            {hasFeedback.option_explanation && (
+              <p className="mt-1 opacity-80">{hasFeedback.option_explanation}</p>
+            )}
           </div>
         )}
       </div>
@@ -198,7 +216,7 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
         </Button>
 
         <div className="flex gap-2">
-          {answeredCount === shuffledQuestions.length && (
+          {answeredCount === questions.length && (
             <Button onClick={handleFinish} loading={loading}>
               {mode === 'exam' ? 'إنهاء الاختبار' : 'إنهاء التمرين'}
             </Button>
@@ -207,8 +225,8 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
 
         <Button
           variant="secondary"
-          onClick={() => setCurrentIndex((i) => Math.min(shuffledQuestions.length - 1, i + 1))}
-          disabled={currentIndex === shuffledQuestions.length - 1}
+          onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
+          disabled={currentIndex === questions.length - 1}
         >
           التالي
         </Button>
@@ -216,7 +234,7 @@ export function LessonPage({ subjectId, lesson, questions, unfinishedAttempt, ex
 
       {mode === 'exam' && (
         <p className="text-center text-sm text-muted mt-4">
-          تمت الإجابة على {answeredCount} من {shuffledQuestions.length}
+          تمت الإجابة على {answeredCount} من {questions.length}
         </p>
       )}
     </div>
