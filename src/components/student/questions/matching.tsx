@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { ImageZoom } from '@/components/ui/image-zoom';
+import { useI18n } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 
 type Item = { id: string; text?: string; image?: string | null };
 
@@ -23,6 +25,7 @@ const PAIR_COLORS = [
 ];
 
 export function MatchingQuestion({ content, onAnswer, feedback, disabled, savedPairs }: Props) {
+  const Q = useI18n().t.question;
   const left = content.left as Item[];
   const right = content.right as Item[];
   const [pairs, setPairs] = useState<Record<string, string>>(savedPairs ?? {});
@@ -97,7 +100,7 @@ export function MatchingQuestion({ content, onAnswer, feedback, disabled, savedP
       <div className="mb-4">
         <p className="text-base font-medium">{content.question?.text}</p>
         {content.question?.image && <ImageZoom src={content.question.image} className="mt-2" />}
-        <p className="text-xs text-muted mt-2">اختر عنصراً من اليمين ثم طابقه من اليسار</p>
+        <p className="text-xs text-muted mt-2">{Q.matchingHint}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -133,7 +136,7 @@ export function MatchingQuestion({ content, onAnswer, feedback, disabled, savedP
 
       {!disabled && Object.keys(pairs).length > 0 && Object.keys(pairs).length < left.length && (
         <p className="text-xs text-muted text-center mt-3">
-          تم المطابقة: {Object.keys(pairs).length} / {left.length}
+          {fmt(Q.matchedCount, { a: Object.keys(pairs).length, n: left.length })}
         </p>
       )}
     </div>

@@ -1,14 +1,18 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Clock, ListChecks, Target, Trophy } from 'lucide-react';
-import { LeaderboardTable, Podium, formatDuration, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { LeaderboardTable, Podium, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { formatDuration } from '@/lib/format';
+import { getI18n } from '@/i18n/server';
+import { fmt } from '@/i18n/format';
 
 export default async function LeaderboardPage() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) redirect('/auth/login');
 
-  const { data } = await supabase.rpc('get_global_leaderboard');
+  const [{ data }, { t }] = await Promise.all([supabase.rpc('get_global_leaderboard'), getI18n()]);
+  const B = t.leaderboard;
 
   const rows: LeaderboardRow[] = ((data as any[]) ?? []).map((r) => ({
     rank: Number(r.rank),
@@ -25,10 +29,10 @@ export default async function LeaderboardPage() {
 
   const stats = me
     ? [
-        { label: 'ترتيبك', value: `${me.rank}`, sub: `من ${rows.length}`, icon: Trophy, tone: 'bg-amber-100 text-amber-600' },
-        { label: 'الإجابات الصحيحة', value: `${me.score}`, sub: `من ${me.total}`, icon: ListChecks, tone: 'bg-success-light text-success' },
-        { label: 'نسبة الدقة', value: `${accuracy}%`, sub: `${me.exams} اختبار`, icon: Target, tone: 'bg-primary-light text-primary' },
-        { label: 'الوقت الإجمالي', value: formatDuration(me.seconds), sub: 'في الاختبارات', icon: Clock, tone: 'bg-accent-light text-accent' },
+        { label: B.yourRank, value: `${me.rank}`, sub: fmt(B.ofN, { n: rows.length }), icon: Trophy, tone: 'bg-amber-100 text-amber-600', ltr: false },
+        { label: B.correctAnswers, value: `${me.score}`, sub: fmt(B.ofN, { n: me.total }), icon: ListChecks, tone: 'bg-success-light text-success', ltr: false },
+        { label: B.accuracy, value: `${accuracy}%`, sub: fmt(B.examsCount, { n: me.exams ?? 0 }), icon: Target, tone: 'bg-primary-light text-primary', ltr: false },
+        { label: B.totalTime, value: formatDuration(me.seconds), sub: B.inExams, icon: Clock, tone: 'bg-accent-light text-accent', ltr: true },
       ]
     : [];
 
@@ -36,14 +40,12 @@ export default async function LeaderboardPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <section className="hero p-6 sm:p-8 animate-fade-up">
         <div className="relative z-10 flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 animate-float">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 animate-float">
             <Trophy className="h-7 w-7" />
           </span>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">الترتيب العام</h1>
-            <p className="mt-1 text-sm text-white/80">
-              مجموع الإجابات الصحيحة في كل الاختبارات، والأسرع يتقدم عند التعادل. تُحسب أول محاولة فقط.
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold">{B.title}</h1>
+            <p className="mt-1 text-sm text-white/80">{B.subtitle}</p>
           </div>
         </div>
       </section>
@@ -56,7 +58,7 @@ export default async function LeaderboardPage() {
                 <s.icon className="h-5 w-5" />
               </span>
               <p className="text-xs text-muted">{s.label}</p>
-              <p className="text-xl font-bold" dir={s.label === 'الوقت الإجمالي' ? 'ltr' : undefined}>
+              <p className="text-xl font-bold" dir={s.ltr ? 'ltr' : undefined}>
                 {s.value}
               </p>
               <p className="text-xs text-muted">{s.sub}</p>
@@ -67,12 +69,7 @@ export default async function LeaderboardPage() {
 
       {rows.length >= 3 && <Podium rows={rows.slice(0, 3)} currentUserId={session.user.id} />}
 
-      <LeaderboardTable
-        rows={rows}
-        currentUserId={session.user.id}
-        showExams
-        emptyText="لا يوجد ترتيب بعد. أكمل أول اختبار لتظهر هنا."
-      />
+      <LeaderboardTable rows={rows} currentUserId={session.user.id} showExams emptyText={B.empty} />
     </div>
   );
 }

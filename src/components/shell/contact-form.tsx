@@ -6,19 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { submitContactMessage } from '@/app/actions/contact';
+import { useI18n } from '@/i18n/client';
 
-const subjects = [
-  { value: 'general', label: 'استفسار عام' },
-  { value: 'support', label: 'مشكلة تقنية' },
-  { value: 'billing', label: 'الاشتراك والدفع' },
-  { value: 'refund', label: 'استرداد مبلغ' },
-  { value: 'other', label: 'أخرى' },
-] as const;
+const SUBJECTS = ['general', 'support', 'billing', 'refund', 'other'] as const;
+type Subject = (typeof SUBJECTS)[number];
 
 export function ContactForm() {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState<(typeof subjects)[number]['value']>('general');
+  const [subject, setSubject] = useState<Subject>('general');
   const [message, setMessage] = useState('');
   const [website, setWebsite] = useState('');
   const [error, setError] = useState('');
@@ -32,7 +29,7 @@ export function ContactForm() {
     const res = await submitContactMessage({ name, email, subject, message, website });
     setSending(false);
     if (res.ok) setSent(true);
-    else setError(res.error);
+    else setError(t.contact.errors[res.error]);
   };
 
   if (sent) {
@@ -41,8 +38,8 @@ export function ContactForm() {
         <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success-light text-success animate-pop">
           <CircleCheck className="h-8 w-8" />
         </span>
-        <h3 className="text-lg font-bold">وصلتنا رسالتك</h3>
-        <p className="text-sm text-muted">سنرد عليك على بريدك الإلكتروني في أقرب وقت.</p>
+        <h3 className="text-lg font-bold">{t.contact.sentTitle}</h3>
+        <p className="text-sm text-muted">{t.contact.sentText}</p>
         <Button
           variant="secondary"
           onClick={() => {
@@ -50,7 +47,7 @@ export function ContactForm() {
             setMessage('');
           }}
         >
-          إرسال رسالة أخرى
+          {t.contact.sendAnother}
         </Button>
       </div>
     );
@@ -59,10 +56,10 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input id="c_name" label="الاسم" value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input id="c_name" label={t.contact.name} value={name} onChange={(e) => setName(e.target.value)} required />
         <Input
           id="c_email"
-          label="البريد الإلكتروني"
+          label={t.contact.email}
           type="email"
           dir="ltr"
           className="text-left"
@@ -72,21 +69,23 @@ export function ContactForm() {
         />
       </div>
       <div>
-        <label htmlFor="c_subject" className="mb-1.5 block text-sm font-medium">الموضوع</label>
+        <label htmlFor="c_subject" className="mb-1.5 block text-sm font-medium">
+          {t.contact.subject}
+        </label>
         <select
           id="c_subject"
           value={subject}
-          onChange={(e) => setSubject(e.target.value as typeof subject)}
+          onChange={(e) => setSubject(e.target.value as Subject)}
           className="w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary"
         >
-          {subjects.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
+          {SUBJECTS.map((s) => (
+            <option key={s} value={s}>
+              {t.contact.subjects[s]}
             </option>
           ))}
         </select>
       </div>
-      <Textarea id="c_message" label="رسالتك" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} required />
+      <Textarea id="c_message" label={t.contact.message} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} required />
       <input
         type="text"
         name="website"
@@ -99,8 +98,8 @@ export function ContactForm() {
       />
       {error && <p className="text-sm text-error">{error}</p>}
       <Button type="submit" loading={sending} className="w-full sm:w-auto px-6">
-        <Send className="h-4 w-4" />
-        إرسال
+        <Send className="h-4 w-4 ltr:-scale-x-100" />
+        {t.contact.send}
       </Button>
     </form>
   );

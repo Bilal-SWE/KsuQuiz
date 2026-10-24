@@ -4,10 +4,10 @@ export const APP_NAME = 'KSU Quiz';
 export const CONTACT_EMAIL = '';
 
 export const PUBLIC_PAGES = [
-  { href: '/about', label: 'من نحن' },
-  { href: '/contact', label: 'اتصل بنا' },
-  { href: '/privacy', label: 'سياسة الخصوصية' },
-  { href: '/refund', label: 'سياسة الاسترجاع' },
+  { href: '/about', key: 'about' },
+  { href: '/contact', key: 'contact' },
+  { href: '/privacy', key: 'privacy' },
+  { href: '/refund', key: 'refund' },
 ] as const;
 
 export const ROLES = {

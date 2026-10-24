@@ -25,7 +25,10 @@ import { MatchingQuestion } from '@/components/student/questions/matching';
 import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 import { ExamResults } from '@/components/student/exam-results';
 import { ImageZoom } from '@/components/ui/image-zoom';
-import { LeaderboardTable, Podium, formatDuration, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { LeaderboardTable, Podium, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { formatDuration } from '@/lib/format';
+import { useI18n } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 
 type Question = {
   id: string;
@@ -71,6 +74,8 @@ export function LessonPage({
   currentUserId,
 }: Props) {
   const router = useRouter();
+  const { t } = useI18n();
+  const L = t.lesson;
   const [mode, setMode] = useState<'select' | 'exam' | 'practice'>(
     unfinishedAttempt ? (unfinishedAttempt.mode as 'exam' | 'practice') : 'select',
   );
@@ -137,13 +142,13 @@ export function LessonPage({
           else delete next[questionId];
           return next;
         });
-        alert('تعذّر حفظ الإجابة، حاول مرة أخرى');
+        alert(L.saveFailed);
       })
       .finally(() => {
         pendingSaves.current.delete(save);
       });
     pendingSaves.current.add(save);
-  }, [attemptId]);
+  }, [attemptId, L.saveFailed]);
 
   const handleFinish = async () => {
     if (!attemptId) return;
@@ -175,27 +180,23 @@ export function LessonPage({
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Trophy className="h-6 w-6 text-accent" />
-              ترتيب الاختبار
+              {L.rankTitle}
             </h1>
             <p className="text-sm text-muted">{lesson.title}</p>
           </div>
           <Button variant="secondary" onClick={() => setShowRank(false)}>
-            <ArrowRight className="h-4 w-4" />
-            رجوع
+            <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
+            {L.back}
           </Button>
         </div>
         {leaderboard.length >= 3 && <Podium rows={leaderboard.slice(0, 3)} currentUserId={currentUserId} />}
         {myRow && (
           <p className="rounded-xl bg-primary-light px-4 py-2.5 text-sm font-medium text-primary">
-            ترتيبك: {myRow.rank} من {leaderboard.length}، {myRow.score} / {myRow.total} إجابة صحيحة
+            {fmt(L.rankSummary, { rank: myRow.rank, total: leaderboard.length, score: myRow.score, questions: myRow.total })}
           </p>
         )}
-        <LeaderboardTable
-          rows={leaderboard}
-          currentUserId={currentUserId}
-          emptyText="لم يكمل أي طالب هذا الاختبار بعد. كن الأول!"
-        />
-        <p className="text-xs text-muted">تُحسب أول محاولة اختبار فقط لكل طالب.</p>
+        <LeaderboardTable rows={leaderboard} currentUserId={currentUserId} emptyText={L.rankEmpty} />
+        <p className="text-xs text-muted">{L.firstOnly}</p>
       </div>
     );
   }
@@ -204,24 +205,26 @@ export function LessonPage({
     const modes = [
       {
         key: 'practice' as const,
-        title: 'وضع التمرين',
-        desc: 'اعرف الإجابة والشرح بعد كل سؤال',
+        title: L.practice,
+        desc: L.practiceDesc,
         icon: BookOpenCheck,
         tint: 'from-emerald-500 to-teal-500',
         onClick: () => handleStart('practice'),
       },
       {
         key: 'exam' as const,
-        title: 'وضع الاختبار',
-        desc: 'النتيجة في النهاية، وأول محاولة تدخل الترتيب',
+        title: L.exam,
+        desc: L.examDesc,
         icon: ClipboardList,
         tint: 'from-primary to-fuchsia-600',
         onClick: () => handleStart('exam'),
       },
       {
         key: 'rank' as const,
-        title: 'الترتيب',
-        desc: myRow ? `ترتيبك ${myRow.rank} من ${leaderboard.length}` : `${leaderboard.length} طالب أكملوا الاختبار`,
+        title: L.rank,
+        desc: myRow
+          ? fmt(L.rankMine, { rank: myRow.rank, total: leaderboard.length })
+          : fmt(L.rankCount, { n: leaderboard.length }),
         icon: Trophy,
         tint: 'from-amber-400 to-orange-500',
         onClick: () => setShowRank(true),
@@ -233,18 +236,20 @@ export function LessonPage({
         <section className="hero p-6 sm:p-8 animate-fade-up">
           <div className="relative z-10">
             <Link href={`/subjects/${subjectId}`} className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
-              <ArrowRight className="h-3.5 w-3.5" />
-              العودة للدروس
+              <ArrowRight className="h-3.5 w-3.5 ltr:-scale-x-100" />
+              {L.backToLessons}
             </Link>
-            <h1 className="mt-2 text-2xl sm:text-3xl font-bold">{lesson.title}</h1>
+            <h1 dir="auto" className="mt-2 text-2xl sm:text-3xl font-bold">
+              {lesson.title}
+            </h1>
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
                 <Flag className="h-4 w-4" />
-                {questions.length} سؤال
+                {fmt(L.questionsCount, { n: questions.length })}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
                 <Users className="h-4 w-4" />
-                {leaderboard.length} متنافس
+                {fmt(L.competitors, { n: leaderboard.length })}
               </span>
             </div>
           </div>
@@ -299,7 +304,7 @@ export function LessonPage({
       <div className="flex items-center gap-3">
         <Link
           href={`/subjects/${subjectId}`}
-          aria-label="خروج من الدرس"
+          aria-label={L.exitLesson}
           className="rounded-xl p-2 text-muted hover:bg-surface-hover hover:text-foreground press"
         >
           <X className="h-5 w-5" />
@@ -316,9 +321,11 @@ export function LessonPage({
       </div>
 
       <div className="flex items-center justify-between text-sm">
-        <span className="font-bold truncate">{lesson.title}</span>
+        <span dir="auto" className="font-bold truncate">
+          {lesson.title}
+        </span>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${mode === 'exam' ? 'bg-primary-light text-primary' : 'bg-success-light text-success'}`}>
-          {mode === 'exam' ? 'اختبار' : 'تمرين'}
+          {mode === 'exam' ? L.examBadge : L.practiceBadge}
         </span>
       </div>
 
@@ -327,7 +334,7 @@ export function LessonPage({
           <button
             key={q.id}
             onClick={() => setCurrentIndex(i)}
-            aria-label={`السؤال ${i + 1}`}
+            aria-label={fmt(L.questionNumber, { n: i + 1 })}
             className={`h-8 w-8 rounded-lg text-xs font-bold transition press cursor-pointer ${dotStyle(q, i)}`}
           >
             {i + 1}
@@ -339,9 +346,11 @@ export function LessonPage({
         <section className="hero p-6 sm:p-8 animate-fade-up">
           <div className="relative z-10">
             <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium ring-1 ring-white/25">
-              السؤال {currentIndex + 1} من {questions.length}
+              {fmt(L.questionOf, { i: currentIndex + 1, n: questions.length })}
             </span>
-            <h1 className="mt-3 text-xl sm:text-2xl font-bold leading-relaxed">{currentQ.content.question?.text}</h1>
+            <h1 dir="auto" className="mt-3 text-xl sm:text-2xl font-bold leading-relaxed">
+              {currentQ.content.question?.text}
+            </h1>
             {currentQ.content.question?.image && (
               <div className="mt-4 overflow-hidden rounded-2xl bg-white/95 p-2">
                 <ImageZoom src={currentQ.content.question.image} />
@@ -398,7 +407,7 @@ export function LessonPage({
         {mode === 'practice' && hasAnswer && !hasFeedback && !('is_correct' in hasAnswer) && (
           <p className="flex items-center gap-2 text-sm text-muted">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-            جارٍ التحقق من الإجابة…
+            {L.checking}
           </p>
         )}
 
@@ -410,14 +419,14 @@ export function LessonPage({
           >
             <p className="flex items-center gap-2 text-base font-bold">
               {hasFeedback.is_correct ? <CircleCheck className="h-5 w-5" /> : <CircleX className="h-5 w-5" />}
-              {hasFeedback.is_correct ? 'أحسنت! إجابة صحيحة' : 'إجابة خاطئة'}
+              {hasFeedback.is_correct ? L.correct : L.wrong}
             </p>
             {(hasFeedback.option_explanation || hasFeedback.explanation) && (
               <div className="mt-2 flex gap-2 text-foreground/80">
                 <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                 <div className="space-y-1">
-                  {hasFeedback.option_explanation && <p>{hasFeedback.option_explanation}</p>}
-                  {hasFeedback.explanation && <p>{hasFeedback.explanation}</p>}
+                  {hasFeedback.option_explanation && <p dir="auto">{hasFeedback.option_explanation}</p>}
+                  {hasFeedback.explanation && <p dir="auto">{hasFeedback.explanation}</p>}
                 </div>
               </div>
             )}
@@ -427,19 +436,17 @@ export function LessonPage({
 
       <div className="flex items-center justify-between gap-3">
         <Button variant="secondary" onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))} disabled={currentIndex === 0}>
-          <ArrowRight className="h-4 w-4" />
-          السابق
+          <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
+          {L.previous}
         </Button>
 
         {answeredCount === questions.length ? (
           <Button onClick={handleFinish} loading={loading === 'finish'} className="px-6">
             <Flag className="h-4 w-4" />
-            {mode === 'exam' ? 'إنهاء الاختبار' : 'إنهاء التمرين'}
+            {mode === 'exam' ? L.finishExam : L.finishPractice}
           </Button>
         ) : (
-          <span className="text-xs text-muted">
-            {answeredCount} / {questions.length} تمت الإجابة
-          </span>
+          <span className="text-xs text-muted">{fmt(L.answeredOf, { a: answeredCount, n: questions.length })}</span>
         )}
 
         <Button
@@ -447,8 +454,8 @@ export function LessonPage({
           onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
           disabled={isLast}
         >
-          التالي
-          <ArrowLeft className="h-4 w-4" />
+          {L.next}
+          <ArrowLeft className="h-4 w-4 ltr:-scale-x-100" />
         </Button>
       </div>
     </div>

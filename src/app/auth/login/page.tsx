@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { loginSchema } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthShell } from '@/components/shell/auth-shell';
+import { useI18n } from '@/i18n/client';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,18 +21,21 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const result = loginSchema.safeParse({ email, password });
-    if (!result.success) {
-      setError(result.error.issues[0].message);
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError(t.auth.errors.emailInvalid);
+      return;
+    }
+    if (!password) {
+      setError(t.auth.errors.passwordRequired);
       return;
     }
 
     setLoading(true);
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
     if (authError) {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      setError(t.auth.errors.invalidCredentials);
       setLoading(false);
       return;
     }
@@ -41,42 +45,42 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell title="أهلاً بعودتك" subtitle="سجّل الدخول وتابع من حيث توقفت">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            id="email"
-            label="البريد الإلكتروني"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="example@email.com"
-            dir="ltr"
-            className="text-left"
-          />
-          <Input
-            id="password"
-            label="كلمة المرور"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••"
-            dir="ltr"
-            className="text-left"
-          />
+    <AuthShell title={t.auth.loginTitle} subtitle={t.auth.loginSubtitle}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          id="email"
+          label={t.auth.email}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="example@email.com"
+          dir="ltr"
+          className="text-left"
+        />
+        <Input
+          id="password"
+          label={t.auth.password}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••"
+          dir="ltr"
+          className="text-left"
+        />
 
-          {error && <p className="text-sm text-error text-center">{error}</p>}
+        {error && <p className="text-sm text-error text-center">{error}</p>}
 
-          <Button type="submit" loading={loading} className="w-full">
-            تسجيل الدخول
-          </Button>
-        </form>
+        <Button type="submit" loading={loading} className="w-full">
+          {t.auth.loginButton}
+        </Button>
+      </form>
 
-        <p className="text-sm text-muted text-center mt-6">
-          ليس لديك حساب؟{' '}
-          <Link href="/auth/signup" className="text-primary hover:underline">
-            إنشاء حساب جديد
-          </Link>
-        </p>
+      <p className="text-sm text-muted text-center mt-6">
+        {t.auth.noAccount}{' '}
+        <Link href="/auth/signup" className="text-primary hover:underline">
+          {t.auth.createAccount}
+        </Link>
+      </p>
     </AuthShell>
   );
 }

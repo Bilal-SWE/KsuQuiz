@@ -1,4 +1,8 @@
+'use client';
+
 import { Crown, Medal } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
+import { formatDuration } from '@/lib/format';
 
 export type LeaderboardRow = {
   rank: number;
@@ -10,15 +14,6 @@ export type LeaderboardRow = {
   exams?: number;
 };
 
-export function formatDuration(totalSeconds: number) {
-  const s = Math.max(0, Math.round(totalSeconds));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  const mmss = `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-  return h > 0 ? `${h}:${mmss}` : mmss;
-}
-
 const rankStyle: Record<number, string> = {
   1: 'bg-gradient-to-br from-amber-300 to-yellow-500 text-white',
   2: 'bg-gradient-to-br from-slate-300 to-slate-400 text-white',
@@ -26,6 +21,7 @@ const rankStyle: Record<number, string> = {
 };
 
 export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; currentUserId: string }) {
+  const B = useI18n().t.leaderboard;
   const order = [rows[1], rows[0], rows[2]].filter(Boolean);
   const heights: Record<number, string> = { 1: 'h-28', 2: 'h-20', 3: 'h-16' };
 
@@ -40,7 +36,7 @@ export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; curren
             {(r.full_name || '?').charAt(0)}
           </div>
           <p className={`mt-2 w-full truncate text-center text-sm font-bold ${r.student_id === currentUserId ? 'text-primary' : ''}`}>
-            {r.full_name || 'طالب'}
+            <bdi>{r.full_name || B.studentFallback}</bdi>
           </p>
           <p className="text-xs text-muted">
             {r.score} / {r.total}
@@ -69,6 +65,7 @@ export function LeaderboardTable({
   showExams?: boolean;
   emptyText: string;
 }) {
+  const B = useI18n().t.leaderboard;
   if (rows.length === 0) {
     return (
       <div className="card flex flex-col items-center gap-2 py-10 text-center">
@@ -84,10 +81,10 @@ export function LeaderboardTable({
         <thead className="bg-surface-hover text-muted">
           <tr>
             <th className="py-2.5 px-3 text-start font-medium w-14">#</th>
-            <th className="py-2.5 px-3 text-start font-medium">الطالب</th>
-            {showExams && <th className="py-2.5 px-3 text-center font-medium hidden sm:table-cell">الاختبارات</th>}
-            <th className="py-2.5 px-3 text-center font-medium">الصحيحة</th>
-            <th className="py-2.5 px-3 text-center font-medium">الوقت</th>
+            <th className="py-2.5 px-3 text-start font-medium">{B.student}</th>
+            {showExams && <th className="py-2.5 px-3 text-center font-medium hidden sm:table-cell">{B.exams}</th>}
+            <th className="py-2.5 px-3 text-center font-medium">{B.correct}</th>
+            <th className="py-2.5 px-3 text-center font-medium">{B.time}</th>
           </tr>
         </thead>
         <tbody>
@@ -113,8 +110,8 @@ export function LeaderboardTable({
                       {(r.full_name || '?').charAt(0)}
                     </span>
                     <span className="font-medium truncate max-w-[9rem] sm:max-w-none">
-                      {r.full_name || 'طالب'}
-                      {isMe && <span className="ms-1 text-xs text-primary">(أنت)</span>}
+                      <bdi>{r.full_name || B.studentFallback}</bdi>
+                      {isMe && <span className="ms-1 text-xs text-primary">{B.you}</span>}
                     </span>
                   </div>
                 </td>

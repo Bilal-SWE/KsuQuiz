@@ -2,6 +2,7 @@
 
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import { ImageZoom } from '@/components/ui/image-zoom';
+import { useI18n } from '@/i18n/client';
 
 type Props = {
   content: Record<string, any>;
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function TrueFalseQuestion({ content, onAnswer, feedback, disabled, selectedValue, hideStem }: Props) {
+  const { t } = useI18n();
   const getStyle = (value: boolean) => {
     if (!feedback) return selectedValue === value ? 'border-primary ring-4 ring-primary/15' : 'card-hover';
     if (value === feedback.correct_answer) return 'border-success bg-success-light animate-pop';
@@ -31,8 +33,8 @@ export function TrueFalseQuestion({ content, onAnswer, feedback, disabled, selec
 
       <div className="grid grid-cols-2 gap-3 stagger">
         {[
-          { value: true, label: 'صح', icon: ThumbsUp, tint: 'from-emerald-500 to-teal-500' },
-          { value: false, label: 'خطأ', icon: ThumbsDown, tint: 'from-orange-400 to-rose-500' },
+          { value: true, label: t.question.true, icon: ThumbsUp, tint: 'from-emerald-500 to-teal-500' },
+          { value: false, label: t.question.false, icon: ThumbsDown, tint: 'from-orange-400 to-rose-500' },
         ].map(({ value, label, icon: Icon, tint }) => (
           <button
             key={String(value)}

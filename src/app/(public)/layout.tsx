@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { SiteFooter } from '@/components/shell/site-footer';
+import { LanguageToggle } from '@/i18n/client';
+import { getI18n } from '@/i18n/server';
 import { APP_NAME } from '@/lib/constants';
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+  const { t } = await getI18n();
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
@@ -11,15 +14,16 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link href="/" aria-label={APP_NAME} className="press">
             <Logo />
           </Link>
-          <div className="flex items-center gap-2">
-            <Link href="/auth/login" className="press rounded-xl px-3 py-2 text-sm font-medium hover:bg-surface-hover">
-              تسجيل الدخول
+          <div className="flex items-center gap-1 sm:gap-2">
+            <LanguageToggle />
+            <Link href="/auth/login" className="press hidden sm:inline-flex rounded-xl px-3 py-2 text-sm font-medium hover:bg-surface-hover">
+              {t.common.login}
             </Link>
             <Link
               href="/auth/signup"
               className="press rounded-xl bg-gradient-to-l from-primary to-violet-500 px-4 py-2 text-sm font-medium text-white shadow-[0_6px_16px_-6px_rgb(109_40_217/0.6)] hover:brightness-110"
             >
-              ابدأ مجاناً
+              {t.common.startFree}
             </Link>
           </div>
         </div>

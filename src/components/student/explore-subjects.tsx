@@ -5,6 +5,8 @@ import { Check, FolderOpen, LayoutGrid, Plus, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
 import { categoryColor, type Category } from '@/lib/categories';
+import { useI18n } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 import { SubjectCard } from '@/components/student/subject-card';
 import { EmptyState } from '@/components/ui/empty-state';
 
@@ -31,6 +33,8 @@ export function ExploreSubjects({
   initialQuery: string;
   initialCategory: string;
 }) {
+  const { t } = useI18n();
+  const E = t.explore;
   const [query, setQuery] = useState(initialQuery);
   const [active, setActive] = useState(initialCategory);
   const [enrolled, setEnrolled] = useState(new Set(enrolledIds));
@@ -59,7 +63,7 @@ export function ExploreSubjects({
   const groups = showGrouped
     ? [
         ...categories.map((c) => ({ key: c.id, name: c.name, color: c.color, items: filtered.filter((s) => catOf(s) === c.id) })),
-        { key: UNCATEGORIZED, name: 'مواد أخرى', color: 'violet', items: filtered.filter((s) => catOf(s) === UNCATEGORIZED) },
+        { key: UNCATEGORIZED, name: E.otherSubjects, color: 'violet', items: filtered.filter((s) => catOf(s) === UNCATEGORIZED) },
       ].filter((g) => g.items.length > 0)
     : [];
 
@@ -108,7 +112,7 @@ export function ExploreSubjects({
               }`}
             >
               {isEnrolled ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {isEnrolled ? 'في موادي' : 'إضافة إلى موادي'}
+              {isEnrolled ? E.inMySubjects : E.addToMySubjects}
             </button>
           </div>
         );
@@ -117,10 +121,10 @@ export function ExploreSubjects({
   );
 
   const chips = [
-    { key: 'all', name: 'الكل', count: subjects.length, color: null as string | null },
+    { key: 'all', name: E.all, count: subjects.length, color: null as string | null },
     ...categories.map((c) => ({ key: c.id, name: c.name, count: counts[c.id] ?? 0, color: c.color })),
     ...(hasUncategorized && categories.length > 0
-      ? [{ key: UNCATEGORIZED, name: 'أخرى', count: counts[UNCATEGORIZED] ?? 0, color: null }]
+      ? [{ key: UNCATEGORIZED, name: E.other, count: counts[UNCATEGORIZED] ?? 0, color: null }]
       : []),
   ];
 
@@ -128,15 +132,15 @@ export function ExploreSubjects({
     <div className="space-y-6">
       <section className="hero p-6 sm:p-8 animate-fade-up">
         <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-bold">تصفح المواد</h1>
-          <p className="mt-1 text-sm text-white/80">{subjects.length} مادة متاحة، أضف ما تريد إلى موادك</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{E.title}</h1>
+          <p className="mt-1 text-sm text-white/80">{fmt(E.available, { n: subjects.length })}</p>
           <div className="relative mt-5 max-w-lg">
-            <Search className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
             <input
-              placeholder="ابحث عن مادة..."
+              placeholder={E.search}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-2xl border-0 bg-white py-3.5 pr-12 pl-4 text-sm text-foreground shadow-lg placeholder:text-muted/70 focus:outline-none focus:ring-4 focus:ring-white/40"
+              className="w-full rounded-2xl border-0 bg-white py-3.5 ps-12 pe-4 text-sm text-foreground shadow-lg placeholder:text-muted/70 focus:outline-none focus:ring-4 focus:ring-white/40"
             />
           </div>
         </div>
@@ -175,8 +179,8 @@ export function ExploreSubjects({
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Search className="h-7 w-7" />}
-          title="لا توجد نتائج"
-          description={query ? 'جرّب كلمات بحث مختلفة' : 'لا توجد مواد في هذا التصنيف حالياً'}
+          title={E.noResults}
+          description={query ? E.tryDifferent : E.noneInCategory}
         />
       ) : showGrouped ? (
         <div className="space-y-10">
@@ -193,10 +197,10 @@ export function ExploreSubjects({
                   </h2>
                   {g.key !== UNCATEGORIZED && g.items.length > 3 ? (
                     <button onClick={() => selectCategory(g.key)} className="text-sm font-medium text-primary hover:underline cursor-pointer">
-                      عرض الكل ({g.items.length})
+                      {fmt(E.viewAll, { n: g.items.length })}
                     </button>
                   ) : (
-                    <span className="text-sm text-muted">{g.items.length} مادة</span>
+                    <span className="text-sm text-muted">{fmt(E.subjectsCount, { n: g.items.length })}</span>
                   )}
                 </div>
                 {renderGrid(g.key === UNCATEGORIZED ? g.items : g.items.slice(0, 3))}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BookOpen, Check } from 'lucide-react';
+import { useI18n } from '@/i18n/client';
 
 type Subject = {
   id: string;
@@ -41,6 +42,7 @@ export function SubjectCover({ subject, className = '' }: { subject: Subject; cl
 }
 
 export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?: boolean }) {
+  const { t } = useI18n();
   return (
     <Link href={`/subjects/${subject.id}`} className="card card-hover group block overflow-hidden press">
       <div className="aspect-[16/8] overflow-hidden">
@@ -50,18 +52,24 @@ export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-bold text-foreground">{subject.name}</h3>
+          <h3 dir="auto" className="font-bold text-foreground">
+            {subject.name}
+          </h3>
           {enrolled && (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-light px-2 py-0.5 text-xs font-medium text-success">
               <Check className="h-3 w-3" />
-              مسجّل
+              {t.subjectCard.enrolled}
             </span>
           )}
         </div>
-        {subject.description && <p className="mt-1 text-sm text-muted line-clamp-2">{subject.description}</p>}
+        {subject.description && (
+          <p dir="auto" className="mt-1 text-sm text-muted line-clamp-2">
+            {subject.description}
+          </p>
+        )}
         <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
           <BookOpen className="h-3.5 w-3.5" />
-          ابدأ المذاكرة
+          {t.subjectCard.startStudying}
         </span>
       </div>
     </Link>

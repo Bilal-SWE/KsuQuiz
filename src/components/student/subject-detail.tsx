@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { ArrowRight, BookOpen, Check, RotateCcw } from 'lucide-react';
 import { GRADIENTS } from '@/components/student/subject-card';
+import { useI18n } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 
 type Lesson = { id: string; title: string; sort_order: number };
 type Attempt = { lesson_id: string; score: number | null; total: number | null; finished_at: string | null };
@@ -16,6 +18,8 @@ export function SubjectDetail({
   lessons: Lesson[];
   attempts: Attempt[];
 }) {
+  const { t } = useI18n();
+  const S = t.subject;
   const finishedFor = (lessonId: string) => attempts.filter((a) => a.lesson_id === lessonId && a.finished_at);
 
   const bestPct = (lessonId: string) => {
@@ -32,17 +36,21 @@ export function SubjectDetail({
       <section className="hero p-6 sm:p-8 animate-fade-up">
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
-            <ArrowRight className="h-3.5 w-3.5" />
-            موادي
+            <ArrowRight className="h-3.5 w-3.5 ltr:-scale-x-100" />
+            {S.back}
           </Link>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-bold">{subject.name}</h1>
-          {subject.description && <p className="mt-2 max-w-md text-sm text-white/80">{subject.description}</p>}
+          <h1 dir="auto" className="mt-2 text-2xl sm:text-3xl font-bold">
+            {subject.name}
+          </h1>
+          {subject.description && (
+            <p dir="auto" className="mt-2 max-w-md text-sm text-white/80">
+              {subject.description}
+            </p>
+          )}
           <div className="mt-5 max-w-sm">
             <div className="mb-1.5 flex items-center justify-between text-xs text-white/85">
-              <span>تقدّمك</span>
-              <span>
-                {doneCount} من {lessons.length} دروس
-              </span>
+              <span>{S.progress}</span>
+              <span>{fmt(S.lessonsDone, { done: doneCount, total: lessons.length })}</span>
             </div>
             <div className="h-2.5 overflow-hidden rounded-full bg-white/20">
               <div className="h-full rounded-full bg-white transition-[width] duration-700" style={{ width: `${progress}%` }} />
@@ -53,12 +61,12 @@ export function SubjectDetail({
 
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">الدروس</h2>
-          {lessons.length > 0 && <span className="text-sm text-muted">{lessons.length} درس</span>}
+          <h2 className="text-xl font-bold">{S.lessons}</h2>
+          {lessons.length > 0 && <span className="text-sm text-muted">{fmt(S.lessonsCount, { n: lessons.length })}</span>}
         </div>
 
         {lessons.length === 0 ? (
-          <p className="card text-center text-muted py-12">لا توجد دروس منشورة في هذه المادة حالياً</p>
+          <p className="card text-center text-muted py-12">{S.noLessons}</p>
         ) : (
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 stagger">
             {lessons.map((lesson, i) => {
@@ -66,7 +74,7 @@ export function SubjectDetail({
               const tries = finishedFor(lesson.id).length;
               const badge =
                 best === null
-                  ? { text: 'لم تبدأ', cls: 'bg-surface-hover text-muted' }
+                  ? { text: S.notStarted, cls: 'bg-surface-hover text-muted' }
                   : best >= 70
                     ? { text: `${best}%`, cls: 'bg-success-light text-success' }
                     : best >= 50
@@ -94,22 +102,24 @@ export function SubjectDetail({
                   </div>
                   <div className="p-4">
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-foreground">{lesson.title}</h3>
+                      <h3 dir="auto" className="font-bold text-foreground">
+                        {lesson.title}
+                      </h3>
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${badge.cls}`}>{badge.text}</span>
                     </div>
                     <p className="mt-1 flex items-center gap-1 text-sm text-muted">
                       {tries > 0 ? (
                         <>
                           <RotateCcw className="h-3.5 w-3.5" />
-                          {tries} محاولة
+                          {fmt(S.attempts, { n: tries })}
                         </>
                       ) : (
-                        'ابدأ أول محاولة'
+                        S.firstAttempt
                       )}
                     </p>
                     <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
                       <BookOpen className="h-3.5 w-3.5" />
-                      {best === null ? 'ابدأ الدرس' : 'أكمل التدريب'}
+                      {best === null ? S.startLesson : S.continue}
                     </span>
                   </div>
                 </Link>

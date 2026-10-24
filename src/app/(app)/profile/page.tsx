@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useI18n } from '@/i18n/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-const roleLabels: Record<string, string> = { owner: 'مالك', admin: 'مشرف', student: 'طالب' };
-
 export default function ProfilePage() {
   const { user, profile } = useAuth();
+  const P = useI18n().t.profile;
   const [fullName, setFullName] = useState('');
   const [nameStatus, setNameStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [savingName, setSavingName] = useState(false);
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const saveName = async () => {
     const name = fullName.trim();
     if (name.length < 2) {
-      setNameStatus({ ok: false, msg: 'الاسم يجب أن يكون حرفين على الأقل' });
+      setNameStatus({ ok: false, msg: P.nameShort });
       return;
     }
     if (!user) return;
@@ -36,16 +36,16 @@ export default function ProfilePage() {
     const { error } = await supabase.from('profiles').update({ full_name: name }).eq('id', user.id);
     if (!error) await supabase.auth.updateUser({ data: { full_name: name } });
     setSavingName(false);
-    setNameStatus(error ? { ok: false, msg: 'تعذّر حفظ الاسم' } : { ok: true, msg: 'تم حفظ الاسم' });
+    setNameStatus(error ? { ok: false, msg: P.nameFailed } : { ok: true, msg: P.nameSaved });
   };
 
   const savePassword = async () => {
     if (password.length < 6) {
-      setPwStatus({ ok: false, msg: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+      setPwStatus({ ok: false, msg: P.passwordShort });
       return;
     }
     if (password !== confirm) {
-      setPwStatus({ ok: false, msg: 'كلمتا المرور غير متطابقتين' });
+      setPwStatus({ ok: false, msg: P.passwordMismatch });
       return;
     }
     setSavingPw(true);
@@ -53,11 +53,11 @@ export default function ProfilePage() {
     const { error } = await createClient().auth.updateUser({ password });
     setSavingPw(false);
     if (error) {
-      setPwStatus({ ok: false, msg: 'تعذّر تغيير كلمة المرور، جرّب كلمة مختلفة' });
+      setPwStatus({ ok: false, msg: P.passwordFailed });
     } else {
       setPassword('');
       setConfirm('');
-      setPwStatus({ ok: true, msg: 'تم تغيير كلمة المرور' });
+      setPwStatus({ ok: true, msg: P.passwordChanged });
     }
   };
 
@@ -70,34 +70,36 @@ export default function ProfilePage() {
           {initials}
         </div>
         <div className="min-w-0">
-          <h1 className="text-xl font-bold truncate">{profile?.full_name || 'حسابي'}</h1>
-          <p className="text-sm text-muted truncate" dir="ltr">{user?.email}</p>
+          <h1 className="text-xl font-bold truncate">{profile?.full_name || P.fallbackTitle}</h1>
+          <p className="text-sm text-muted truncate" dir="ltr">
+            {user?.email}
+          </p>
           {profile && (
             <span className="mt-1 inline-block rounded-full bg-primary-light px-2.5 py-0.5 text-xs font-medium text-primary">
-              {roleLabels[profile.role] ?? profile.role}
+              {P.roles[profile.role] ?? profile.role}
             </span>
           )}
         </div>
       </div>
 
       <section className="card p-5 space-y-4">
-        <h2 className="font-bold">البيانات الشخصية</h2>
-        <Input id="full_name" label="الاسم الكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-        <Input id="email" label="البريد الإلكتروني" value={user?.email ?? ''} disabled dir="ltr" className="opacity-70" />
+        <h2 className="font-bold">{P.personalData}</h2>
+        <Input id="full_name" label={P.fullName} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+        <Input id="email" label={P.email} value={user?.email ?? ''} disabled dir="ltr" className="opacity-70" />
         <div className="flex items-center gap-3">
-          <Button onClick={saveName} loading={savingName}>حفظ</Button>
-          {nameStatus && (
-            <p className={`text-sm ${nameStatus.ok ? 'text-success' : 'text-error'}`}>{nameStatus.msg}</p>
-          )}
+          <Button onClick={saveName} loading={savingName}>
+            {P.save}
+          </Button>
+          {nameStatus && <p className={`text-sm ${nameStatus.ok ? 'text-success' : 'text-error'}`}>{nameStatus.msg}</p>}
         </div>
       </section>
 
       <section className="card p-5 space-y-4">
-        <h2 className="font-bold">تغيير كلمة المرور</h2>
+        <h2 className="font-bold">{P.changePassword}</h2>
         <Input
           id="password"
           type="password"
-          label="كلمة المرور الجديدة"
+          label={P.newPassword}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
@@ -105,13 +107,15 @@ export default function ProfilePage() {
         <Input
           id="confirm"
           type="password"
-          label="تأكيد كلمة المرور"
+          label={P.confirmPassword}
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           autoComplete="new-password"
         />
         <div className="flex items-center gap-3">
-          <Button onClick={savePassword} loading={savingPw}>تغيير كلمة المرور</Button>
+          <Button onClick={savePassword} loading={savingPw}>
+            {P.changePassword}
+          </Button>
           {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success' : 'text-error'}`}>{pwStatus.msg}</p>}
         </div>
       </section>

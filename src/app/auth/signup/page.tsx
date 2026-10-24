@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { signupSchema } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthShell } from '@/components/shell/auth-shell';
+import { useI18n } from '@/i18n/client';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,27 +22,34 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    const result = signupSchema.safeParse({ full_name: fullName, email, password });
-    if (!result.success) {
-      setError(result.error.issues[0].message);
+    if (fullName.trim().length < 2) {
+      setError(t.auth.errors.nameRequired);
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError(t.auth.errors.emailInvalid);
+      return;
+    }
+    if (password.length < 6) {
+      setError(t.auth.errors.passwordShort);
       return;
     }
 
     setLoading(true);
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName.trim() } },
     });
 
     if (authError) {
       if (authError.message === 'User already registered') {
-        setError('هذا البريد الإلكتروني مسجل بالفعل');
+        setError(t.auth.errors.alreadyRegistered);
       } else if (authError.message.includes('email') && authError.message.includes('confirm')) {
-        setError('تم إنشاء الحساب. يرجى تأكيد بريدك الإلكتروني');
+        setError(t.auth.errors.confirmEmail);
       } else {
-        setError(authError.message);
+        setError(t.auth.errors.generic);
       }
       setLoading(false);
       return;
@@ -52,49 +60,49 @@ export default function SignupPage() {
   };
 
   return (
-    <AuthShell title="أنشئ حسابك" subtitle="دقيقة واحدة وتبدأ التدريب">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            id="full_name"
-            label="الاسم الكامل"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder="أحمد محمد"
-          />
-          <Input
-            id="email"
-            label="البريد الإلكتروني"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="example@email.com"
-            dir="ltr"
-            className="text-left"
-          />
-          <Input
-            id="password"
-            label="كلمة المرور"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="6 أحرف على الأقل"
-            dir="ltr"
-            className="text-left"
-          />
+    <AuthShell title={t.auth.signupTitle} subtitle={t.auth.signupSubtitle}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          id="full_name"
+          label={t.auth.fullName}
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder={t.auth.fullNamePlaceholder}
+        />
+        <Input
+          id="email"
+          label={t.auth.email}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="example@email.com"
+          dir="ltr"
+          className="text-left"
+        />
+        <Input
+          id="password"
+          label={t.auth.password}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t.auth.passwordPlaceholder}
+          dir="ltr"
+          className="text-left"
+        />
 
-          {error && <p className="text-sm text-error text-center">{error}</p>}
+        {error && <p className="text-sm text-error text-center">{error}</p>}
 
-          <Button type="submit" loading={loading} className="w-full">
-            إنشاء حساب
-          </Button>
-        </form>
+        <Button type="submit" loading={loading} className="w-full">
+          {t.auth.signupButton}
+        </Button>
+      </form>
 
-        <p className="text-sm text-muted text-center mt-6">
-          لديك حساب بالفعل؟{' '}
-          <Link href="/auth/login" className="text-primary hover:underline">
-            تسجيل الدخول
-          </Link>
-        </p>
+      <p className="text-sm text-muted text-center mt-6">
+        {t.auth.haveAccount}{' '}
+        <Link href="/auth/login" className="text-primary hover:underline">
+          {t.auth.loginButton}
+        </Link>
+      </p>
     </AuthShell>
   );
 }

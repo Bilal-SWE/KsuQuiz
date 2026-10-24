@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
+import { LanguageToggle } from '@/i18n/client';
+import { getI18n } from '@/i18n/server';
 import { APP_NAME, PUBLIC_PAGES } from '@/lib/constants';
 
-export function SiteFooter({ className = '' }: { className?: string }) {
+export async function SiteFooter({ className = '' }: { className?: string }) {
+  const { t } = await getI18n();
   return (
     <footer className={`border-t border-border/70 bg-surface/60 ${className}`}>
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
@@ -12,11 +15,14 @@ export function SiteFooter({ className = '' }: { className?: string }) {
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
           {PUBLIC_PAGES.map((p) => (
             <Link key={p.href} href={p.href} className="hover:text-primary transition-colors">
-              {p.label}
+              {t.footer[p.key]}
             </Link>
           ))}
         </nav>
-        <p>© {new Date().getFullYear()} {APP_NAME}</p>
+        <div className="flex items-center gap-3">
+          <LanguageToggle className="-my-2" />
+          <p>© {new Date().getFullYear()} {APP_NAME}</p>
+        </div>
       </div>
     </footer>
   );

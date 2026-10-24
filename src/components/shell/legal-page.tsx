@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
+import { getI18n } from '@/i18n/server';
 
-export function LegalPage({
+export async function LegalPage({
   title,
   subtitle,
   updated,
@@ -13,6 +14,7 @@ export function LegalPage({
   icon: LucideIcon;
   children: React.ReactNode;
 }) {
+  const { t } = await getI18n();
   return (
     <div className="space-y-6">
       <section className="hero p-6 sm:p-8 animate-fade-up">
@@ -23,7 +25,11 @@ export function LegalPage({
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
             {subtitle && <p className="mt-1 text-sm text-white/80">{subtitle}</p>}
-            {updated && <p className="mt-1 text-xs text-white/70">آخر تحديث: {updated}</p>}
+            {updated && (
+              <p className="mt-1 text-xs text-white/70">
+                {t.legal.lastUpdated}: {updated}
+              </p>
+            )}
           </div>
         </div>
       </section>

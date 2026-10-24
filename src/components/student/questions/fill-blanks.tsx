@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ImageZoom } from '@/components/ui/image-zoom';
 import { Button } from '@/components/ui/button';
 import type { FillItem, FillWord } from '@/lib/fill-blanks';
+import { useI18n } from '@/i18n/client';
 
 type Props = {
   content: Record<string, any>;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, savedResponse }: Props) {
+  const Q = useI18n().t.question;
   const items = (content.items ?? []) as FillItem[];
   const words = (content.words ?? []) as FillWord[];
   const blankIds = items.flatMap((it) => it.segments.filter((s) => s.type === 'blank').map((s) => (s as { id: string }).id));
@@ -60,13 +62,15 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
     <div>
       {content.question?.text && (
         <div className="mb-4">
-          <p className="text-lg font-bold leading-relaxed">{content.question.text}</p>
+          <p dir="auto" className="text-lg font-bold leading-relaxed">
+            {content.question.text}
+          </p>
           {content.question?.image && <ImageZoom src={content.question.image} className="mt-3" />}
         </div>
       )}
 
       <div className="mb-5 overflow-hidden rounded-2xl border-2 border-primary/15">
-        <div className="bg-primary-light px-3 py-2 text-xs font-bold text-primary">بنك الكلمات</div>
+        <div className="bg-primary-light px-3 py-2 text-xs font-bold text-primary">{Q.wordBank}</div>
         <div className="grid grid-cols-2 sm:grid-cols-3">
           {words.map((w) => {
             const used = usedWordIds.has(w.id);
@@ -79,7 +83,7 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
                   used ? 'text-muted line-through opacity-40' : disabled ? '' : 'hover:bg-primary hover:text-white cursor-pointer'
                 }`}
               >
-                {w.text}
+                <span dir="auto">{w.text}</span>
               </button>
             );
           })}
@@ -88,7 +92,7 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
 
       <ol className="space-y-3">
         {items.map((item, index) => (
-          <li key={item.id} className="flex gap-2 text-sm leading-9">
+          <li key={item.id} dir="auto" className="flex gap-2 text-sm leading-9">
             <span className="text-muted">{index + 1}.</span>
             <span>
               {item.segments.map((seg, i) =>
@@ -117,11 +121,11 @@ export function FillBlanksQuestion({ content, onAnswer, feedback, disabled, save
       {!disabled && onAnswer && (
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-xs text-muted">
-            {allFilled ? 'راجع إجاباتك ثم أكّد' : 'اختر فراغاً ثم اضغط على الكلمة المناسبة'}
+            {allFilled ? Q.reviewThenConfirm : Q.pickBlank}
           </p>
           {allFilled && changed && (
             <Button onClick={() => onAnswer(filled)} className="text-sm">
-              تأكيد الإجابة
+              {Q.confirmAnswer}
             </Button>
           )}
         </div>

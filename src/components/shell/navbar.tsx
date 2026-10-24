@@ -2,16 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Compass, FolderOpen, Home, LayoutDashboard, LogOut, Trophy, User, Users } from 'lucide-react';
+import { Compass, Crown, FolderOpen, Home, LayoutDashboard, LogOut, Trophy, User, Users } from 'lucide-react';
+import { SubscribeButton } from '@/components/shell/subscribe-button';
 import { Logo } from '@/components/ui/logo';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { APP_NAME } from '@/lib/constants';
+import { LanguageToggle, useI18n } from '@/i18n/client';
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const { profile } = useAuth();
+  const { t } = useI18n();
   const isAdmin = profile?.role === 'admin' || profile?.role === 'owner';
 
   const handleLogout = async () => {
@@ -22,15 +25,15 @@ export function Navbar() {
 
   const links = isAdmin
     ? [
-        { href: '/admin', label: 'لوحة التحكم', icon: LayoutDashboard, exact: false },
-        { href: '/admin/categories', label: 'التصنيفات', icon: FolderOpen, exact: true },
-        { href: '/admin/users', label: 'المستخدمون', icon: Users, exact: true },
-        { href: '/leaderboard', label: 'الترتيب', icon: Trophy, exact: true },
+        { href: '/admin', label: t.nav.dashboard, icon: LayoutDashboard, exact: false },
+        { href: '/admin/categories', label: t.nav.categories, icon: FolderOpen, exact: true },
+        { href: '/admin/users', label: t.nav.users, icon: Users, exact: true },
+        { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ]
     : [
-        { href: '/', label: 'موادي', icon: Home, exact: true },
-        { href: '/explore', label: 'تصفح', icon: Compass, exact: true },
-        { href: '/leaderboard', label: 'الترتيب', icon: Trophy, exact: true },
+        { href: '/', label: t.nav.mySubjects, icon: Home, exact: true },
+        { href: '/explore', label: t.nav.explore, icon: Compass, exact: true },
+        { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ];
 
   const isActive = (href: string, exact: boolean) => {
@@ -69,9 +72,16 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-1">
+            {!isAdmin && (
+              <SubscribeButton className="me-1 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-l from-amber-400 to-orange-500 px-3 py-2 text-sm font-bold text-white shadow-[0_6px_16px_-6px_rgb(249_115_22/0.6)] hover:brightness-110">
+                <Crown className="h-4 w-4" />
+                <span className="hidden sm:inline">{t.nav.subscribe}</span>
+              </SubscribeButton>
+            )}
+            <LanguageToggle className="hidden sm:inline-flex" />
             <Link
               href="/profile"
-              title="حسابي"
+              title={t.common.myAccount}
               className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors press ${
                 pathname === '/profile' ? 'bg-primary-light' : 'hover:bg-surface-hover'
               }`}
@@ -79,12 +89,14 @@ export function Navbar() {
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent to-rose-500 text-sm font-bold text-white">
                 {initial}
               </span>
-              <span className="hidden sm:inline max-w-28 truncate text-sm font-medium">{profile?.full_name}</span>
+              <span dir="auto" className="hidden sm:inline max-w-28 truncate text-sm font-medium">
+                {profile?.full_name}
+              </span>
             </Link>
             <button
               onClick={handleLogout}
-              title="خروج"
-              aria-label="خروج"
+              title={t.common.logout}
+              aria-label={t.common.logout}
               className="rounded-xl p-2 text-muted hover:bg-error-light hover:text-error transition-colors cursor-pointer press"
             >
               <LogOut className="h-5 w-5" />
@@ -95,7 +107,7 @@ export function Navbar() {
 
       <nav className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-surface/90 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto grid max-w-md" style={{ gridTemplateColumns: `repeat(${links.length + 1}, minmax(0, 1fr))` }}>
-          {[...links, { href: '/profile', label: 'حسابي', icon: User, exact: true }].map(({ href, label, icon: Icon, exact }) => {
+          {[...links, { href: '/profile', label: t.common.myAccount, icon: User, exact: true }].map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
             return (
               <Link key={href} href={href} className="flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium press">

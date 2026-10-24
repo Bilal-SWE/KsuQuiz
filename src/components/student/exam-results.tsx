@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, CircleCheck, CircleX, Lightbulb, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
+import { useI18n } from '@/i18n/client';
 
 type ReviewItem = {
   question_id: string;
@@ -79,12 +80,12 @@ function ScoreRing({ pct }: { pct: number }) {
   );
 }
 
-function verdict(pct: number) {
-  if (pct === 100) return { title: 'علامة كاملة! أداء مذهل', sub: 'أنت مستعد تماماً لهذا الدرس' };
-  if (pct >= 85) return { title: 'ممتاز جداً!', sub: 'اقتربت من الكمال، واصل هكذا' };
-  if (pct >= 70) return { title: 'أحسنت!', sub: 'أداء جيد، راجع الأخطاء لتصل للعلامة الكاملة' };
-  if (pct >= 50) return { title: 'بداية جيدة', sub: 'راجع الشرح وأعد المحاولة لتحسين نتيجتك' };
-  return { title: 'لا بأس، التعلّم رحلة', sub: 'جرّب وضع التمرين أولاً ثم أعد الاختبار' };
+function verdictKey(pct: number) {
+  if (pct === 100) return 'perfect' as const;
+  if (pct >= 85) return 'excellent' as const;
+  if (pct >= 70) return 'good' as const;
+  if (pct >= 50) return 'fair' as const;
+  return 'low' as const;
 }
 
 export function ExamResults({
@@ -101,7 +102,9 @@ export function ExamResults({
   onRetry: () => void;
 }) {
   const pct = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
-  const v = verdict(pct);
+  const { t } = useI18n();
+  const R = t.results;
+  const v = R.verdicts[verdictKey(pct)];
   const wrong = result.total - result.score;
 
   return (
@@ -119,28 +122,28 @@ export function ExamResults({
         <div className="mt-5 grid w-full max-w-xs grid-cols-2 gap-3">
           <div className="rounded-2xl bg-success-light p-3 text-success">
             <p className="text-2xl font-bold">{result.score}</p>
-            <p className="text-xs font-medium">صحيحة</p>
+            <p className="text-xs font-medium">{R.correct}</p>
           </div>
           <div className="rounded-2xl bg-error-light p-3 text-error">
             <p className="text-2xl font-bold">{wrong}</p>
-            <p className="text-xs font-medium">خاطئة</p>
+            <p className="text-xs font-medium">{R.wrong}</p>
           </div>
         </div>
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button onClick={onRetry} className="px-5">
             <RotateCcw className="h-4 w-4" />
-            إعادة المحاولة
+            {R.retry}
           </Button>
           <Button variant="secondary" onClick={onBack}>
-            <ArrowRight className="h-4 w-4" />
-            العودة للدروس
+            <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
+            {R.backToLessons}
           </Button>
         </div>
       </section>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold">مراجعة الإجابات</h2>
+        <h2 className="mb-3 text-lg font-bold">{R.reviewTitle}</h2>
         <div className="space-y-3 stagger">
           {result.review.map((item, index) => {
             const q = questions.find((q) => q.id === item.question_id);
@@ -158,18 +161,18 @@ export function ExamResults({
                   )}
                   <p className="text-sm font-bold">
                     <span className="text-muted">{index + 1}. </span>
-                    {q.content.question?.text}
+                    <bdi>{q.content.question?.text}</bdi>
                   </p>
                 </div>
 
                 {q.type === 'mcq' && (
                   <div className="ms-7 space-y-1 text-sm">
                     <p className={item.is_correct ? 'text-success' : 'text-error'}>
-                      إجابتك: {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}
+                      {R.yourAnswer} {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}
                     </p>
                     {!item.is_correct && (
                       <p className="text-success">
-                        الإجابة الصحيحة: {q.content.options?.find((o: any) => o.id === item.correct_answer)?.text ?? item.correct_answer}
+                        {R.correctAnswer} {q.content.options?.find((o: any) => o.id === item.correct_answer)?.text ?? item.correct_answer}
                       </p>
                     )}
                   </div>
@@ -177,8 +180,14 @@ export function ExamResults({
 
                 {q.type === 'true_false' && (
                   <div className="ms-7 space-y-1 text-sm">
-                    <p className={item.is_correct ? 'text-success' : 'text-error'}>إجابتك: {item.response ? 'صح' : 'خطأ'}</p>
-                    {!item.is_correct && <p className="text-success">الإجابة الصحيحة: {item.correct_answer ? 'صح' : 'خطأ'}</p>}
+                    <p className={item.is_correct ? 'text-success' : 'text-error'}>
+                      {R.yourAnswer} {item.response ? t.question.true : t.question.false}
+                    </p>
+                    {!item.is_correct && (
+                      <p className="text-success">
+                        {R.correctAnswer} {item.correct_answer ? t.question.true : t.question.false}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -194,15 +203,15 @@ export function ExamResults({
                 )}
 
                 {q.type === 'matching' && !item.is_correct && (
-                  <p className="ms-7 text-sm text-error">بعض المطابقات كانت خاطئة</p>
+                  <p className="ms-7 text-sm text-error">{R.someMatchesWrong}</p>
                 )}
 
                 {(item.explanation || item.option_explanation) && (
                   <div className="ms-7 mt-3 flex gap-2 rounded-xl bg-warning-light/60 p-3 text-sm text-foreground/80">
                     <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                     <div className="space-y-1">
-                      {item.option_explanation && <p>{item.option_explanation}</p>}
-                      {item.explanation && <p>{item.explanation}</p>}
+                      {item.option_explanation && <p dir="auto">{item.option_explanation}</p>}
+                      {item.explanation && <p dir="auto">{item.explanation}</p>}
                     </div>
                   </div>
                 )}
