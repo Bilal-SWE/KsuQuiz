@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
 import { SubjectCard } from '@/components/student/subject-card';
@@ -28,7 +27,6 @@ export function ExploreSubjects({
   const [query, setQuery] = useState(initialQuery);
   const [enrolled, setEnrolled] = useState(new Set(enrolledIds));
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
 
   const filtered = query.trim()
     ? subjects.filter((s) =>
@@ -38,7 +36,9 @@ export function ExploreSubjects({
 
   const toggleEnroll = async (subjectId: string) => {
     const supabase = createClient();
-    const userId = (await supabase.auth.getUser()).data.user!.id;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const userId = session.user.id;
     const wasEnrolled = enrolled.has(subjectId);
 
     // Optimistic update

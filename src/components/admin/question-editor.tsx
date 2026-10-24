@@ -14,10 +14,18 @@ type Question = {
   explanation: string | null;
 };
 
+type SavedQuestion = {
+  id: string;
+  type: string;
+  content: any;
+  explanation: string | null;
+  sort_order: number;
+};
+
 type Props = {
   lessonId: string;
   question: Question | null;
-  onDone: () => void;
+  onDone: (saved?: SavedQuestion) => void;
   onCancel: () => void;
 };
 
@@ -103,10 +111,11 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
     try {
       if (question) {
         await updateQuestion(question.id, { type, content, explanation });
+        onDone({ id: question.id, type, content, explanation, sort_order: (question as any).sort_order ?? 0 });
       } else {
-        await createQuestion(lessonId, { type, content, explanation });
+        const created = await createQuestion(lessonId, { type, content, explanation });
+        onDone({ id: created.id, type, content, explanation, sort_order: 999 });
       }
-      onDone();
     } catch {
       setError('حدث خطأ');
     }

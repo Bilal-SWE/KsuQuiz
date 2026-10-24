@@ -6,27 +6,28 @@ export const instant = false;
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user) redirect('/auth/login');
+  if (!session) redirect('/auth/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const [{ data: profile }, { data: enrollments }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single(),
+    supabase
+      .from('enrollments')
+      .select(`
+        subject_id,
+        subjects (id, name, description, cover_image, status)
+      `)
+      .eq('student_id', session.user.id),
+  ]);
 
   if (profile?.role === 'admin' || profile?.role === 'owner') {
     redirect('/admin');
   }
-
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select(`
-      subject_id,
-      subjects (id, name, description, cover_image, status)
-    `)
-    .eq('student_id', user.id);
 
   const enrolledSubjects = (enrollments ?? [])
     .map((e) => (e as any).subjects)

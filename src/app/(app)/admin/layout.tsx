@@ -5,13 +5,13 @@ export const instant = false;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/auth/login');
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .single();
 
   if (profile?.role !== 'admin' && profile?.role !== 'owner') {

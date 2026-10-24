@@ -10,20 +10,21 @@ export default async function ExplorePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/auth/login');
 
   const params = await searchParams;
-  const { data: subjects } = await supabase
-    .from('subjects')
-    .select('id, name, description, cover_image')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
-
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('subject_id')
-    .eq('student_id', user.id);
+  const [{ data: subjects }, { data: enrollments }] = await Promise.all([
+    supabase
+      .from('subjects')
+      .select('id, name, description, cover_image')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('enrollments')
+      .select('subject_id')
+      .eq('student_id', session.user.id),
+  ]);
 
   const enrolledIds = new Set((enrollments ?? []).map((e) => e.subject_id));
 

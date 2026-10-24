@@ -6,20 +6,20 @@ import { revalidatePath } from 'next/cache';
 
 async function requireAdmin() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('غير مسجل الدخول');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('غير مسجل الدخول');
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .single();
 
   if (profile?.role !== 'admin' && profile?.role !== 'owner') {
     throw new Error('غير مصرح');
   }
 
-  return { supabase, userId: user.id, role: profile.role };
+  return { supabase, userId: session.user.id, role: profile.role };
 }
 
 // =================== SUBJECTS ===================
@@ -137,12 +137,14 @@ export async function deleteLesson(id: string) {
 export async function reorderLessons(subjectId: string, orderedIds: string[]) {
   const { supabase, userId } = await requireAdmin();
 
-  for (let i = 0; i < orderedIds.length; i++) {
-    await supabase
-      .from('lessons')
-      .update({ sort_order: i + 1, updated_by: userId })
-      .eq('id', orderedIds[i]);
-  }
+  await Promise.all(
+    orderedIds.map((id, i) =>
+      supabase
+        .from('lessons')
+        .update({ sort_order: i + 1, updated_by: userId })
+        .eq('id', id),
+    ),
+  );
   revalidatePath(`/admin/subjects/${subjectId}`);
 }
 

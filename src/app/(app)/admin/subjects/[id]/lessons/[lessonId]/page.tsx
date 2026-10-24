@@ -12,25 +12,13 @@ export default async function AdminLessonPage({
   const { id: subjectId, lessonId } = await params;
   const supabase = await createClient();
 
-  const { data: lesson } = await supabase
-    .from('lessons')
-    .select('*')
-    .eq('id', lessonId)
-    .single();
+  const [{ data: lesson }, { data: subject }, { data: questions }] = await Promise.all([
+    supabase.from('lessons').select('*').eq('id', lessonId).single(),
+    supabase.from('subjects').select('name').eq('id', subjectId).single(),
+    supabase.from('questions').select('*').eq('lesson_id', lessonId).order('sort_order'),
+  ]);
 
   if (!lesson || lesson.subject_id !== subjectId) notFound();
-
-  const { data: subject } = await supabase
-    .from('subjects')
-    .select('name')
-    .eq('id', subjectId)
-    .single();
-
-  const { data: questions } = await supabase
-    .from('questions')
-    .select('*')
-    .eq('lesson_id', lessonId)
-    .order('sort_order');
 
   return (
     <AdminLessonDetail

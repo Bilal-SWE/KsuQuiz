@@ -50,10 +50,16 @@ export function AdminLessonDetail({
     });
   };
 
-  const handleQuestionDone = () => {
+  const handleQuestionDone = (saved?: Question) => {
     setShowEditor(false);
+    if (saved) {
+      setQuestions((prev) => {
+        const exists = prev.find((q) => q.id === saved.id);
+        if (exists) return prev.map((q) => q.id === saved.id ? saved : q);
+        return [...prev, saved];
+      });
+    }
     setEditingQuestion(null);
-    router.refresh();
   };
 
   return (

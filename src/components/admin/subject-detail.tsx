@@ -33,19 +33,20 @@ type Lesson = {
   status: string;
 };
 
-export function AdminSubjectDetail({ subject, lessons: initialLessons }: { subject: Subject; lessons: Lesson[] }) {
+export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLessons }: { subject: Subject; lessons: Lesson[] }) {
   const router = useRouter();
   const { profile } = useAuth();
   const [editing, setEditing] = useState(false);
   const [newLessonTitle, setNewLessonTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [lessons, setLessons] = useState(initialLessons);
+  const [subject, setSubject] = useState(initialSubject);
   const [, startTransition] = useTransition();
 
   const handleUpdateSubject = async (data: any) => {
     await updateSubject(subject.id, data);
+    setSubject((prev) => ({ ...prev, ...data }));
     setEditing(false);
-    router.refresh();
   };
 
   const handleDeleteSubject = async () => {

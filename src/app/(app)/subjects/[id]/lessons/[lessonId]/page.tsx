@@ -11,44 +11,41 @@ export default async function LessonRoute({
 }) {
   const { id: subjectId, lessonId } = await params;
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/auth/login');
 
-  const { data: lesson } = await supabase
-    .from('lessons')
-    .select('id, title, subject_id')
-    .eq('id', lessonId)
-    .eq('status', 'published')
-    .single();
+  const [{ data: lesson }, { data: rawQuestions }, { data: unfinishedAttempt }] = await Promise.all([
+    supabase
+      .from('lessons')
+      .select('id, title, subject_id')
+      .eq('id', lessonId)
+      .eq('status', 'published')
+      .single(),
+    supabase
+      .from('questions')
+      .select('id, type, content, explanation, sort_order')
+      .eq('lesson_id', lessonId)
+      .order('sort_order'),
+    supabase
+      .from('attempts')
+      .select('id, mode, started_at')
+      .eq('student_id', session.user.id)
+      .eq('lesson_id', lessonId)
+      .is('finished_at', null)
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   if (!lesson || lesson.subject_id !== subjectId) notFound();
-
-  // Fetch questions WITHOUT correct answers
-  const { data: rawQuestions } = await supabase
-    .from('questions')
-    .select('id, type, content, explanation, sort_order')
-    .eq('lesson_id', lessonId)
-    .order('sort_order');
 
   const questions = (rawQuestions ?? []).map((q) => {
     const content = q.content as Record<string, any>;
     const stripped = { ...content };
-    // Strip correct answers from client
     delete stripped.correct;
     delete stripped.pairs;
     return { ...q, content: stripped };
   });
-
-  // Check for unfinished attempt
-  const { data: unfinishedAttempt } = await supabase
-    .from('attempts')
-    .select('id, mode, started_at')
-    .eq('student_id', user.id)
-    .eq('lesson_id', lessonId)
-    .is('finished_at', null)
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   let existingAnswers: any[] = [];
   if (unfinishedAttempt) {

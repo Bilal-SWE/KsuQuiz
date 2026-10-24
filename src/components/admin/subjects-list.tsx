@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -17,7 +14,6 @@ type Subject = {
 };
 
 export function AdminSubjectsList({ subjects }: { subjects: Subject[] }) {
-  const router = useRouter();
 
   return (
     <div>

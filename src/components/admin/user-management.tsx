@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { setUserRole } from '@/app/actions/admin';
@@ -24,16 +24,20 @@ const roleBadgeVariant: Record<string, 'success' | 'warning' | 'default'> = {
   student: 'default',
 };
 
-export function UserManagement({ users, currentUserId }: { users: User[]; currentUserId: string }) {
-  const router = useRouter();
+export function UserManagement({ users: initialUsers, currentUserId }: { users: User[]; currentUserId: string }) {
+  const [users, setUsers] = useState(initialUsers);
+  const [, startTransition] = useTransition();
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'student') => {
-    try {
-      await setUserRole(userId, newRole);
-      router.refresh();
-    } catch (e: any) {
-      alert(e.message);
-    }
+    setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role: newRole } : u));
+    startTransition(async () => {
+      try {
+        await setUserRole(userId, newRole);
+      } catch (e: any) {
+        setUsers(initialUsers);
+        alert(e.message);
+      }
+    });
   };
 
   return (

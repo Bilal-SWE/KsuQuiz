@@ -6,21 +6,22 @@ export const instant = false;
 
 export default async function UsersPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) redirect('/auth/login');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const [{ data: profile }, { data: users }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false }),
+  ]);
 
   if (profile?.role !== 'owner') redirect('/admin');
 
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  return <UserManagement users={users ?? []} currentUserId={user.id} />;
+  return <UserManagement users={users ?? []} currentUserId={session.user.id} />;
 }
