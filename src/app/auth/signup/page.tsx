@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { signupSchema } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { APP_NAME } from '@/lib/constants';
+import { AuthShell } from '@/components/shell/auth-shell';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -52,13 +52,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground">{APP_NAME}</h1>
-          <p className="text-sm text-muted mt-1">إنشاء حساب جديد</p>
-        </div>
-
+    <AuthShell title="أنشئ حسابك" subtitle="دقيقة واحدة وتبدأ التدريب">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="full_name"
@@ -101,7 +95,6 @@ export default function SignupPage() {
             تسجيل الدخول
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useMemo, useState } from 'react';
+import { Check, FolderOpen, LayoutGrid, Plus, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
+import { categoryColor, type Category } from '@/lib/categories';
 import { SubjectCard } from '@/components/student/subject-card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 
 type Subject = {
@@ -13,26 +13,63 @@ type Subject = {
   name: string;
   description: string | null;
   cover_image: string | null;
+  category_id: string | null;
 };
+
+const UNCATEGORIZED = 'none';
 
 export function ExploreSubjects({
   subjects,
+  categories,
   enrolledIds,
   initialQuery,
+  initialCategory,
 }: {
   subjects: Subject[];
+  categories: Category[];
   enrolledIds: string[];
   initialQuery: string;
+  initialCategory: string;
 }) {
   const [query, setQuery] = useState(initialQuery);
+  const [active, setActive] = useState(initialCategory);
   const [enrolled, setEnrolled] = useState(new Set(enrolledIds));
-  const [pending, startTransition] = useTransition();
 
-  const filtered = query.trim()
-    ? subjects.filter((s) =>
-        normalizeArabic(s.name).includes(normalizeArabic(query)),
-      )
-    : subjects;
+  const validIds = new Set(categories.map((c) => c.id));
+  const catOf = (s: Subject) => (s.category_id && validIds.has(s.category_id) ? s.category_id : UNCATEGORIZED);
+  const hasUncategorized = subjects.some((s) => catOf(s) === UNCATEGORIZED);
+
+  const counts = useMemo(() => {
+    const m: Record<string, number> = {};
+    subjects.forEach((s) => {
+      const k = catOf(s);
+      m[k] = (m[k] ?? 0) + 1;
+    });
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjects, categories]);
+
+  const filtered = subjects.filter((s) => {
+    if (active !== 'all' && catOf(s) !== active) return false;
+    if (query.trim() && !normalizeArabic(s.name).includes(normalizeArabic(query))) return false;
+    return true;
+  });
+
+  const showGrouped = active === 'all' && !query.trim() && categories.length > 0;
+  const groups = showGrouped
+    ? [
+        ...categories.map((c) => ({ key: c.id, name: c.name, color: c.color, items: filtered.filter((s) => catOf(s) === c.id) })),
+        { key: UNCATEGORIZED, name: 'مواد أخرى', color: 'violet', items: filtered.filter((s) => catOf(s) === UNCATEGORIZED) },
+      ].filter((g) => g.items.length > 0)
+    : [];
+
+  const selectCategory = (key: string) => {
+    setActive(key);
+    const url = new URL(window.location.href);
+    if (key === 'all') url.searchParams.delete('c');
+    else url.searchParams.set('c', key);
+    window.history.replaceState(null, '', url);
+  };
 
   const toggleEnroll = async (subjectId: string) => {
     const supabase = createClient();
@@ -41,10 +78,10 @@ export function ExploreSubjects({
     const userId = session.user.id;
     const wasEnrolled = enrolled.has(subjectId);
 
-    // Optimistic update
     setEnrolled((prev) => {
       const next = new Set(prev);
-      wasEnrolled ? next.delete(subjectId) : next.add(subjectId);
+      if (wasEnrolled) next.delete(subjectId);
+      else next.add(subjectId);
       return next;
     });
 
@@ -55,40 +92,120 @@ export function ExploreSubjects({
     }
   };
 
-  return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">تصفح المواد</h1>
+  const renderGrid = (items: Subject[]) => (
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 stagger">
+      {items.map((subject) => {
+        const isEnrolled = enrolled.has(subject.id);
+        return (
+          <div key={subject.id} className="flex flex-col gap-2">
+            <SubjectCard subject={subject} enrolled={isEnrolled} />
+            <button
+              onClick={() => toggleEnroll(subject.id)}
+              className={`press inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                isEnrolled
+                  ? 'border border-border bg-surface text-muted hover:border-error/40 hover:text-error'
+                  : 'bg-gradient-to-l from-primary to-violet-500 text-white shadow-[0_6px_16px_-6px_rgb(109_40_217/0.6)] hover:brightness-110'
+              }`}
+            >
+              {isEnrolled ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {isEnrolled ? 'في موادي' : 'إضافة إلى موادي'}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
 
-      <div className="mb-6">
-        <Input
-          placeholder="ابحث عن مادة..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
+  const chips = [
+    { key: 'all', name: 'الكل', count: subjects.length, color: null as string | null },
+    ...categories.map((c) => ({ key: c.id, name: c.name, count: counts[c.id] ?? 0, color: c.color })),
+    ...(hasUncategorized && categories.length > 0
+      ? [{ key: UNCATEGORIZED, name: 'أخرى', count: counts[UNCATEGORIZED] ?? 0, color: null }]
+      : []),
+  ];
+
+  return (
+    <div className="space-y-6">
+      <section className="hero p-6 sm:p-8 animate-fade-up">
+        <div className="relative z-10">
+          <h1 className="text-2xl sm:text-3xl font-bold">تصفح المواد</h1>
+          <p className="mt-1 text-sm text-white/80">{subjects.length} مادة متاحة، أضف ما تريد إلى موادك</p>
+          <div className="relative mt-5 max-w-lg">
+            <Search className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+            <input
+              placeholder="ابحث عن مادة..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full rounded-2xl border-0 bg-white py-3.5 pr-12 pl-4 text-sm text-foreground shadow-lg placeholder:text-muted/70 focus:outline-none focus:ring-4 focus:ring-white/40"
+            />
+          </div>
+        </div>
+      </section>
+
+      {categories.length > 0 && (
+        <div className="-mx-4 overflow-x-auto px-4 pb-1">
+          <div className="flex w-max gap-2">
+            {chips.map((chip) => {
+              const isActive = active === chip.key;
+              const col = chip.color ? categoryColor(chip.color) : null;
+              return (
+                <button
+                  key={chip.key}
+                  onClick={() => selectCategory(chip.key)}
+                  className={`press inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition cursor-pointer ${
+                    isActive
+                      ? `bg-gradient-to-l ${col ? col.gradient : 'from-primary to-violet-500'} text-white shadow-md`
+                      : 'border border-border bg-surface text-muted hover:border-primary/30 hover:text-foreground'
+                  }`}
+                >
+                  {chip.key === 'all' ? (
+                    <LayoutGrid className="h-4 w-4" />
+                  ) : (
+                    <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-white' : col ? col.dot : 'bg-muted/50'}`} />
+                  )}
+                  {chip.name}
+                  <span className={`rounded-full px-1.5 text-xs ${isActive ? 'bg-white/25' : 'bg-surface-hover'}`}>{chip.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <EmptyState
+          icon={<Search className="h-7 w-7" />}
           title="لا توجد نتائج"
-          description={query ? 'جرّب كلمات بحث مختلفة' : 'لا توجد مواد منشورة حالياً'}
+          description={query ? 'جرّب كلمات بحث مختلفة' : 'لا توجد مواد في هذا التصنيف حالياً'}
         />
-      ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((subject) => (
-            <div key={subject.id} className="relative">
-              <SubjectCard subject={subject} enrolled={enrolled.has(subject.id)} />
-              <div className="mt-2">
-                <Button
-                  variant={enrolled.has(subject.id) ? 'secondary' : 'primary'}
-                  className="w-full text-sm"
-                  onClick={() => toggleEnroll(subject.id)}
-                >
-                  {enrolled.has(subject.id) ? 'إزالة من موادي' : 'إضافة إلى موادي'}
-                </Button>
-              </div>
-            </div>
-          ))}
+      ) : showGrouped ? (
+        <div className="space-y-10">
+          {groups.map((g) => {
+            const col = categoryColor(g.color);
+            return (
+              <section key={g.key}>
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-xl font-bold">
+                    <span className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${col.gradient} text-white`}>
+                      <FolderOpen className="h-5 w-5" />
+                    </span>
+                    {g.name}
+                  </h2>
+                  {g.key !== UNCATEGORIZED && g.items.length > 3 ? (
+                    <button onClick={() => selectCategory(g.key)} className="text-sm font-medium text-primary hover:underline cursor-pointer">
+                      عرض الكل ({g.items.length})
+                    </button>
+                  ) : (
+                    <span className="text-sm text-muted">{g.items.length} مادة</span>
+                  )}
+                </div>
+                {renderGrid(g.key === UNCATEGORIZED ? g.items : g.items.slice(0, 3))}
+              </section>
+            );
+          })}
         </div>
+      ) : (
+        renderGrid(filtered)
       )}
     </div>
   );

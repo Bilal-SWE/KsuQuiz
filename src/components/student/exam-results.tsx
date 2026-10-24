@@ -1,6 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { ArrowRight, CircleCheck, CircleX, Lightbulb, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 
 type ReviewItem = {
   question_id: string;
@@ -17,6 +20,73 @@ type Question = {
   content: Record<string, any>;
 };
 
+const CONFETTI_COLORS = ['#8b5cf6', '#f97316', '#10b981', '#ec4899', '#facc15', '#3b82f6'];
+
+function Confetti() {
+  const pieces = Array.from({ length: 36 }, (_, i) => ({
+    left: (i * 37) % 100,
+    delay: (i % 12) * 0.08,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    rotate: (i * 47) % 360,
+  }));
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span
+          key={i}
+          className="confetti-piece"
+          style={{ left: `${p.left}%`, background: p.color, animationDelay: `${p.delay}s`, rotate: `${p.rotate}deg` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ScoreRing({ pct }: { pct: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setShown(pct), 80);
+    return () => clearTimeout(t);
+  }, [pct]);
+
+  const r = 52;
+  const c = 2 * Math.PI * r;
+  const color = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
+
+  return (
+    <div className="relative h-40 w-40">
+      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+        <circle cx="60" cy="60" r={r} fill="none" stroke="var(--surface-hover)" strokeWidth="10" />
+        <circle
+          cx="60"
+          cy="60"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * shown) / 100}
+          style={{ transition: 'stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1)' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-bold" style={{ color }}>
+          {pct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function verdict(pct: number) {
+  if (pct === 100) return { title: 'علامة كاملة! أداء مذهل', sub: 'أنت مستعد تماماً لهذا الدرس' };
+  if (pct >= 85) return { title: 'ممتاز جداً!', sub: 'اقتربت من الكمال، واصل هكذا' };
+  if (pct >= 70) return { title: 'أحسنت!', sub: 'أداء جيد، راجع الأخطاء لتصل للعلامة الكاملة' };
+  if (pct >= 50) return { title: 'بداية جيدة', sub: 'راجع الشرح وأعد المحاولة لتحسين نتيجتك' };
+  return { title: 'لا بأس، التعلّم رحلة', sub: 'جرّب وضع التمرين أولاً ثم أعد الاختبار' };
+}
+
 export function ExamResults({
   lessonTitle,
   result,
@@ -31,78 +101,116 @@ export function ExamResults({
   onRetry: () => void;
 }) {
   const pct = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
+  const v = verdict(pct);
+  const wrong = result.total - result.score;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="text-center py-8">
-        <h1 className="text-xl font-bold mb-2">{lessonTitle}</h1>
-        <div
-          className={`inline-flex items-center justify-center w-24 h-24 rounded-full text-2xl font-bold ${
-            pct >= 70 ? 'bg-green-100 text-green-700' : pct >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {pct}%
+    <div className="relative max-w-2xl mx-auto space-y-6">
+      {pct >= 70 && <Confetti />}
+
+      <section className="card relative flex flex-col items-center px-6 py-8 text-center animate-fade-up">
+        <p className="text-sm text-muted">{lessonTitle}</p>
+        <div className="my-4">
+          <ScoreRing pct={pct} />
         </div>
-        <p className="text-muted mt-2">
-          {result.score} / {result.total} إجابة صحيحة
-        </p>
-      </div>
+        <h1 className="text-2xl font-bold">{v.title}</h1>
+        <p className="mt-1 text-sm text-muted">{v.sub}</p>
 
-      <h2 className="font-bold text-lg mb-4">مراجعة الإجابات</h2>
+        <div className="mt-5 grid w-full max-w-xs grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-success-light p-3 text-success">
+            <p className="text-2xl font-bold">{result.score}</p>
+            <p className="text-xs font-medium">صحيحة</p>
+          </div>
+          <div className="rounded-2xl bg-error-light p-3 text-error">
+            <p className="text-2xl font-bold">{wrong}</p>
+            <p className="text-xs font-medium">خاطئة</p>
+          </div>
+        </div>
 
-      <div className="space-y-4">
-        {result.review.map((item, index) => {
-          const q = questions.find((q) => q.id === item.question_id);
-          if (!q) return null;
-          return (
-            <div
-              key={item.question_id}
-              className={`rounded-xl border p-4 ${item.is_correct ? 'border-green-200 bg-green-50/50' : 'border-red-200 bg-red-50/50'}`}
-            >
-              <div className="flex items-start gap-2 mb-2">
-                <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${item.is_correct ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {index + 1}
-                </span>
-                <p className="text-sm font-medium">{q.content.question?.text}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Button onClick={onRetry} className="px-5">
+            <RotateCcw className="h-4 w-4" />
+            إعادة المحاولة
+          </Button>
+          <Button variant="secondary" onClick={onBack}>
+            <ArrowRight className="h-4 w-4" />
+            العودة للدروس
+          </Button>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-lg font-bold">مراجعة الإجابات</h2>
+        <div className="space-y-3 stagger">
+          {result.review.map((item, index) => {
+            const q = questions.find((q) => q.id === item.question_id);
+            if (!q) return null;
+            return (
+              <div
+                key={item.question_id}
+                className={`card border-s-4 p-4 ${item.is_correct ? 'border-s-success' : 'border-s-error'}`}
+              >
+                <div className="mb-2 flex items-start gap-2">
+                  {item.is_correct ? (
+                    <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-success" />
+                  ) : (
+                    <CircleX className="mt-0.5 h-5 w-5 shrink-0 text-error" />
+                  )}
+                  <p className="text-sm font-bold">
+                    <span className="text-muted">{index + 1}. </span>
+                    {q.content.question?.text}
+                  </p>
+                </div>
+
+                {q.type === 'mcq' && (
+                  <div className="ms-7 space-y-1 text-sm">
+                    <p className={item.is_correct ? 'text-success' : 'text-error'}>
+                      إجابتك: {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}
+                    </p>
+                    {!item.is_correct && (
+                      <p className="text-success">
+                        الإجابة الصحيحة: {q.content.options?.find((o: any) => o.id === item.correct_answer)?.text ?? item.correct_answer}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {q.type === 'true_false' && (
+                  <div className="ms-7 space-y-1 text-sm">
+                    <p className={item.is_correct ? 'text-success' : 'text-error'}>إجابتك: {item.response ? 'صح' : 'خطأ'}</p>
+                    {!item.is_correct && <p className="text-success">الإجابة الصحيحة: {item.correct_answer ? 'صح' : 'خطأ'}</p>}
+                  </div>
+                )}
+
+                {q.type === 'fill_blanks' && (
+                  <div className="ms-7 mt-2">
+                    <FillBlanksQuestion
+                      content={{ ...q.content, question: undefined }}
+                      feedback={{ is_correct: !!item.is_correct, correct_answer: item.correct_answer ?? {} }}
+                      disabled
+                      savedResponse={item.response}
+                    />
+                  </div>
+                )}
+
+                {q.type === 'matching' && !item.is_correct && (
+                  <p className="ms-7 text-sm text-error">بعض المطابقات كانت خاطئة</p>
+                )}
+
+                {(item.explanation || item.option_explanation) && (
+                  <div className="ms-7 mt-3 flex gap-2 rounded-xl bg-warning-light/60 p-3 text-sm text-foreground/80">
+                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <div className="space-y-1">
+                      {item.option_explanation && <p>{item.option_explanation}</p>}
+                      {item.explanation && <p>{item.explanation}</p>}
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {q.type === 'mcq' && (
-                <div className="text-sm text-muted ms-8">
-                  <p>إجابتك: {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}</p>
-                  {!item.is_correct && (
-                    <p className="text-green-700">الإجابة الصحيحة: {q.content.options?.find((o: any) => o.id === item.correct_answer)?.text ?? item.correct_answer}</p>
-                  )}
-                </div>
-              )}
-
-              {q.type === 'true_false' && (
-                <div className="text-sm text-muted ms-8">
-                  <p>إجابتك: {item.response ? 'صح' : 'خطأ'}</p>
-                  {!item.is_correct && (
-                    <p className="text-green-700">الإجابة الصحيحة: {item.correct_answer ? 'صح' : 'خطأ'}</p>
-                  )}
-                </div>
-              )}
-
-              {q.type === 'matching' && !item.is_correct && (
-                <p className="text-sm text-green-700 ms-8">بعض المطابقات كانت خاطئة</p>
-              )}
-
-              {(item.explanation || item.option_explanation) && (
-                <div className="text-sm text-muted mt-2 ms-8 border-t border-border/50 pt-2 space-y-1">
-                  {item.option_explanation && <p>{item.option_explanation}</p>}
-                  {item.explanation && <p>{item.explanation}</p>}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-6 flex justify-center gap-3">
-        <Button onClick={onRetry}>إعادة المحاولة</Button>
-        <Button variant="secondary" onClick={onBack}>العودة للدروس</Button>
-      </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

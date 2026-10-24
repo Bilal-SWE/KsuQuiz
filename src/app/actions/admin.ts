@@ -22,6 +22,68 @@ async function requireAdmin() {
   return { supabase, userId: session.user.id, role: profile.role };
 }
 
+// =================== CATEGORIES ===================
+
+const CATEGORY_COLOR_KEYS = ['violet', 'sky', 'emerald', 'orange', 'amber', 'pink'];
+
+export async function createCategory(data: { name: string; color: string }) {
+  const { supabase } = await requireAdmin();
+  const name = data.name.trim();
+  if (!name) throw new Error('اسم التصنيف مطلوب');
+
+  const { data: maxOrder } = await supabase
+    .from('categories')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: category, error } = await supabase
+    .from('categories')
+    .insert({
+      name,
+      color: CATEGORY_COLOR_KEYS.includes(data.color) ? data.color : 'violet',
+      sort_order: (maxOrder?.sort_order ?? 0) + 1,
+    })
+    .select('id, name, color, sort_order')
+    .single();
+
+  if (error) throw new Error('فشل في إنشاء التصنيف');
+  revalidatePath('/admin/categories');
+  revalidatePath('/explore');
+  return category;
+}
+
+export async function updateCategory(id: string, data: { name?: string; color?: string }) {
+  const { supabase } = await requireAdmin();
+  const updates: Record<string, any> = {};
+  if (data.name !== undefined) {
+    if (!data.name.trim()) throw new Error('اسم التصنيف مطلوب');
+    updates.name = data.name.trim();
+  }
+  if (data.color !== undefined && CATEGORY_COLOR_KEYS.includes(data.color)) updates.color = data.color;
+
+  const { error } = await supabase.from('categories').update(updates).eq('id', id);
+  if (error) throw new Error('فشل في تحديث التصنيف');
+  revalidatePath('/admin/categories');
+  revalidatePath('/explore');
+}
+
+export async function deleteCategory(id: string) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  if (error) throw new Error('فشل في حذف التصنيف');
+  revalidatePath('/admin/categories');
+  revalidatePath('/explore');
+}
+
+export async function reorderCategories(orderedIds: string[]) {
+  const { supabase } = await requireAdmin();
+  await Promise.all(orderedIds.map((id, i) => supabase.from('categories').update({ sort_order: i + 1 }).eq('id', id)));
+  revalidatePath('/admin/categories');
+  revalidatePath('/explore');
+}
+
 // =================== SUBJECTS ===================
 
 export async function createSubject(data: {
@@ -29,6 +91,7 @@ export async function createSubject(data: {
   description?: string;
   status?: string;
   cover_image?: string;
+  category_id?: string | null;
 }) {
   const { supabase, userId } = await requireAdmin();
 
@@ -39,6 +102,7 @@ export async function createSubject(data: {
       name_normalized: normalizeArabic(data.name),
       description: data.description ?? null,
       cover_image: data.cover_image ?? null,
+      category_id: data.category_id || null,
       status: (data.status as 'draft' | 'published') ?? 'draft',
       created_by: userId,
       updated_by: userId,
@@ -53,7 +117,7 @@ export async function createSubject(data: {
 
 export async function updateSubject(
   id: string,
-  data: { name?: string; description?: string; status?: string; cover_image?: string | null },
+  data: { name?: string; description?: string; status?: string; cover_image?: string | null; category_id?: string | null },
 ) {
   const { supabase, userId } = await requireAdmin();
 
@@ -65,6 +129,7 @@ export async function updateSubject(
   if (data.description !== undefined) updates.description = data.description;
   if (data.status !== undefined) updates.status = data.status;
   if (data.cover_image !== undefined) updates.cover_image = data.cover_image;
+  if (data.category_id !== undefined) updates.category_id = data.category_id || null;
 
   const { error } = await supabase.from('subjects').update(updates).eq('id', id);
   if (error) throw new Error('فشل في تحديث المادة');
@@ -182,7 +247,7 @@ export async function createQuestion(
     .from('questions')
     .insert({
       lesson_id: lessonId,
-      type: data.type as 'mcq' | 'matching' | 'true_false',
+      type: data.type as 'mcq' | 'true_false' | 'fill_blanks',
       content: data.content,
       explanation: data.explanation ?? null,
       sort_order: (maxOrder?.sort_order ?? 0) + 1,
@@ -263,6 +328,13 @@ export async function getUsers() {
     .order('created_at', { ascending: false });
 
   return data ?? [];
+}
+
+export async function deleteUser(userId: string) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.rpc('admin_delete_user', { p_user_id: userId });
+  if (error) throw new Error(error.message || 'فشل في حذف الحساب');
+  revalidatePath('/admin/users');
 }
 
 export async function setUserRole(userId: string, newRole: 'admin' | 'student') {

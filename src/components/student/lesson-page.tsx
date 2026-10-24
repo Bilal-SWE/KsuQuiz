@@ -1,14 +1,31 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpenCheck,
+  CircleCheck,
+  CircleX,
+  ClipboardList,
+  Clock,
+  Flag,
+  Lightbulb,
+  Trophy,
+  Users,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { startAttempt, submitAnswer, finishAttempt } from '@/app/actions/quiz';
 import { McqQuestion } from '@/components/student/questions/mcq';
 import { TrueFalseQuestion } from '@/components/student/questions/true-false';
 import { MatchingQuestion } from '@/components/student/questions/matching';
+import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 import { ExamResults } from '@/components/student/exam-results';
-import { LeaderboardTable, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { ImageZoom } from '@/components/ui/image-zoom';
+import { LeaderboardTable, Podium, formatDuration, type LeaderboardRow } from '@/components/student/leaderboard-table';
 
 type Question = {
   id: string;
@@ -22,11 +39,27 @@ type Props = {
   subjectId: string;
   lesson: { id: string; title: string };
   questions: Question[];
-  unfinishedAttempt: { id: string; mode: string } | null;
+  unfinishedAttempt: { id: string; mode: string; started_at?: string } | null;
   existingAnswers: { question_id: string; response: any; is_correct: boolean | null }[];
   leaderboard: LeaderboardRow[];
   currentUserId: string;
 };
+
+function ElapsedTimer({ since }: { since: number }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  if (now === null) return null;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-surface-hover px-2.5 py-1 text-xs font-medium text-muted tabular-nums" dir="ltr">
+      <Clock className="h-3.5 w-3.5" />
+      {formatDuration((now - since) / 1000)}
+    </span>
+  );
+}
 
 export function LessonPage({
   subjectId,
@@ -42,8 +75,11 @@ export function LessonPage({
     unfinishedAttempt ? (unfinishedAttempt.mode as 'exam' | 'practice') : 'select',
   );
   const [attemptId, setAttemptId] = useState<string | null>(unfinishedAttempt?.id ?? null);
+  const [startedAt, setStartedAt] = useState<number | null>(
+    unfinishedAttempt?.started_at ? new Date(unfinishedAttempt.started_at).getTime() : null,
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<false | 'exam' | 'practice' | 'finish'>(false);
   const [answers, setAnswers] = useState<Record<string, any>>(() => {
     const map: Record<string, any> = {};
     existingAnswers.forEach((a) => { map[a.question_id] = a; });
@@ -51,11 +87,14 @@ export function LessonPage({
   });
   const [feedback, setFeedback] = useState<Record<string, any>>({});
   const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[] } | null>(null);
+  const [showRank, setShowRank] = useState(false);
+  const pendingSaves = useRef(new Set<Promise<void>>());
 
   const handleStart = async (selectedMode: 'exam' | 'practice') => {
-    setLoading(true);
+    setLoading(selectedMode);
     const attempt = await startAttempt(lesson.id, selectedMode);
     setAttemptId(attempt.id);
+    setStartedAt(Date.now());
     setMode(selectedMode);
     setLoading(false);
   };
@@ -64,26 +103,52 @@ export function LessonPage({
     setExamResult(null);
     setMode('select');
     setAttemptId(null);
+    setStartedAt(null);
     setCurrentIndex(0);
     setAnswers({});
     setFeedback({});
     router.refresh();
   };
 
-  const handleAnswer = useCallback(async (questionId: string, response: any) => {
+  const handleAnswer = useCallback((questionId: string, response: any) => {
     if (!attemptId) return;
-    setLoading(true);
-    const result = await submitAnswer(attemptId, questionId, response);
-    setAnswers((prev) => ({ ...prev, [questionId]: { response, ...result } }));
-    if ('is_correct' in result) {
-      setFeedback((prev) => ({ ...prev, [questionId]: result }));
-    }
-    setLoading(false);
+    let previous: any;
+    setAnswers((prev) => {
+      previous = prev[questionId];
+      return { ...prev, [questionId]: { response } };
+    });
+
+    const save = submitAnswer(attemptId, questionId, response)
+      .then((result) => {
+        setAnswers((prev) =>
+          prev[questionId]?.response === response
+            ? { ...prev, [questionId]: { response, ...result } }
+            : prev,
+        );
+        if ('is_correct' in result) {
+          setFeedback((prev) => ({ ...prev, [questionId]: result }));
+        }
+      })
+      .catch(() => {
+        setAnswers((prev) => {
+          if (prev[questionId]?.response !== response) return prev;
+          const next = { ...prev };
+          if (previous) next[questionId] = previous;
+          else delete next[questionId];
+          return next;
+        });
+        alert('تعذّر حفظ الإجابة، حاول مرة أخرى');
+      })
+      .finally(() => {
+        pendingSaves.current.delete(save);
+      });
+    pendingSaves.current.add(save);
   }, [attemptId]);
 
   const handleFinish = async () => {
     if (!attemptId) return;
-    setLoading(true);
+    setLoading('finish');
+    await Promise.all(pendingSaves.current);
     const result = await finishAttempt(attemptId);
     setExamResult(result);
     setLoading(false);
@@ -101,38 +166,112 @@ export function LessonPage({
     );
   }
 
-  if (mode === 'select') {
-    const myRow = leaderboard.find((r) => r.student_id === currentUserId);
+  const myRow = leaderboard.find((r) => r.student_id === currentUserId);
+
+  if (mode === 'select' && showRank) {
     return (
-      <div className="max-w-2xl mx-auto py-8">
-        <div className="max-w-md mx-auto text-center">
-          <h1 className="text-xl font-bold mb-2">{lesson.title}</h1>
-          <p className="text-sm text-muted mb-8">{questions.length} سؤال</p>
-
-          <div className="space-y-3">
-            <Button onClick={() => handleStart('practice')} loading={loading} className="w-full py-3">
-              وضع التمرين
-              <span className="block text-xs opacity-75 font-normal">اعرف الإجابة بعد كل سؤال</span>
-            </Button>
-            <Button onClick={() => handleStart('exam')} loading={loading} variant="secondary" className="w-full py-3">
-              وضع الاختبار
-              <span className="block text-xs opacity-75 font-normal">اعرف النتيجة في النهاية</span>
-            </Button>
+      <div className="max-w-2xl mx-auto space-y-5 animate-fade-up">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-accent" />
+              ترتيب الاختبار
+            </h1>
+            <p className="text-sm text-muted">{lesson.title}</p>
           </div>
+          <Button variant="secondary" onClick={() => setShowRank(false)}>
+            <ArrowRight className="h-4 w-4" />
+            رجوع
+          </Button>
         </div>
+        {leaderboard.length >= 3 && <Podium rows={leaderboard.slice(0, 3)} currentUserId={currentUserId} />}
+        {myRow && (
+          <p className="rounded-xl bg-primary-light px-4 py-2.5 text-sm font-medium text-primary">
+            ترتيبك: {myRow.rank} من {leaderboard.length}، {myRow.score} / {myRow.total} إجابة صحيحة
+          </p>
+        )}
+        <LeaderboardTable
+          rows={leaderboard}
+          currentUserId={currentUserId}
+          emptyText="لم يكمل أي طالب هذا الاختبار بعد. كن الأول!"
+        />
+        <p className="text-xs text-muted">تُحسب أول محاولة اختبار فقط لكل طالب.</p>
+      </div>
+    );
+  }
 
-        <section className="mt-10">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 className="font-bold">ترتيب الاختبار</h2>
-            {myRow && <span className="text-sm text-primary">ترتيبك: {myRow.rank}</span>}
+  if (mode === 'select') {
+    const modes = [
+      {
+        key: 'practice' as const,
+        title: 'وضع التمرين',
+        desc: 'اعرف الإجابة والشرح بعد كل سؤال',
+        icon: BookOpenCheck,
+        tint: 'from-emerald-500 to-teal-500',
+        onClick: () => handleStart('practice'),
+      },
+      {
+        key: 'exam' as const,
+        title: 'وضع الاختبار',
+        desc: 'النتيجة في النهاية، وأول محاولة تدخل الترتيب',
+        icon: ClipboardList,
+        tint: 'from-primary to-fuchsia-600',
+        onClick: () => handleStart('exam'),
+      },
+      {
+        key: 'rank' as const,
+        title: 'الترتيب',
+        desc: myRow ? `ترتيبك ${myRow.rank} من ${leaderboard.length}` : `${leaderboard.length} طالب أكملوا الاختبار`,
+        icon: Trophy,
+        tint: 'from-amber-400 to-orange-500',
+        onClick: () => setShowRank(true),
+      },
+    ];
+
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <section className="hero p-6 sm:p-8 animate-fade-up">
+          <div className="relative z-10">
+            <Link href={`/subjects/${subjectId}`} className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
+              <ArrowRight className="h-3.5 w-3.5" />
+              العودة للدروس
+            </Link>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-bold">{lesson.title}</h1>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
+                <Flag className="h-4 w-4" />
+                {questions.length} سؤال
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
+                <Users className="h-4 w-4" />
+                {leaderboard.length} متنافس
+              </span>
+            </div>
           </div>
-          <LeaderboardTable
-            rows={leaderboard}
-            currentUserId={currentUserId}
-            emptyText="لم يكمل أي طالب هذا الاختبار بعد. كن الأول!"
-          />
-          <p className="text-xs text-muted mt-2">تُحسب أول محاولة اختبار فقط لكل طالب.</p>
         </section>
+
+        <div className="grid gap-3 sm:grid-cols-3 stagger">
+          {modes.map((m) => (
+            <button
+              key={m.key}
+              onClick={m.onClick}
+              disabled={!!loading || (m.key !== 'rank' && questions.length === 0)}
+              className="card card-hover press group flex flex-col items-start gap-3 p-5 text-start cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <span className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${m.tint} text-white shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}>
+                {loading === m.key ? (
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                ) : (
+                  <m.icon className="h-6 w-6" />
+                )}
+              </span>
+              <span>
+                <span className="block font-bold">{m.title}</span>
+                <span className="mt-0.5 block text-xs text-muted">{m.desc}</span>
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     );
   }
@@ -143,28 +282,77 @@ export function LessonPage({
   const answeredCount = Object.keys(answers).length;
   const hasFeedback = feedback[currentQ.id];
   const hasAnswer = answers[currentQ.id];
+  const isLast = currentIndex === questions.length - 1;
+  const progress = Math.round((answeredCount / questions.length) * 100);
+
+  const dotStyle = (q: Question, i: number) => {
+    const fb = feedback[q.id];
+    const a = answers[q.id];
+    const base = i === currentIndex ? 'ring-2 ring-primary ring-offset-2 ring-offset-background ' : '';
+    if (mode === 'practice' && fb) return base + (fb.is_correct ? 'bg-success text-white' : 'bg-error text-white');
+    if (a) return base + 'bg-primary text-white';
+    return base + 'bg-surface text-muted border border-border';
+  };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-bold">{lesson.title}</h2>
-        <span className="text-sm text-muted">
-          {currentIndex + 1} / {questions.length}
+    <div className="max-w-2xl mx-auto space-y-4">
+      <div className="flex items-center gap-3">
+        <Link
+          href={`/subjects/${subjectId}`}
+          aria-label="خروج من الدرس"
+          className="rounded-xl p-2 text-muted hover:bg-surface-hover hover:text-foreground press"
+        >
+          <X className="h-5 w-5" />
+        </Link>
+        <div className="flex-1">
+          <div className="h-3 overflow-hidden rounded-full bg-surface-hover">
+            <div
+              className="h-full rounded-full bg-gradient-to-l from-primary to-fuchsia-500 transition-[width] duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+        {mode === 'exam' && startedAt && <ElapsedTimer since={startedAt} />}
+      </div>
+
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-bold truncate">{lesson.title}</span>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${mode === 'exam' ? 'bg-primary-light text-primary' : 'bg-success-light text-success'}`}>
+          {mode === 'exam' ? 'اختبار' : 'تمرين'}
         </span>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-gray-200 rounded-full mb-6">
-        <div
-          className="h-full bg-primary rounded-full transition-all"
-          style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
-        />
+      <div className="flex flex-wrap gap-1.5">
+        {questions.map((q, i) => (
+          <button
+            key={q.id}
+            onClick={() => setCurrentIndex(i)}
+            aria-label={`السؤال ${i + 1}`}
+            className={`h-8 w-8 rounded-lg text-xs font-bold transition press cursor-pointer ${dotStyle(q, i)}`}
+          >
+            {i + 1}
+          </button>
+        ))}
       </div>
 
-      {/* Question */}
-      <div className="bg-surface rounded-xl border border-border p-5 mb-4">
+      <div key={currentQ.id} className="space-y-4">
+        <section className="hero p-6 sm:p-8 animate-fade-up">
+          <div className="relative z-10">
+            <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium ring-1 ring-white/25">
+              السؤال {currentIndex + 1} من {questions.length}
+            </span>
+            <h1 className="mt-3 text-xl sm:text-2xl font-bold leading-relaxed">{currentQ.content.question?.text}</h1>
+            {currentQ.content.question?.image && (
+              <div className="mt-4 overflow-hidden rounded-2xl bg-white/95 p-2">
+                <ImageZoom src={currentQ.content.question.image} />
+              </div>
+            )}
+          </div>
+        </section>
+
         {currentQ.type === 'mcq' && (
           <McqQuestion
+            hideStem
             content={currentQ.content}
             onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
             feedback={hasFeedback}
@@ -174,6 +362,7 @@ export function LessonPage({
         )}
         {currentQ.type === 'true_false' && (
           <TrueFalseQuestion
+            hideStem
             content={currentQ.content}
             onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
             feedback={hasFeedback}
@@ -181,62 +370,87 @@ export function LessonPage({
             selectedValue={hasAnswer?.response}
           />
         )}
+        {currentQ.type === 'fill_blanks' && (
+          <div className="card p-4 sm:p-5 animate-fade-up">
+            <FillBlanksQuestion
+              key={currentQ.id}
+              content={{ ...currentQ.content, question: undefined }}
+              onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
+              feedback={hasFeedback}
+              disabled={!!hasAnswer && mode === 'practice'}
+              savedResponse={hasAnswer?.response}
+            />
+          </div>
+        )}
         {currentQ.type === 'matching' && (
-          <MatchingQuestion
-            content={currentQ.content}
-            onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
-            feedback={hasFeedback}
-            disabled={!!hasAnswer && mode === 'practice'}
-            savedPairs={hasAnswer?.response}
-          />
+          <div className="card p-4 sm:p-5">
+            <MatchingQuestion
+              key={currentQ.id}
+              content={{ ...currentQ.content, question: undefined }}
+              onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
+              feedback={hasFeedback}
+              disabled={!!hasAnswer && mode === 'practice'}
+              savedPairs={hasAnswer?.response}
+            />
+          </div>
         )}
 
-        {/* Practice mode feedback */}
+        {mode === 'practice' && hasAnswer && !hasFeedback && !('is_correct' in hasAnswer) && (
+          <p className="flex items-center gap-2 text-sm text-muted">
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+            جارٍ التحقق من الإجابة…
+          </p>
+        )}
+
         {mode === 'practice' && hasFeedback && (
-          <div className={`mt-4 p-3 rounded-lg text-sm ${hasFeedback.is_correct ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-            <p className="font-medium">{hasFeedback.is_correct ? 'إجابة صحيحة!' : 'إجابة خاطئة'}</p>
-            {hasFeedback.explanation && (
-              <p className="mt-1 opacity-80">{hasFeedback.explanation}</p>
-            )}
-            {hasFeedback.option_explanation && (
-              <p className="mt-1 opacity-80">{hasFeedback.option_explanation}</p>
+          <div
+            className={`card p-4 text-sm animate-slide-in ${
+              hasFeedback.is_correct ? 'bg-success-light text-success' : 'bg-error-light text-error'
+            }`}
+          >
+            <p className="flex items-center gap-2 text-base font-bold">
+              {hasFeedback.is_correct ? <CircleCheck className="h-5 w-5" /> : <CircleX className="h-5 w-5" />}
+              {hasFeedback.is_correct ? 'أحسنت! إجابة صحيحة' : 'إجابة خاطئة'}
+            </p>
+            {(hasFeedback.option_explanation || hasFeedback.explanation) && (
+              <div className="mt-2 flex gap-2 text-foreground/80">
+                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                <div className="space-y-1">
+                  {hasFeedback.option_explanation && <p>{hasFeedback.option_explanation}</p>}
+                  {hasFeedback.explanation && <p>{hasFeedback.explanation}</p>}
+                </div>
+              </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Navigation */}
       <div className="flex items-center justify-between gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-          disabled={currentIndex === 0}
-        >
+        <Button variant="secondary" onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))} disabled={currentIndex === 0}>
+          <ArrowRight className="h-4 w-4" />
           السابق
         </Button>
 
-        <div className="flex gap-2">
-          {answeredCount === questions.length && (
-            <Button onClick={handleFinish} loading={loading}>
-              {mode === 'exam' ? 'إنهاء الاختبار' : 'إنهاء التمرين'}
-            </Button>
-          )}
-        </div>
+        {answeredCount === questions.length ? (
+          <Button onClick={handleFinish} loading={loading === 'finish'} className="px-6">
+            <Flag className="h-4 w-4" />
+            {mode === 'exam' ? 'إنهاء الاختبار' : 'إنهاء التمرين'}
+          </Button>
+        ) : (
+          <span className="text-xs text-muted">
+            {answeredCount} / {questions.length} تمت الإجابة
+          </span>
+        )}
 
         <Button
-          variant="secondary"
+          variant={hasAnswer && !isLast ? 'primary' : 'secondary'}
           onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
-          disabled={currentIndex === questions.length - 1}
+          disabled={isLast}
         >
           التالي
+          <ArrowLeft className="h-4 w-4" />
         </Button>
       </div>
-
-      {mode === 'exam' && (
-        <p className="text-center text-sm text-muted mt-4">
-          تمت الإجابة على {answeredCount} من {questions.length}
-        </p>
-      )}
     </div>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { createQuestion, updateQuestion } from '@/app/actions/admin';
+import { buildFillBlanksContent, parseDistractors } from '@/lib/fill-blanks';
 
 type Question = {
   id: string;
@@ -75,9 +76,27 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
         ],
   );
 
+  // Fill-in-the-blanks state
+  const [fillItems, setFillItems] = useState<string[]>(
+    question?.type === 'fill_blanks' && question.content.items
+      ? question.content.items.map((i: any) => i.raw ?? '')
+      : ['', ''],
+  );
+  const [distractorsText, setDistractorsText] = useState<string>(
+    question?.type === 'fill_blanks' ? (question.content.distractors ?? []).join('، ') : '',
+  );
+  const fillPreview = useMemo(
+    () => (type === 'fill_blanks' ? buildFillBlanksContent(fillItems, parseDistractors(distractorsText)) : null),
+    [type, fillItems, distractorsText],
+  );
+
   const handleSubmit = async () => {
     if (!questionText.trim()) {
       setError('نص السؤال مطلوب');
+      return;
+    }
+    if (type === 'fill_blanks' && (fillPreview?.blankCount ?? 0) === 0) {
+      setError('ضع كلمة واحدة على الأقل بين قوسين [ ] لتصبح فراغاً');
       return;
     }
     setError('');
@@ -85,6 +104,11 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
 
     let content: any;
     switch (type) {
+      case 'fill_blanks': {
+        const { blankCount, ...built } = buildFillBlanksContent(fillItems, parseDistractors(distractorsText));
+        content = { question: { text: questionText, image: questionImage || null }, ...built };
+        break;
+      }
       case 'mcq':
         content = {
           question: { text: questionText, image: questionImage || null },
@@ -163,7 +187,7 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
           {[
             { value: 'mcq', label: 'اختيار من متعدد' },
             { value: 'true_false', label: 'صح / خطأ' },
-            { value: 'matching', label: 'مطابقة' },
+            { value: 'fill_blanks', label: 'املأ الفراغات' },
           ].map((t) => (
             <button
               key={t.value}
@@ -273,7 +297,66 @@ export function QuestionEditor({ lessonId, question, onDone, onCancel }: Props) 
         </div>
       )}
 
-      {/* Matching */}
+      {/* Fill in the blanks */}
+      {type === 'fill_blanks' && (
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">الجمل:</label>
+            <p className="text-xs text-muted mt-0.5">
+              اكتب كل جملة وضع الكلمة المطلوبة بين قوسين مربعين، مثل: عاصمة السعودية هي [الرياض]
+            </p>
+          </div>
+          {fillItems.map((item, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <span className="text-sm text-muted mt-2.5 w-5">{index + 1}.</span>
+              <div className="flex-1">
+                <Input
+                  value={item}
+                  onChange={(e) => {
+                    const next = [...fillItems];
+                    next[index] = e.target.value;
+                    setFillItems(next);
+                  }}
+                  placeholder="الجملة مع [الكلمة] بين قوسين"
+                />
+              </div>
+              {fillItems.length > 1 && (
+                <button
+                  onClick={() => setFillItems(fillItems.filter((_, i) => i !== index))}
+                  className="text-error text-sm mt-2 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+          <Button variant="ghost" onClick={() => setFillItems([...fillItems, ''])} className="text-sm">
+            + إضافة جملة
+          </Button>
+
+          <Input
+            label="كلمات إضافية للتمويه (اختياري)"
+            value={distractorsText}
+            onChange={(e) => setDistractorsText(e.target.value)}
+            placeholder="جدة، الدمام، مكة"
+          />
+
+          {fillPreview && fillPreview.words.length > 0 && (
+            <div className="rounded-lg bg-surface-hover p-3">
+              <p className="text-xs text-muted mb-2">بنك الكلمات كما سيراه الطالب ({fillPreview.blankCount} فراغ):</p>
+              <div className="flex flex-wrap gap-2">
+                {fillPreview.words.map((w) => (
+                  <span key={w.id} className="rounded-md border border-border bg-surface px-2 py-1 text-sm">
+                    {w.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Matching (legacy questions only) */}
       {type === 'matching' && (
         <div className="space-y-3">
           <label className="text-sm font-medium">أزواج المطابقة (كل صف = زوج):</label>

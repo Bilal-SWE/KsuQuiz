@@ -6,34 +6,137 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-border: var(--border-color);
   --color-muted: var(--muted);
   --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
   --color-error: var(--error);
+  --color-error-light: var(--error-light);
   --font-sans: var(--font-ibm-plex-arabic);
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #dbeafe;
+  --background: #f6f5ff;
+  --foreground: #1e1b4b;
+  --primary: #6d28d9;
+  --primary-hover: #5b21b6;
+  --primary-light: #ede9fe;
+  --accent: #f97316;
+  --accent-light: #ffedd5;
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --border-color: #e2e8f0;
-  --muted: #64748b;
-  --success: #16a34a;
-  --error: #dc2626;
+  --surface-hover: #f5f3ff;
+  --border-color: #e7e5f4;
+  --muted: #6b6893;
+  --success: #059669;
+  --success-light: #d1fae5;
+  --warning: #d97706;
+  --warning-light: #fef3c7;
+  --error: #e11d48;
+  --error-light: #ffe4e6;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  background-image:
+    radial-gradient(40rem 40rem at 110% -10%, rgb(139 92 246 / 0.14), transparent 60%),
+    radial-gradient(36rem 36rem at -10% 20%, rgb(249 115 22 / 0.10), transparent 60%),
+    radial-gradient(30rem 30rem at 50% 120%, rgb(16 185 129 / 0.08), transparent 60%);
+  background-attachment: fixed;
 }
 
 * {
   scrollbar-width: thin;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-border bg-surface shadow-[0_1px_2px_rgb(30_27_75/0.04),0_4px_16px_-4px_rgb(30_27_75/0.06)];
+  }
+  .card-hover {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_10px_30px_-10px_rgb(109_40_217/0.25)];
+  }
+  .hero {
+    @apply relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-violet-600 to-fuchsia-600 text-white;
+  }
+  .hero::after {
+    content: '';
+    @apply pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-white/10;
+  }
+  .hero::before {
+    content: '';
+    @apply pointer-events-none absolute -bottom-20 left-1/3 h-48 w-48 rounded-full bg-accent/30 blur-2xl;
+  }
+  .gradient-text {
+    @apply bg-gradient-to-l from-primary to-fuchsia-600 bg-clip-text text-transparent;
+  }
+  .press {
+    @apply transition-transform active:scale-[0.97];
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(420px) rotate(720deg); opacity: 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* "backwards" so the end state never pins opacity/transform over utility classes. */
+.stagger > * { animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.10s; }
+.stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger > *:nth-child(n + 7) { animation-delay: 0.26s; }
+
+.animate-fade-up { animation: fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.animate-slide-in { animation: slide-in 0.3s ease-out backwards; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-pop, .stagger > .animate-pop { animation: pop 0.35s ease-out; }
+.animate-shake, .stagger > .animate-shake { animation: shake 0.4s ease-in-out; }
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  animation: confetti-fall 2.4s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

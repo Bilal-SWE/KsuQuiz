@@ -70,6 +70,13 @@ export default async function LessonRoute({
     const stripped = { ...content };
     delete stripped.correct;
     delete stripped.pairs;
+    delete stripped.distractors;
+    if (stripped.items) {
+      stripped.items = stripped.items.map(({ raw, ...item }: Record<string, any>) => item);
+    }
+    if (stripped.words) {
+      stripped.words = shuffleArray(stripped.words);
+    }
     if (stripped.options) {
       stripped.options = stripped.options.map(({ explanation, ...o }: Record<string, any>) => o);
     }

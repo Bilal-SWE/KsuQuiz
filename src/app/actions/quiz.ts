@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { gradeFillBlanks } from '@/lib/fill-blanks';
 
 export async function startAttempt(lessonId: string, mode: 'exam' | 'practice') {
   const supabase = await createClient();
@@ -27,6 +28,8 @@ function gradeQuestion(
       return response === content.correct;
     case 'true_false':
       return response === content.correct;
+    case 'fill_blanks':
+      return gradeFillBlanks(content as any, response);
     case 'matching': {
       const pairs = content.pairs as Record<string, string>;
       const studentPairs = response as Record<string, string>;

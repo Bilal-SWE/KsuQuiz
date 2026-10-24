@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { loginSchema } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { APP_NAME } from '@/lib/constants';
+import { AuthShell } from '@/components/shell/auth-shell';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,13 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground">{APP_NAME}</h1>
-          <p className="text-sm text-muted mt-1">تسجيل الدخول إلى حسابك</p>
-        </div>
-
+    <AuthShell title="أهلاً بعودتك" subtitle="سجّل الدخول وتابع من حيث توقفت">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="email"
@@ -83,7 +77,6 @@ export default function LoginPage() {
             إنشاء حساب جديد
           </Link>
         </p>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

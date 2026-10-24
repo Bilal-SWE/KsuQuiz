@@ -24,6 +24,7 @@ type Subject = {
   description: string | null;
   cover_image: string | null;
   status: string;
+  category_id?: string | null;
 };
 
 type Lesson = {

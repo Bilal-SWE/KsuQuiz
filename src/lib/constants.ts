@@ -1,4 +1,4 @@
-export const APP_NAME = 'منصة التدريب';
+export const APP_NAME = 'KSU Quiz';
 
 export const ROLES = {
   OWNER: 'owner',

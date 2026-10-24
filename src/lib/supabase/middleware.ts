@@ -31,7 +31,19 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  if (!user && !path.startsWith('/auth')) {
+  if (!user && path === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/welcome';
+    return NextResponse.rewrite(url);
+  }
+
+  if (user && path === '/welcome') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/';
+    return NextResponse.redirect(url);
+  }
+
+  if (!user && !path.startsWith('/auth') && path !== '/welcome') {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);

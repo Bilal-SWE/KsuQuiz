@@ -6,6 +6,7 @@ const typeLabels: Record<string, string> = {
   mcq: 'اختيار من متعدد',
   true_false: 'صح / خطأ',
   matching: 'مطابقة',
+  fill_blanks: 'املأ الفراغات',
 };
 
 export function QuestionPreview({ question }: { question: { type: string; content: any; explanation: string | null } }) {
@@ -49,6 +50,28 @@ export function QuestionPreview({ question }: { question: { type: string; conten
               <span className="text-green-700">{content.right?.[i]?.text}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {question.type === 'fill_blanks' && content.items && (
+        <div className="text-sm space-y-1">
+          {content.items.map((item: any, i: number) => (
+            <p key={item.id}>
+              <span className="text-muted">{i + 1}. </span>
+              {item.segments.map((s: any, j: number) =>
+                s.type === 'text' ? (
+                  <span key={j}>{s.value}</span>
+                ) : (
+                  <span key={j} className="mx-1 rounded bg-green-50 px-1.5 text-green-800 font-medium">
+                    {content.correct?.[s.id]}
+                  </span>
+                ),
+              )}
+            </p>
+          ))}
+          {content.distractors?.length > 0 && (
+            <p className="text-xs text-muted">كلمات التمويه: {content.distractors.join('، ')}</p>
+          )}
         </div>
       )}
 

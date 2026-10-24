@@ -19,7 +19,7 @@ export default async function UsersPage() {
       .order('created_at', { ascending: false }),
   ]);
 
-  if (profile?.role !== 'owner') redirect('/admin');
+  if (profile?.role !== 'owner' && profile?.role !== 'admin') redirect('/');
 
-  return <UserManagement users={users ?? []} currentUserId={session.user.id} />;
+  return <UserManagement users={users ?? []} currentUserId={session.user.id} currentRole={profile.role} />;
 }
