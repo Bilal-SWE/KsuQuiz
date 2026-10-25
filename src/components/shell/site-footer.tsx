@@ -1,28 +1,22 @@
 import Link from 'next/link';
-import { Logo } from '@/components/ui/logo';
-import { LanguageToggle } from '@/i18n/client';
 import { getI18n } from '@/i18n/server';
 import { APP_NAME, PUBLIC_PAGES } from '@/lib/constants';
 
 export async function SiteFooter({ className = '' }: { className?: string }) {
   const { t } = await getI18n();
   return (
-    <footer className={`border-t border-border/70 bg-surface/60 ${className}`}>
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-        <Link href="/" aria-label={APP_NAME}>
-          <Logo markClassName="h-7 w-7" textClassName="text-base" />
-        </Link>
-        <nav className="flex flex-wrap gap-x-5 gap-y-2">
+    <footer className={`border-t border-border/70 ${className}`}>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-3 text-xs text-muted sm:justify-between">
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1">
           {PUBLIC_PAGES.map((p) => (
             <Link key={p.href} href={p.href} className="hover:text-primary-ink transition-colors">
               {t.footer[p.key]}
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-3">
-          <LanguageToggle className="-my-2" />
-          <p>© {new Date().getFullYear()} {APP_NAME}</p>
-        </div>
+        <p>
+          © {new Date().getFullYear()} {APP_NAME}
+        </p>
       </div>
     </footer>
   );

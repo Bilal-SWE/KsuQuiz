@@ -42,7 +42,7 @@ export async function PricingSection() {
           </Link>
         </div>
 
-        <div className="relative flex flex-col overflow-hidden rounded-3xl bg-ink p-6 text-white shadow-[0_20px_50px_-20px_rgb(255_90_54/0.45)] sm:p-8">
+        <div className="relative flex flex-col overflow-hidden rounded-3xl bg-ink p-6 text-white shadow-[0_20px_50px_-20px_rgb(15_157_138/0.45)] sm:p-8">
           <span className="pointer-events-none absolute -end-12 -top-12 h-36 w-36 rounded-full bg-primary" />
           <span className="absolute top-5 end-5 rounded-full bg-accent px-3 py-1 text-xs font-bold text-ink">{P.soon}</span>
           <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30">

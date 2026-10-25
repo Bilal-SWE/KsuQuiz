@@ -1,8 +1,9 @@
 'use client';
 
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { ImageZoom } from '@/components/ui/image-zoom';
 import { useI18n } from '@/i18n/client';
+import { AnswerOption, type OptionState } from '@/components/student/questions/answer-option';
 
 type Props = {
   content: Record<string, any>;
@@ -15,38 +16,44 @@ type Props = {
 
 export function TrueFalseQuestion({ content, onAnswer, feedback, disabled, selectedValue, hideStem }: Props) {
   const { t } = useI18n();
-  const getStyle = (value: boolean) => {
-    if (!feedback) return selectedValue === value ? 'border-sky ring-4 ring-sky/20' : 'card-hover';
-    if (value === feedback.correct_answer) return 'border-success bg-success-light animate-pop';
-    if (value === selectedValue && !feedback.is_correct) return 'border-error bg-error-light animate-shake';
-    return 'opacity-55';
+
+  const state = (value: boolean): OptionState => {
+    if (!feedback) return selectedValue === value ? 'selected' : 'idle';
+    if (value === feedback.correct_answer) return 'correct';
+    if (value === selectedValue) return 'wrong';
+    return 'dim';
   };
 
   return (
     <div>
       {!hideStem && (
         <div className="mb-5">
-          <p className="text-lg font-bold leading-relaxed">{content.question?.text}</p>
+          <p dir="auto" className="text-lg font-bold leading-relaxed">
+            {content.question?.text}
+          </p>
           {content.question?.image && <ImageZoom src={content.question.image} className="mt-3" />}
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 stagger">
+      <div className="grid grid-cols-2 gap-2 stagger sm:gap-3">
         {[
-          { value: true, label: t.question.true, icon: ThumbsUp, tint: 'bg-success text-ink' },
-          { value: false, label: t.question.false, icon: ThumbsDown, tint: 'bg-error text-white' },
-        ].map(({ value, label, icon: Icon, tint }) => (
-          <button
+          { value: true, label: t.question.true, Icon: Check, tint: 'bg-success-light text-success-ink' },
+          { value: false, label: t.question.false, Icon: X, tint: 'bg-error-light text-error' },
+        ].map(({ value, label, Icon, tint }) => (
+          <AnswerOption
             key={String(value)}
-            onClick={() => !disabled && onAnswer(value)}
+            layout="tile"
+            state={state(value)}
             disabled={disabled}
-            className={`card flex flex-col items-center gap-3 p-5 font-bold transition duration-200 press ${getStyle(value)} ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+            onClick={() => onAnswer(value)}
+            icon={
+              <span className={`flex h-8 w-8 items-center justify-center rounded-full sm:h-9 sm:w-9 ${tint}`}>
+                <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3} />
+              </span>
+            }
           >
-            <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${tint} shadow-md`}>
-              <Icon className="h-7 w-7" />
-            </span>
             {label}
-          </button>
+          </AnswerOption>
         ))}
       </div>
     </div>

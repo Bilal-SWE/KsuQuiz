@@ -31,10 +31,9 @@ export function LanguageToggle({ className = '' }: { className?: string }) {
       onClick={toggle}
       title={t.common.switchLanguageLabel}
       aria-label={t.common.switchLanguageLabel}
-      className={`press inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium text-muted hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer ${className}`}
+      className={`press inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer ${className}`}
     >
-      <Languages className="h-4 w-4" />
-      <span>{t.common.switchLanguage}</span>
+      <Languages className="h-[18px] w-[18px]" />
     </button>
   );
 }

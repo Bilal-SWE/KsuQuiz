@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useI18n } from '@/i18n/client';
@@ -8,8 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, profile } = useAuth();
-  const P = useI18n().t.profile;
+  const { t } = useI18n();
+  const P = t.profile;
   const [fullName, setFullName] = useState('');
   const [nameStatus, setNameStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [savingName, setSavingName] = useState(false);
@@ -59,6 +63,11 @@ export default function ProfilePage() {
       setConfirm('');
       setPwStatus({ ok: true, msg: P.passwordChanged });
     }
+  };
+
+  const logout = async () => {
+    await createClient().auth.signOut();
+    router.push('/auth/login');
   };
 
   const initials = (profile?.full_name || user?.email || '?').trim().charAt(0);
@@ -119,6 +128,15 @@ export default function ProfilePage() {
           {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success-ink' : 'text-error'}`}>{pwStatus.msg}</p>}
         </div>
       </section>
+
+      <button
+        type="button"
+        onClick={logout}
+        className="press flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-error/30 px-4 py-3 text-sm font-bold text-error hover:bg-error-light"
+      >
+        <LogOut className="h-4 w-4 ltr:-scale-x-100" />
+        {t.common.logout}
+      </button>
     </div>
   );
 }

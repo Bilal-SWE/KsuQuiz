@@ -37,8 +37,8 @@ export default async function LeaderboardPage() {
     : [];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <section className="hero p-6 sm:p-8 animate-fade-up">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+      <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10 flex items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 animate-float">
             <Trophy className="h-7 w-7" />

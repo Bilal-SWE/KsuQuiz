@@ -32,8 +32,8 @@ export function SubjectDetail({
   const progress = lessons.length ? Math.round((doneCount / lessons.length) * 100) : 0;
 
   return (
-    <div className="space-y-8">
-      <section className="hero p-6 sm:p-8 animate-fade-up">
+    <div className="space-y-5 sm:space-y-8">
+      <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10">
           <Link href="/" className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
             <ArrowRight className="h-3.5 w-3.5 ltr:-scale-x-100" />
@@ -47,7 +47,7 @@ export function SubjectDetail({
               {subject.description}
             </p>
           )}
-          <div className="mt-5 max-w-sm">
+          <div className="mt-4 max-w-sm sm:mt-5">
             <div className="mb-1.5 flex items-center justify-between text-xs text-white/85">
               <span>{S.progress}</span>
               <span>{fmt(S.lessonsDone, { done: doneCount, total: lessons.length })}</span>
@@ -60,15 +60,15 @@ export function SubjectDetail({
       </section>
 
       <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">{S.lessons}</h2>
+        <div className="mb-3 flex items-center justify-between sm:mb-4">
+          <h2 className="text-lg font-bold sm:text-xl">{S.lessons}</h2>
           {lessons.length > 0 && <span className="text-sm text-muted">{fmt(S.lessonsCount, { n: lessons.length })}</span>}
         </div>
 
         {lessons.length === 0 ? (
           <p className="card text-center text-muted py-12">{S.noLessons}</p>
         ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 stagger">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 stagger">
             {lessons.map((lesson, i) => {
               const best = bestPct(lesson.id);
               const tries = finishedFor(lesson.id).length;
@@ -84,23 +84,23 @@ export function SubjectDetail({
                 <Link
                   key={lesson.id}
                   href={`/subjects/${subject.id}/lessons/${lesson.id}`}
-                  className="card card-hover group block overflow-hidden press"
+                  className="card card-hover group flex overflow-hidden press sm:block"
                 >
-                  <div className="aspect-[16/8] overflow-hidden">
+                  <div className="w-20 shrink-0 overflow-hidden sm:aspect-[16/8] sm:w-auto">
                     <div
-                      className={`relative flex h-full w-full items-center justify-center ${FILLS[i % FILLS.length]} transition-transform duration-500 group-hover:scale-105`}
+                      className={`relative flex h-full min-h-20 w-full items-center justify-center ${FILLS[i % FILLS.length]} transition-transform duration-500 group-hover:scale-105`}
                     >
                       <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
                       <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
-                      <span className="relative text-4xl font-bold">{i + 1}</span>
+                      <span className="relative text-3xl font-bold sm:text-4xl">{i + 1}</span>
                       {best !== null && (
-                        <span className="absolute top-3 end-3 flex h-7 w-7 items-center justify-center rounded-full bg-white text-success-ink shadow">
+                        <span className="absolute top-1.5 end-1.5 flex h-6 w-6 items-center sm:top-3 sm:end-3 sm:h-7 sm:w-7 justify-center rounded-full bg-white text-success-ink shadow">
                           <Check className="h-4 w-4" />
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="min-w-0 flex-1 p-3 sm:p-4">
                     <div className="flex items-start justify-between gap-2">
                       <h3 dir="auto" className="font-bold text-foreground">
                         {lesson.title}
@@ -117,7 +117,7 @@ export function SubjectDetail({
                         S.firstAttempt
                       )}
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary-ink opacity-0 transition-opacity group-hover:opacity-100">
+                    <span className="mt-3 hidden items-center gap-1 text-xs font-medium text-primary-ink opacity-0 sm:inline-flex transition-opacity group-hover:opacity-100">
                       <BookOpen className="h-3.5 w-3.5" />
                       {best === null ? S.startLesson : S.continue}
                     </span>

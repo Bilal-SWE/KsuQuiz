@@ -26,8 +26,8 @@ export function StudentHome({ subjects }: { subjects: Subject[] }) {
   const comma = locale === 'ar' ? '، ' : ', ';
 
   return (
-    <div className="space-y-8">
-      <section className="hero p-6 sm:p-8 animate-fade-up">
+    <div className="space-y-5 sm:space-y-8">
+      <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10">
           <p className="text-sm text-white/80" suppressHydrationWarning>
             {greeting}
@@ -71,7 +71,7 @@ export function StudentHome({ subjects }: { subjects: Subject[] }) {
             }
           />
         ) : (
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 stagger">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 stagger">
             {subjects.map((subject) => (
               <SubjectCard key={subject.id} subject={subject} enrolled />
             ))}

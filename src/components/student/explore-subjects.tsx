@@ -97,7 +97,7 @@ export function ExploreSubjects({
   };
 
   const renderGrid = (items: Subject[]) => (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 stagger">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 stagger">
       {items.map((subject) => {
         const isEnrolled = enrolled.has(subject.id);
         return (
@@ -108,7 +108,7 @@ export function ExploreSubjects({
               className={`press inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
                 isEnrolled
                   ? 'border border-border bg-surface text-muted hover:border-error/40 hover:text-error'
-                  : 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgb(255_90_54/0.45)] hover:brightness-110'
+                  : 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgb(15_157_138/0.45)] hover:brightness-110'
               }`}
             >
               {isEnrolled ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -129,8 +129,8 @@ export function ExploreSubjects({
   ];
 
   return (
-    <div className="space-y-6">
-      <section className="hero p-6 sm:p-8 animate-fade-up">
+    <div className="space-y-4 sm:space-y-6">
+      <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10">
           <h1 className="text-2xl sm:text-3xl font-bold">{E.title}</h1>
           <p className="mt-1 text-sm text-white/80">{fmt(E.available, { n: subjects.length })}</p>

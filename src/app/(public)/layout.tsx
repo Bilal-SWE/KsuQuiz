@@ -10,18 +10,15 @@ export default async function PublicLayout({ children }: { children: React.React
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:h-16 sm:gap-3">
           <Link href="/" aria-label={APP_NAME} className="press">
-            <Logo />
+            <Logo markClassName="h-8 w-8 sm:h-9 sm:w-9" textClassName="text-lg sm:text-xl" />
           </Link>
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5">
             <LanguageToggle />
-            <Link href="/auth/login" className="press hidden sm:inline-flex rounded-xl px-3 py-2 text-sm font-medium hover:bg-surface-hover">
-              {t.common.login}
-            </Link>
             <Link
               href="/auth/signup"
-              className="press rounded-full bg-primary px-4 py-2 text-sm font-medium text-on-primary shadow-[0_6px_16px_-6px_rgb(255_90_54/0.45)] hover:brightness-110"
+              className="press rounded-full bg-primary px-4 py-1.5 text-sm font-bold text-on-primary hover:bg-primary-hover"
             >
               {t.common.startFree}
             </Link>

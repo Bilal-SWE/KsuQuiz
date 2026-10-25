@@ -7,9 +7,11 @@ import { Crown, Sparkles, X } from 'lucide-react';
 
 export function SubscribeButton({
   className = '',
+  title,
   children,
 }: {
   className?: string;
+  title?: string;
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -24,7 +26,7 @@ export function SubscribeButton({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`press cursor-pointer ${className}`}>
+      <button type="button" onClick={() => setOpen(true)} title={title} aria-label={title} className={`press cursor-pointer ${className}`}>
         {children ?? (
           <>
             <Crown className="h-4 w-4" />

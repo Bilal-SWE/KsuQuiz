@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { ArrowRight, CircleCheck, CircleX, Lightbulb, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 import { useI18n } from '@/i18n/client';
 
@@ -21,7 +20,7 @@ type Question = {
   content: Record<string, any>;
 };
 
-const CONFETTI_COLORS = ['#FF5A36', '#FFC93C', '#2EC4A0', '#4C8DFF', '#1B1B2F'];
+const CONFETTI_COLORS = ['#0F9D8A', '#FFB400', '#2E9E4F', '#3B82F6', '#0B1F33'];
 
 function Confetti() {
   const pieces = Array.from({ length: 36 }, (_, i) => ({
@@ -43,40 +42,27 @@ function Confetti() {
   );
 }
 
-function ScoreRing({ pct }: { pct: number }) {
+// The Result design's teal score disc: "8/10" over "correct answers".
+function ScoreCircle({ score, total, label }: { score: number; total: number; label: string }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setShown(pct), 80);
-    return () => clearTimeout(t);
-  }, [pct]);
-
-  const r = 52;
-  const c = 2 * Math.PI * r;
-  const color = pct >= 70 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--error)';
-  const textColor = pct >= 70 ? 'var(--success-ink)' : pct >= 50 ? 'var(--warning-ink)' : 'var(--error)';
+    if (score === 0) return;
+    const step = Math.max(1, Math.ceil(score / 12));
+    let value = 0;
+    const t = setInterval(() => {
+      value = Math.min(score, value + step);
+      setShown(value);
+      if (value >= score) clearInterval(t);
+    }, 60);
+    return () => clearInterval(t);
+  }, [score]);
 
   return (
-    <div className="relative h-40 w-40">
-      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="var(--surface-hover)" strokeWidth="10" />
-        <circle
-          cx="60"
-          cy="60"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c - (c * shown) / 100}
-          style={{ transition: 'stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1)' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold" style={{ color: textColor }}>
-          {pct}%
-        </span>
-      </div>
+    <div className="flex h-[168px] w-[168px] flex-col items-center justify-center rounded-full bg-primary text-on-primary animate-pop">
+      <span className="text-[56px] font-extrabold leading-none tabular-nums" dir="ltr">
+        {shown}/{total}
+      </span>
+      <span className="mt-1 text-base font-bold">{label}</span>
     </div>
   );
 }
@@ -112,34 +98,44 @@ export function ExamResults({
     <div className="relative max-w-2xl mx-auto space-y-6">
       {pct >= 70 && <Confetti />}
 
-      <section className="card relative flex flex-col items-center px-6 py-8 text-center animate-fade-up">
-        <p className="text-sm text-muted">{lessonTitle}</p>
-        <div className="my-4">
-          <ScoreRing pct={pct} />
-        </div>
-        <h1 className="text-2xl font-bold">{v.title}</h1>
-        <p className="mt-1 text-sm text-muted">{v.sub}</p>
-
-        <div className="mt-5 grid w-full max-w-xs grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-success-light p-3 text-success-ink">
-            <p className="text-2xl font-bold">{result.score}</p>
-            <p className="text-xs font-medium">{R.correct}</p>
-          </div>
-          <div className="rounded-2xl bg-error-light p-3 text-error">
-            <p className="text-2xl font-bold">{wrong}</p>
-            <p className="text-xs font-medium">{R.wrong}</p>
-          </div>
+      <section className="relative flex flex-col items-center gap-6 rounded-[28px] bg-ink px-6 pt-10 pb-7 text-center text-background animate-fade-up">
+        <p dir="auto" className="text-sm font-bold text-on-ink-muted">
+          {lessonTitle}
+        </p>
+        <ScoreCircle score={result.score} total={result.total} label={R.correctAnswers} />
+        <div className="flex flex-col gap-2">
+          <h1 className="text-[34px] font-extrabold">{v.title}</h1>
+          <p className="text-lg text-on-ink-muted">{v.sub}</p>
         </div>
 
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Button onClick={onRetry} className="px-5">
-            <RotateCcw className="h-4 w-4" />
+        <div className="flex w-full max-w-sm gap-3">
+          <div className="flex-1 rounded-[20px] bg-ink-raised p-4">
+            <div className="text-[26px] font-extrabold tabular-nums">{pct}%</div>
+            <div className="text-sm text-on-ink-muted">{t.leaderboard.accuracy}</div>
+          </div>
+          <div className="flex-1 rounded-[20px] bg-ink-raised p-4">
+            <div className="text-[26px] font-extrabold tabular-nums">{wrong}</div>
+            <div className="text-sm text-on-ink-muted">{R.wrong}</div>
+          </div>
+        </div>
+
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="press flex cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-4 py-4 text-[19px] font-extrabold text-on-primary hover:bg-primary-hover"
+          >
+            <RotateCcw className="h-5 w-5" />
             {R.retry}
-          </Button>
-          <Button variant="secondary" onClick={onBack}>
-            <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="press flex cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-on-ink-muted px-4 py-3.5 text-lg font-bold text-background hover:bg-ink-raised"
+          >
+            <ArrowRight className="h-5 w-5 ltr:-scale-x-100" />
             {R.backToLessons}
-          </Button>
+          </button>
         </div>
       </section>
 

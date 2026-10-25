@@ -25,35 +25,47 @@
   --color-warning-ink: var(--warning-ink);
   --color-error: var(--error);
   --color-error-light: var(--error-light);
+  --color-ink-raised: var(--ink-raised);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-pastel-teal: var(--pastel-teal);
+  --color-pastel-amber: var(--pastel-amber);
+  --color-pastel-blue: var(--pastel-blue);
+  --color-pastel-peach: var(--pastel-peach);
   --font-sans: var(--font-poppins), var(--font-tajawal), system-ui, sans-serif;
 }
 
-/* Quizzy identity. Bright brand/sun/mint are for fills, borders and icons;
-   the *-ink shades are their text-safe (4.5:1) versions. */
+/* Quizzy identity (teal), with the exact values used in the Quizzy Screens design.
+   Bright brand/amber/green are for fills, borders and icons; *-ink shades are text-safe (4.5:1). */
 :root {
-  --background: #fff8f0;
+  --background: #f4faf9;
   --surface: #ffffff;
-  --surface-hover: #fff1e6;
-  --border-color: #f0e2d3;
-  --foreground: #1b1b2f;
-  --muted: #5b5b73;
-  --primary: #ff5a36;
-  --primary-hover: #f04a26;
-  --primary-light: #ffe8e1;
-  --primary-ink: #c2401f;
-  --on-primary: #1b1b2f;
-  --accent: #ffc93c;
-  --accent-light: #fff3cc;
-  --accent-ink: #8a6300;
-  --sky: #4c8dff;
-  --success: #2ec4a0;
-  --success-light: #ddf6ef;
-  --success-ink: #0b7a5e;
-  --warning: #ffc93c;
-  --warning-light: #fff3cc;
-  --warning-ink: #8a6300;
+  --surface-hover: #e9f4f2;
+  --border-color: #d5e4e1;
+  --foreground: #0b1f33;
+  --muted: #4a5f70;
+  --ink-raised: #13304a;
+  --on-ink-muted: #a9bfcb;
+  --primary: #0f9d8a;
+  --primary-hover: #0c8775;
+  --primary-light: #dcf2ee;
+  --primary-ink: #0a7566;
+  --on-primary: #0b1f33;
+  --accent: #ffb400;
+  --accent-light: #ffe6a3;
+  --accent-ink: #8a5a00;
+  --sky: #3b82f6;
+  --success: #2e9e4f;
+  --success-light: #e4f5e9;
+  --success-ink: #1f7a3a;
+  --warning: #ffb400;
+  --warning-light: #ffe6a3;
+  --warning-ink: #8a5a00;
   --error: #d6264b;
-  --error-light: #fde4e9;
+  --error-light: #fde6eb;
+  --pastel-teal: #bfede5;
+  --pastel-amber: #ffe6a3;
+  --pastel-blue: #cfe0ff;
+  --pastel-peach: #ffd3c7;
 }
 
 body {
@@ -67,22 +79,14 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-3xl border border-border bg-surface shadow-[0_1px_2px_rgb(27_27_47/0.04),0_6px_18px_-8px_rgb(27_27_47/0.08)];
+    @apply rounded-[28px] border border-border bg-surface shadow-[0_12px_28px_rgb(11_31_51/0.08)];
   }
   .card-hover {
-    @apply transition duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_12px_28px_-12px_rgb(255_90_54/0.35)];
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_18px_36px_rgb(11_31_51/0.12)];
   }
-  /* Navy banner with the brand's coral bubble and sun dot as decoration */
+  /* Plain navy band, as in the design's "how to play" section and result screen */
   .hero {
-    @apply relative overflow-hidden rounded-3xl bg-ink text-background;
-  }
-  .hero::after {
-    content: '';
-    @apply pointer-events-none absolute -end-20 -bottom-24 h-64 w-64 rounded-full bg-primary opacity-90;
-  }
-  .hero::before {
-    content: '';
-    @apply pointer-events-none absolute end-36 top-6 h-12 w-12 rounded-full bg-accent;
+    @apply relative overflow-hidden rounded-3xl bg-ink text-background sm:rounded-[28px];
   }
   .gradient-text {
     @apply text-primary-ink;

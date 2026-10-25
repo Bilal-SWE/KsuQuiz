@@ -1,27 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Compass, Crown, FolderOpen, Home, LayoutDashboard, LogOut, Trophy, User, Users } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Compass, Crown, FolderOpen, Home, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
 import { SubscribeButton } from '@/components/shell/subscribe-button';
 import { Logo } from '@/components/ui/logo';
-import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { APP_NAME } from '@/lib/constants';
 import { LanguageToggle, useI18n } from '@/i18n/client';
 
 export function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
   const { profile } = useAuth();
   const { t } = useI18n();
   const isAdmin = profile?.role === 'admin' || profile?.role === 'owner';
-
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/auth/login');
-  };
 
   const links = isAdmin
     ? [
@@ -48,9 +40,9 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border/70 bg-surface/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-2 px-4 sm:h-16 sm:gap-3">
           <Link href={isAdmin ? '/admin' : '/'} className="press" aria-label={APP_NAME}>
-            <Logo />
+            <Logo markClassName="h-8 w-8 sm:h-9 sm:w-9" textClassName="text-lg sm:text-xl" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -72,35 +64,25 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-1">
+            <LanguageToggle />
             {!isAdmin && (
-              <SubscribeButton className="me-1 inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-2 text-sm font-bold text-ink shadow-[0_6px_16px_-6px_rgb(255_201_60/0.6)] hover:brightness-110">
-                <Crown className="h-4 w-4" />
-                <span className="hidden sm:inline">{t.nav.subscribe}</span>
+              <SubscribeButton
+                title={t.nav.subscribe}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-light text-accent-ink hover:bg-accent hover:text-ink transition-colors"
+              >
+                <Crown className="h-[18px] w-[18px]" />
               </SubscribeButton>
             )}
-            <LanguageToggle className="hidden sm:inline-flex" />
             <Link
               href="/profile"
               title={t.common.myAccount}
-              className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors press ${
-                pathname === '/profile' ? 'bg-primary-light' : 'hover:bg-surface-hover'
+              aria-label={t.common.myAccount}
+              className={`press ms-1 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-colors ${
+                pathname === '/profile' ? 'bg-primary text-on-primary' : 'bg-primary-light text-primary-ink hover:bg-pastel-teal'
               }`}
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-ink">
-                {initial}
-              </span>
-              <span dir="auto" className="hidden sm:inline max-w-28 truncate text-sm font-medium">
-                {profile?.full_name}
-              </span>
+              {initial}
             </Link>
-            <button
-              onClick={handleLogout}
-              title={t.common.logout}
-              aria-label={t.common.logout}
-              className="rounded-xl p-2 text-muted hover:bg-error-light hover:text-error transition-colors cursor-pointer press"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
           </div>
         </div>
       </header>

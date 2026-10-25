@@ -20,8 +20,8 @@ export function AdminSubjectsList({ subjects }: { subjects: Subject[] }) {
   const published = subjects.filter((s) => s.status === 'published').length;
 
   return (
-    <div className="space-y-6">
-      <section className="hero p-6 sm:p-8 animate-fade-up">
+    <div className="space-y-4 sm:space-y-6">
+      <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">لوحة التحكم</h1>
