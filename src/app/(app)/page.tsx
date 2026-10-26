@@ -7,7 +7,7 @@ import { sortByName } from '@/lib/sort';
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; c?: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -43,7 +43,6 @@ export default async function HomePage({
       categories={(categories as Category[]) ?? []}
       enrolledIds={[...enrolledIds]}
       initialQuery={params.q ?? ''}
-      initialCategory={params.c ?? 'all'}
     />
   );
 }

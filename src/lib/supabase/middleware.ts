@@ -43,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const isPublic = ['/welcome', '/about', '/contact', '/privacy', '/refund'].includes(path);
+  const isPublic = ['/welcome', '/about', '/contact', '/privacy', '/refund'].includes(path) || path.startsWith('/api/webhooks/');
 
   if (!user && !path.startsWith('/auth') && !isPublic) {
     const url = request.nextUrl.clone();

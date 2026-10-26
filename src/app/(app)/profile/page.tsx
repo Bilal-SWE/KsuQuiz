@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/supabase/auth-context';
 import { useI18n } from '@/i18n/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SubscriptionCard } from '@/components/student/subscription-card';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -91,6 +92,8 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {user && profile?.role === 'student' && <SubscriptionCard userId={user.id} />}
 
       <section className="card p-5 space-y-4">
         <h2 className="font-bold">{P.personalData}</h2>

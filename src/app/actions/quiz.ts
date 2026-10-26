@@ -2,11 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { gradeFillBlanks } from '@/lib/fill-blanks';
+import { canAccessLesson } from '@/lib/access';
 
 export async function startAttempt(lessonId: string, mode: 'exam' | 'practice') {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('غير مسجل الدخول');
+  if (!(await canAccessLesson(supabase, lessonId))) throw new Error('هذا الدرس للمشتركين');
 
   const { data, error } = await supabase
     .from('attempts')

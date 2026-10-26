@@ -259,46 +259,87 @@ export function LessonPage({
 
   if (mode === 'resume') {
     const answered = questions.filter((q) => answers[q.id]).length;
-    const pct = questions.length ? Math.round((answered / questions.length) * 100) : 0;
+    const correct = questions.filter((q) => answers[q.id]?.is_correct === true).length;
+    const wrong = questions.filter((q) => answers[q.id]?.is_correct === false).length;
+    const ratio = questions.length ? answered / questions.length : 0;
+    const R = 52;
+    const C = 2 * Math.PI * R;
     return (
-      <div className="mx-auto flex max-w-xl flex-col gap-5 animate-fade-up">
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            href={`/subjects/${subjectId}`}
-            aria-label={L.exitLesson}
-            className="press flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink shadow-sm hover:bg-surface-hover"
-          >
-            <X className="h-5 w-5" strokeWidth={2.5} />
-          </Link>
-          <span dir="auto" className="min-w-0 truncate text-base font-bold text-muted">
-            {lesson.title}
-          </span>
-          <span className="rounded-full bg-pastel-teal px-4 py-2 text-base font-extrabold text-ink">{L.practiceBadge}</span>
-        </div>
+      <div className="mx-auto flex max-w-xl flex-col gap-4 animate-fade-up">
+        <span dir="auto" className="truncate text-center text-sm font-medium text-muted">
+          {lesson.title}
+        </span>
 
-        <section className="flex flex-col gap-5 rounded-[28px] bg-surface px-6 py-7 shadow-[0_12px_28px_rgb(11_31_51/0.08)]">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-pastel-amber text-ink">
-            <RotateCcw className="h-7 w-7" />
-          </span>
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[26px] font-extrabold leading-normal">{L.resumeTitle}</h1>
-            <p className="text-lg leading-relaxed text-muted">{fmt(L.resumeText, { a: answered, n: questions.length })}</p>
+        <section className="card flex flex-col items-center gap-4 !rounded-[28px] px-5 py-7 text-center">
+          <div className="relative h-32 w-32">
+            <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden="true">
+              <circle cx="60" cy="60" r={R} fill="none" strokeWidth="10" className="stroke-border" />
+              <circle
+                cx="60"
+                cy="60"
+                r={R}
+                fill="none"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={C}
+                strokeDashoffset={C * (1 - ratio)}
+                className="stroke-primary transition-[stroke-dashoffset] duration-700"
+              />
+            </svg>
+            <span className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-extrabold tabular-nums" dir="ltr">
+                {answered}/{questions.length}
+              </span>
+            </span>
           </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-border">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+
+          <div>
+            <h1 className="text-xl font-extrabold sm:text-2xl">{L.resumeTitle}</h1>
+            <p className="mt-1 text-sm text-muted sm:text-base">{fmt(L.resumeText, { a: answered, n: questions.length })}</p>
           </div>
+
+          {(correct > 0 || wrong > 0) && (
+            <div className="flex gap-2 text-sm font-bold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-success-light px-3 py-1 text-success-ink">
+                <CircleCheck className="h-4 w-4" />
+                {fmt(L.resumeCorrect, { n: correct })}
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-error-light px-3 py-1 text-error">
+                <CircleX className="h-4 w-4" />
+                {fmt(L.resumeWrong, { n: wrong })}
+              </span>
+            </div>
+          )}
+
+          {questions.length > 1 && (
+            <div className="flex flex-wrap justify-center gap-1.5" aria-hidden="true">
+              {questions.map((q, i) => {
+                const a = answers[q.id];
+                return (
+                  <span
+                    key={q.id}
+                    className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                      !a
+                        ? 'border-2 border-border bg-surface text-muted'
+                        : a.is_correct === false
+                          ? 'border-2 border-error bg-error-light text-error'
+                          : 'border-2 border-success bg-success-light text-success-ink'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </section>
 
-        <div className="flex flex-col gap-3">
-          <Button onClick={handleContinue} disabled={!!loading} className="py-4 text-lg font-extrabold">
-            {L.resumeContinue}
-            <ArrowLeft className="h-5 w-5 ltr:-scale-x-100" />
-          </Button>
+        <div className="flex items-center justify-center gap-3">
           <button
             type="button"
             onClick={handleRestart}
             disabled={!!loading}
-            className="press flex cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-ink bg-surface px-4 py-3.5 text-lg font-bold text-ink hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60"
+            className="press flex h-11 max-w-44 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-border bg-surface text-base font-bold text-ink hover:border-ink disabled:cursor-not-allowed disabled:opacity-60 sm:h-12"
           >
             {loading === 'practice' ? (
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
@@ -307,7 +348,19 @@ export function LessonPage({
             )}
             {L.resumeRestart}
           </button>
+          <Button onClick={handleContinue} disabled={!!loading} className="h-11 max-w-44 flex-1 text-base font-extrabold sm:h-12">
+            {L.resumeContinue}
+            <ArrowLeft className="h-5 w-5 ltr:-scale-x-100" />
+          </Button>
         </div>
+
+        <Link
+          href={`/subjects/${subjectId}`}
+          className="press mx-auto flex h-9 items-center gap-1.5 rounded-full border-2 border-border bg-surface px-5 text-sm font-bold text-ink hover:border-ink"
+        >
+          <BookOpen className="h-4 w-4" />
+          {L.backToLessons}
+        </Link>
       </div>
     );
   }

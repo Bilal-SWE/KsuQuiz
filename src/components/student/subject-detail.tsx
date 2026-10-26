@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, RotateCcw } from 'lucide-react';
+import { ArrowRight, Lock, RotateCcw } from 'lucide-react';
 import { FILLS } from '@/components/student/subject-card';
 import { useI18n } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
@@ -13,10 +13,13 @@ export function SubjectDetail({
   subject,
   lessons,
   attempts,
+  freeLessons,
 }: {
   subject: { id: string; name: string; description: string | null; cover_image: string | null };
   lessons: Lesson[];
   attempts: Attempt[];
+  // How many lessons a free student can open; null when everything is unlocked.
+  freeLessons: number | null;
 }) {
   const { t } = useI18n();
   const S = t.subject;
@@ -58,6 +61,7 @@ export function SubjectDetail({
         ) : (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 stagger">
             {lessons.map((lesson, i) => {
+              const locked = freeLessons !== null && i >= freeLessons;
               const best = bestPct(lesson.id);
               const tries = finishedFor(lesson.id).length;
               const scoreCls =
@@ -81,7 +85,14 @@ export function SubjectDetail({
                     >
                       <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
                       <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
-                      <span className="relative text-2xl font-bold sm:text-3xl">{i + 1}</span>
+                      <span className={`relative text-2xl font-bold sm:text-3xl ${locked ? 'opacity-40' : ''}`}>{i + 1}</span>
+                      {locked && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-background shadow-md">
+                            <Lock className="h-4 w-4" />
+                          </span>
+                        </span>
+                      )}
                       {best !== null && (
                         <span className={`absolute top-1.5 end-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${scoreCls}`}>
                           {best}%
@@ -94,7 +105,9 @@ export function SubjectDetail({
                       {lesson.title}
                     </h3>
                     <p className="mt-0.5 flex items-center justify-center gap-1 truncate text-xs text-muted">
-                      {tries > 0 ? (
+                      {locked ? (
+                        <span className="font-bold text-accent-ink">{S.locked}</span>
+                      ) : tries > 0 ? (
                         <>
                           <RotateCcw className="h-3 w-3 shrink-0" />
                           {fmt(S.attempts, { n: tries })}

@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Check, Compass, FolderOpen, LayoutGrid, Plus, Search, X } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Compass, FolderOpen, Plus, Search, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
 import { categoryColor, type Category } from '@/lib/categories';
@@ -25,55 +25,31 @@ export function ExploreSubjects({
   categories,
   enrolledIds,
   initialQuery,
-  initialCategory,
 }: {
   subjects: Subject[];
   categories: Category[];
   enrolledIds: string[];
   initialQuery: string;
-  initialCategory: string;
 }) {
   const { t } = useI18n();
   const E = t.explore;
   const [query, setQuery] = useState(initialQuery);
-  const [active, setActive] = useState(initialCategory);
   const [enrolled, setEnrolled] = useState(new Set(enrolledIds));
 
   const validIds = new Set(categories.map((c) => c.id));
   const catOf = (s: Subject) => (s.category_id && validIds.has(s.category_id) ? s.category_id : UNCATEGORIZED);
-  const hasUncategorized = subjects.some((s) => catOf(s) === UNCATEGORIZED);
-
-  const counts = useMemo(() => {
-    const m: Record<string, number> = {};
-    subjects.forEach((s) => {
-      const k = catOf(s);
-      m[k] = (m[k] ?? 0) + 1;
-    });
-    return m;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjects, categories]);
-
   const filtered = subjects.filter((s) => {
-    if (active !== 'all' && catOf(s) !== active) return false;
     if (query.trim() && !normalizeArabic(s.name).includes(normalizeArabic(query))) return false;
     return true;
   });
 
-  const showGrouped = active === 'all' && !query.trim() && categories.length > 0;
+  const showGrouped = !query.trim() && categories.length > 0;
   const groups = showGrouped
     ? [
         ...categories.map((c) => ({ key: c.id, name: c.name, color: c.color, items: filtered.filter((s) => catOf(s) === c.id) })),
         { key: UNCATEGORIZED, name: E.otherSubjects, color: 'violet', items: filtered.filter((s) => catOf(s) === UNCATEGORIZED) },
       ].filter((g) => g.items.length > 0)
     : [];
-
-  const selectCategory = (key: string) => {
-    setActive(key);
-    const url = new URL(window.location.href);
-    if (key === 'all') url.searchParams.delete('c');
-    else url.searchParams.set('c', key);
-    window.history.replaceState(null, '', url);
-  };
 
   const toggleEnroll = async (subjectId: string) => {
     const supabase = createClient();
@@ -123,14 +99,6 @@ export function ExploreSubjects({
     </div>
   );
 
-  const chips = [
-    { key: 'all', name: E.all, count: subjects.length, color: null as string | null },
-    ...categories.map((c) => ({ key: c.id, name: c.name, count: counts[c.id] ?? 0, color: c.color })),
-    ...(hasUncategorized && categories.length > 0
-      ? [{ key: UNCATEGORIZED, name: E.other, count: counts[UNCATEGORIZED] ?? 0, color: null }]
-      : []),
-  ];
-
   return (
     <div className="space-y-4 sm:space-y-6">
       <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-4 pt-7 pb-5 text-center sm:px-8 sm:pt-10 sm:pb-6 animate-fade-up">
@@ -170,35 +138,6 @@ export function ExploreSubjects({
             <p className="mt-2 text-xs font-medium text-muted" role="status">
               {fmt(E.resultsCount, { n: filtered.length })}
             </p>
-          )}
-
-          {categories.length > 0 && (
-            <div className="-mx-4 mt-5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-              <div className="mx-auto flex w-max gap-2 sm:w-auto sm:flex-wrap sm:justify-center">
-                {chips.map((chip) => {
-                  const isActive = active === chip.key;
-                  const col = chip.color ? categoryColor(chip.color) : null;
-                  return (
-                    <button
-                      key={chip.key}
-                      onClick={() => selectCategory(chip.key)}
-                      aria-pressed={isActive}
-                      className={`press inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-bold transition cursor-pointer ${
-                        isActive ? 'bg-ink text-background shadow-md' : 'bg-surface text-muted shadow-sm hover:text-ink'
-                      }`}
-                    >
-                      {chip.key === 'all' ? (
-                        <LayoutGrid className="h-4 w-4" />
-                      ) : (
-                        <span className={`h-2.5 w-2.5 rounded-full ring-1 ring-ink/15 ${col ? col.dot : 'bg-muted/50'}`} />
-                      )}
-                      {chip.name}
-                      <span className={`rounded-full px-1.5 text-xs ${isActive ? 'bg-white/15' : 'bg-surface-hover'}`}>{chip.count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           )}
         </div>
       </section>

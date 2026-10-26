@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import { LessonPage } from '@/components/student/lesson-page';
+import { LockedLesson } from '@/components/student/locked-lesson';
+import { canAccessLesson } from '@/lib/access';
 import type { LeaderboardRow } from '@/components/student/leaderboard-table';
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -61,6 +63,11 @@ export default async function LessonRoute({
   }));
 
   if (!lesson || lesson.subject_id !== subjectId) notFound();
+
+  // Locked lessons never send their questions to the browser.
+  if (!(await canAccessLesson(supabase, lessonId))) {
+    return <LockedLesson subjectId={subjectId} lessonTitle={lesson.title} />;
+  }
 
   const shouldShuffleQuestions = (lesson as any).shuffle_questions ?? false;
   const shouldShuffleOptions = (lesson as any).shuffle_options ?? false;
