@@ -1,35 +1,49 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { StudentHome } from '@/components/student/student-home';
+import { ExploreSubjects } from '@/components/student/explore-subjects';
+import type { Category } from '@/lib/categories';
+import { sortByName } from '@/lib/sort';
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; c?: string }>;
+}) {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
-
   if (!session) redirect('/auth/login');
 
-  const [{ data: profile }, { data: enrollments }] = await Promise.all([
+  const params = await searchParams;
+  const [{ data: profile }, { data: subjects }, { data: enrollments }, { data: categories }] = await Promise.all([
+    supabase.from('profiles').select('role').eq('id', session.user.id).single(),
     supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single(),
+      .from('subjects')
+      .select('*')
+      .eq('status', 'published'),
     supabase
       .from('enrollments')
-      .select(`
-        subject_id,
-        subjects (id, name, description, cover_image, status)
-      `)
+      .select('subject_id')
       .eq('student_id', session.user.id),
+    supabase.from('categories').select('id, name, color, sort_order').order('sort_order'),
   ]);
 
-  if (profile?.role === 'admin' || profile?.role === 'owner') {
-    redirect('/admin');
-  }
+  if (profile?.role === 'admin' || profile?.role === 'owner') redirect('/admin');
 
-  const enrolledSubjects = (enrollments ?? [])
-    .map((e) => (e as any).subjects)
-    .filter(Boolean);
+  const enrolledIds = new Set((enrollments ?? []).map((e) => e.subject_id));
 
-  return <StudentHome subjects={enrolledSubjects} />;
+  return (
+    <ExploreSubjects
+      subjects={sortByName(subjects ?? []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        cover_image: s.cover_image,
+        category_id: s.category_id ?? null,
+      }))}
+      categories={(categories as Category[]) ?? []}
+      enrolledIds={[...enrolledIds]}
+      initialQuery={params.q ?? ''}
+      initialCategory={params.c ?? 'all'}
+    />
+  );
 }

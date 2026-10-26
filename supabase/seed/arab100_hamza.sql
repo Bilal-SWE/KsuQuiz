@@ -5,7 +5,7 @@
 alter table public.questions drop constraint if exists questions_type_check;
 alter table public.questions
   add constraint questions_type_check
-  check (type in ('mcq', 'matching', 'true_false', 'fill_blanks'));
+  check (type in ('mcq', 'true_false', 'fill_blanks'));
 
 do $$
 declare

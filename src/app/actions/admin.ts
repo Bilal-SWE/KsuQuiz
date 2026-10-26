@@ -65,7 +65,7 @@ export async function createCategory(data: { name: string; color: string }) {
 
   if (error) throw new Error('فشل في إنشاء التصنيف');
   revalidatePath('/admin/categories');
-  revalidatePath('/explore');
+  revalidatePath('/');
   return category;
 }
 
@@ -81,7 +81,7 @@ export async function updateCategory(id: string, data: { name?: string; color?: 
   const { error } = await supabase.from('categories').update(updates).eq('id', id);
   if (error) throw new Error('فشل في تحديث التصنيف');
   revalidatePath('/admin/categories');
-  revalidatePath('/explore');
+  revalidatePath('/');
 }
 
 export async function deleteCategory(id: string) {
@@ -89,14 +89,28 @@ export async function deleteCategory(id: string) {
   const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) throw new Error('فشل في حذف التصنيف');
   revalidatePath('/admin/categories');
-  revalidatePath('/explore');
+  revalidatePath('/');
 }
 
 export async function reorderCategories(orderedIds: string[]) {
   const { supabase } = await requireAdmin();
   await Promise.all(orderedIds.map((id, i) => supabase.from('categories').update({ sort_order: i + 1 }).eq('id', id)));
   revalidatePath('/admin/categories');
-  revalidatePath('/explore');
+  revalidatePath('/');
+}
+
+// Moves several subjects into a category at once (null = uncategorized).
+export async function setSubjectsCategory(subjectIds: string[], categoryId: string | null) {
+  const { supabase, userId } = await requireAdmin();
+  if (subjectIds.length === 0) return;
+  const { error } = await supabase
+    .from('subjects')
+    .update({ category_id: categoryId, updated_by: userId })
+    .in('id', subjectIds);
+  if (error) throw new Error('فشل في تحديث تصنيف المواد');
+  revalidatePath('/admin');
+  revalidatePath('/admin/categories');
+  revalidatePath('/');
 }
 
 // =================== SUBJECTS ===================
@@ -164,12 +178,15 @@ export async function deleteSubject(id: string) {
 
 export async function updateLessonSettings(
   lessonId: string,
-  settings: { shuffle_questions?: boolean; shuffle_options?: boolean },
+  settings: { shuffle_questions?: boolean; shuffle_options?: boolean; question_seconds?: number },
 ) {
   const { supabase, userId } = await requireAdmin();
   const updates: Record<string, any> = { updated_by: userId };
   if (settings.shuffle_questions !== undefined) updates.shuffle_questions = settings.shuffle_questions;
   if (settings.shuffle_options !== undefined) updates.shuffle_options = settings.shuffle_options;
+  if (settings.question_seconds !== undefined) {
+    updates.question_seconds = Math.min(600, Math.max(10, Math.round(settings.question_seconds)));
+  }
 
   const { error } = await supabase.from('lessons').update(updates).eq('id', lessonId);
   if (error) throw new Error('فشل في تحديث إعدادات الدرس');
@@ -244,9 +261,36 @@ export async function reorderLessons(subjectId: string, orderedIds: string[]) {
 
 // =================== QUESTIONS ===================
 
+// Practice/exam placement. Only sent when given, so saving still works before migration 014.
+function modeFields(data: { in_practice?: boolean; in_exam?: boolean }) {
+  const fields: Record<string, boolean> = {};
+  if (data.in_practice !== undefined) fields.in_practice = data.in_practice;
+  if (data.in_exam !== undefined) fields.in_exam = data.in_exam;
+  if (fields.in_practice === false && fields.in_exam === false) throw new Error('اختر وضعاً واحداً على الأقل للسؤال');
+  return fields;
+}
+
+function MODE_ERROR_HINT(error: { message?: string }, fallback: string) {
+  return /in_practice|in_exam/.test(error.message ?? '') ? 'شغّل ملف التحديث 014 في قاعدة البيانات أولاً' : fallback;
+}
+
+// Sets where questions appear (practice, exam, or both) for one or many questions at once.
+export async function setQuestionsMode(questionIds: string[], mode: { in_practice?: boolean; in_exam?: boolean }) {
+  const { supabase, userId } = await requireAdmin();
+  if (questionIds.length === 0) return;
+  const { error } = await supabase
+    .from('questions')
+    .update({ ...modeFields(mode), updated_by: userId } as any)
+    .in('id', questionIds);
+  if (error) {
+    throw new Error(/questions_in_some_mode/.test(error.message) ? 'يجب أن يظهر السؤال في وضع واحد على الأقل' : MODE_ERROR_HINT(error, 'فشل في تحديث وضع الأسئلة'));
+  }
+  revalidatePath('/admin');
+}
+
 export async function createQuestion(
   lessonId: string,
-  data: { type: string; content: any; explanation?: string },
+  data: { type: string; content: any; explanation?: string; in_practice?: boolean; in_exam?: boolean },
 ) {
   const { supabase, userId } = await requireAdmin();
 
@@ -265,6 +309,7 @@ export async function createQuestion(
       type: data.type as 'mcq' | 'true_false' | 'fill_blanks',
       content: data.content,
       explanation: data.explanation ?? null,
+      ...modeFields(data),
       sort_order: (maxOrder?.sort_order ?? 0) + 1,
       created_by: userId,
       updated_by: userId,
@@ -272,14 +317,14 @@ export async function createQuestion(
     .select('id')
     .single();
 
-  if (error) throw new Error('فشل في إنشاء السؤال');
+  if (error) throw new Error(MODE_ERROR_HINT(error, 'فشل في إنشاء السؤال'));
   revalidatePath('/admin');
   return question;
 }
 
 export async function updateQuestion(
   id: string,
-  data: { type?: string; content?: any; explanation?: string; sort_order?: number },
+  data: { type?: string; content?: any; explanation?: string; sort_order?: number; in_practice?: boolean; in_exam?: boolean },
 ) {
   const { supabase, userId } = await requireAdmin();
 
@@ -288,9 +333,10 @@ export async function updateQuestion(
   if (data.content !== undefined) updates.content = data.content;
   if (data.explanation !== undefined) updates.explanation = data.explanation;
   if (data.sort_order !== undefined) updates.sort_order = data.sort_order;
+  Object.assign(updates, modeFields(data));
 
   const { error } = await supabase.from('questions').update(updates).eq('id', id);
-  if (error) throw new Error('فشل في تحديث السؤال');
+  if (error) throw new Error(MODE_ERROR_HINT(error, 'فشل في تحديث السؤال'));
   revalidatePath('/admin');
 }
 

@@ -100,7 +100,7 @@ export type Database = {
         Row: {
           id: string;
           lesson_id: string;
-          type: 'mcq' | 'matching' | 'true_false' | 'fill_blanks';
+          type: 'mcq' | 'true_false' | 'fill_blanks';
           content: Json;
           explanation: string | null;
           sort_order: number;
@@ -112,7 +112,7 @@ export type Database = {
         Insert: {
           id?: string;
           lesson_id: string;
-          type: 'mcq' | 'matching' | 'true_false' | 'fill_blanks';
+          type: 'mcq' | 'true_false' | 'fill_blanks';
           content: Json;
           explanation?: string | null;
           sort_order: number;
@@ -124,7 +124,7 @@ export type Database = {
         Update: {
           id?: string;
           lesson_id?: string;
-          type?: 'mcq' | 'matching' | 'true_false' | 'fill_blanks';
+          type?: 'mcq' | 'true_false' | 'fill_blanks';
           content?: Json;
           explanation?: string | null;
           sort_order?: number;

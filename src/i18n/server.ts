@@ -1,11 +1,11 @@
-import { cookies } from 'next/headers';
-import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale, type Locale } from './config';
+import { DEFAULT_LOCALE, type Locale } from './config';
 import { ar } from './dictionaries/ar';
 import { en } from './dictionaries/en';
 
+// The site is Arabic only; the language switch was removed, so an old "lang" cookie is ignored.
+// The English dictionary stays in the code in case the switch comes back.
 export async function getLocale(): Promise<Locale> {
-  const value = (await cookies()).get(LOCALE_COOKIE)?.value;
-  return isLocale(value) ? value : DEFAULT_LOCALE;
+  return DEFAULT_LOCALE;
 }
 
 export function dictionaryFor(locale: Locale) {

@@ -27,7 +27,7 @@
 --   ('aaaa2222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'الهندسة', 2, 'published', '<owner-uuid>', '<owner-uuid>'),
 --   ('bbbb1111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222', 'الخلية', 1, 'published', '<owner-uuid>', '<owner-uuid>');
 
--- Step 5: Sample questions (MCQ, True/False, Matching)
+-- Step 5: Sample questions (MCQ, True/False)
 -- MCQ
 -- INSERT INTO public.questions (lesson_id, type, content, explanation, sort_order, created_by, updated_by)
 -- VALUES (
@@ -52,14 +52,3 @@
 --   '<owner-uuid>'
 -- );
 
--- Matching
--- INSERT INTO public.questions (lesson_id, type, content, explanation, sort_order, created_by, updated_by)
--- VALUES (
---   'bbbb1111-1111-1111-1111-111111111111',
---   'matching',
---   '{"question":{"text":"طابق العضو مع وظيفته","image":null},"left":[{"id":"l1","text":"النواة","image":null},{"id":"l2","text":"الميتوكوندريا","image":null},{"id":"l3","text":"الغشاء البلازمي","image":null}],"right":[{"id":"r1","text":"إنتاج الطاقة","image":null},{"id":"r2","text":"التحكم بالخلية","image":null},{"id":"r3","text":"حماية الخلية","image":null}],"pairs":{"l1":"r2","l2":"r1","l3":"r3"}}',
---   'النواة تتحكم بالخلية، الميتوكوندريا تنتج الطاقة، والغشاء البلازمي يحمي الخلية',
---   1,
---   '<owner-uuid>',
---   '<owner-uuid>'
--- );

@@ -36,7 +36,7 @@ export default async function LessonRoute({
       .single(),
     supabase
       .from('questions')
-      .select('id, type, content, explanation, sort_order')
+      .select('*')
       .eq('lesson_id', lessonId)
       .order('sort_order'),
     supabase

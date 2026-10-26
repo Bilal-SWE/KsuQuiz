@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { BookOpenCheck, Trophy, Zap } from 'lucide-react';
 import { Logo } from '@/components/ui/logo';
-import { LanguageToggle, useI18n } from '@/i18n/client';
+import { useI18n } from '@/i18n/client';
 import { APP_NAME } from '@/lib/constants';
 
 const featureIcons = [BookOpenCheck, Zap, Trophy];
@@ -51,7 +51,6 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           {children}
         </div>
       </div>
-      <LanguageToggle className="mt-4" />
     </div>
   );
 }

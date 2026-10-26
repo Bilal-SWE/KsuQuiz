@@ -67,7 +67,8 @@ export default function ProfilePage() {
 
   const logout = async () => {
     await createClient().auth.signOut();
-    router.push('/auth/login');
+    router.push('/welcome');
+    router.refresh();
   };
 
   const initials = (profile?.full_name || user?.email || '?').trim().charAt(0);

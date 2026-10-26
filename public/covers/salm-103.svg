@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#CFE0FF"/><circle cx="290" cy="20" r="54" fill="#fff" opacity=".28"/><circle cx="28" cy="186" r="30" fill="#fff" opacity=".3"/>
+<g stroke="#0B1F33" stroke-width="4" fill="#FFB400">
+<rect x="104" y="136" width="48" height="14" rx="7"/><rect x="104" y="122" width="48" height="14" rx="7"/>
+<rect x="160" y="136" width="48" height="14" rx="7"/><rect x="160" y="122" width="48" height="14" rx="7"/><rect x="160" y="108" width="48" height="14" rx="7"/><rect x="160" y="94" width="48" height="14" rx="7"/>
+<rect x="216" y="136" width="48" height="14" rx="7"/><rect x="216" y="122" width="48" height="14" rx="7"/><rect x="216" y="108" width="48" height="14" rx="7"/><rect x="216" y="94" width="48" height="14" rx="7"/><rect x="216" y="80" width="48" height="14" rx="7"/><rect x="216" y="66" width="48" height="14" rx="7"/>
+</g>
+<circle cx="66" cy="112" r="26" fill="#fff" stroke="#0B1F33" stroke-width="5"/>
+<path d="M70 98a14 14 0 1 0 0 28 11 11 0 1 1 0-28z" fill="#0F9D8A"/>
+<path d="M108 80 140 56l24 14 40-34" fill="none" stroke="#0F9D8A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M188 34h18v18" fill="none" stroke="#0F9D8A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="40" y="150" width="240" height="8" rx="4" fill="#0B1F33"/></svg>

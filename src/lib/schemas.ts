@@ -33,32 +33,14 @@ export const trueFalseContentSchema = z.object({
   correct: z.boolean(),
 });
 
-const matchingItem = z.object({
-  id: z.string().min(1),
-  text: z.string().optional().default(''),
-  image: z.string().url().nullable().optional(),
-}).refine(
-  (data) => data.text.length > 0 || (data.image != null && data.image.length > 0),
-  { message: 'يجب إدخال نص أو صورة لكل عنصر' },
-);
-
-export const matchingContentSchema = z.object({
-  question: textWithImage,
-  left: z.array(matchingItem).min(2, 'يجب إضافة عنصرين على الأقل'),
-  right: z.array(matchingItem).min(2, 'يجب إضافة عنصرين على الأقل'),
-  pairs: z.record(z.string(), z.string()),
-});
-
 export const questionContentSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('mcq'), content: mcqContentSchema }),
   z.object({ type: z.literal('true_false'), content: trueFalseContentSchema }),
-  z.object({ type: z.literal('matching'), content: matchingContentSchema }),
 ]);
 
 export type McqContent = z.infer<typeof mcqContentSchema>;
 export type TrueFalseContent = z.infer<typeof trueFalseContentSchema>;
-export type MatchingContent = z.infer<typeof matchingContentSchema>;
-export type QuestionContent = McqContent | TrueFalseContent | MatchingContent;
+export type QuestionContent = McqContent | TrueFalseContent;
 
 export const subjectSchema = z.object({
   name: z.string().min(1, 'اسم المادة مطلوب').max(200),

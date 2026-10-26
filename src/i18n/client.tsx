@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { Languages } from 'lucide-react';
-import { LOCALE_COOKIE, type Locale } from './config';
+import type { Locale } from './config';
 import { ar, type Dictionary } from './dictionaries/ar';
 import { en } from './dictionaries/en';
 
@@ -14,26 +13,4 @@ export function I18nProvider({ locale, children }: { locale: Locale; children: R
 
 export function useI18n() {
   return useContext(I18nContext);
-}
-
-export function LanguageToggle({ className = '' }: { className?: string }) {
-  const { locale, t } = useI18n();
-
-  const toggle = () => {
-    const next: Locale = locale === 'ar' ? 'en' : 'ar';
-    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
-    window.location.reload();
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      title={t.common.switchLanguageLabel}
-      aria-label={t.common.switchLanguageLabel}
-      className={`press inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface-hover hover:text-foreground transition-colors cursor-pointer ${className}`}
-    >
-      <Languages className="h-[18px] w-[18px]" />
-    </button>
-  );
 }

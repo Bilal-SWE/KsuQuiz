@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   BookOpenCheck,
   CircleCheck,
   CircleX,
@@ -21,7 +22,6 @@ import { Button } from '@/components/ui/button';
 import { startAttempt, submitAnswer, finishAttempt } from '@/app/actions/quiz';
 import { McqQuestion } from '@/components/student/questions/mcq';
 import { TrueFalseQuestion } from '@/components/student/questions/true-false';
-import { MatchingQuestion } from '@/components/student/questions/matching';
 import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 import { ExamResults } from '@/components/student/exam-results';
 import { ImageZoom } from '@/components/ui/image-zoom';
@@ -36,11 +36,13 @@ type Question = {
   content: Record<string, any>;
   explanation: string | null;
   sort_order: number;
+  in_practice?: boolean;
+  in_exam?: boolean;
 };
 
 type Props = {
   subjectId: string;
-  lesson: { id: string; title: string };
+  lesson: { id: string; title: string; question_seconds?: number };
   questions: Question[];
   unfinishedAttempt: { id: string; mode: string; started_at?: string } | null;
   existingAnswers: { question_id: string; response: any; is_correct: boolean | null }[];
@@ -48,26 +50,38 @@ type Props = {
   currentUserId: string;
 };
 
-function ElapsedTimer({ since }: { since: number }) {
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    setNow(Date.now());
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  if (now === null) return null;
+// Countdown for the question on screen: a pill with the seconds left over a shrinking bar.
+function QuestionTimer({ left, total, label }: { left: number; total: number; label: string }) {
+  const secs = Math.ceil(left / 1000);
+  const urgent = secs <= 10;
+  const pct = Math.max(0, Math.min(100, (left / (total * 1000)) * 100));
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3.5 py-1.5 text-sm font-extrabold text-ink tabular-nums" dir="ltr">
-      <Clock className="h-4 w-4" />
-      {formatDuration((now - since) / 1000)}
-    </span>
+    <div className="flex w-full max-w-xs flex-col items-center gap-1.5" role="timer" aria-label={label}>
+      <span
+        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-extrabold tabular-nums transition-colors ${
+          secs === 0 ? 'bg-error text-white' : urgent ? 'bg-error-light text-error animate-pulse' : 'bg-accent-light text-ink'
+        }`}
+        dir="ltr"
+      >
+        <Clock className="h-4 w-4" />
+        {formatDuration(secs)}
+      </span>
+      <span className="h-1.5 w-full overflow-hidden rounded-full bg-border" aria-hidden="true">
+        <span
+          className={`block h-full rounded-full transition-[width] duration-300 ease-linear ${urgent ? 'bg-error' : 'bg-accent'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+    </div>
   );
 }
+
+const DEFAULT_QUESTION_SECONDS = 60;
 
 export function LessonPage({
   subjectId,
   lesson,
-  questions,
+  questions: allQuestions,
   unfinishedAttempt,
   existingAnswers,
   leaderboard,
@@ -95,7 +109,62 @@ export function LessonPage({
   const [feedback, setFeedback] = useState<Record<string, any>>({});
   const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[] } | null>(null);
   const [showRank, setShowRank] = useState(false);
+
+  // Practice and exam are separate sets chosen by the admin; each mode only sees its own.
+  const practiceQuestions = useMemo(() => allQuestions.filter((q) => q.in_practice !== false), [allQuestions]);
+  const examQuestions = useMemo(() => allQuestions.filter((q) => q.in_exam !== false), [allQuestions]);
+  const questions = mode === 'exam' ? examQuestions : practiceQuestions;
   const pendingSaves = useRef(new Set<Promise<void>>());
+
+  // Exam mode: each question gets its own deadline the first time it is shown. The deadlines
+  // are kept per attempt in localStorage so a reload doesn't hand out fresh time.
+  const questionSeconds = lesson.question_seconds ?? DEFAULT_QUESTION_SECONDS;
+  const [deadlines, setDeadlines] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(() => Date.now());
+  const deadlinesKey = attemptId ? `exam-deadlines-${attemptId}` : null;
+
+  useEffect(() => {
+    if (mode !== 'exam' || !deadlinesKey) return;
+    try {
+      setDeadlines(JSON.parse(localStorage.getItem(deadlinesKey) ?? '{}'));
+    } catch {
+      setDeadlines({});
+    }
+  }, [mode, deadlinesKey]);
+
+  useEffect(() => {
+    if (mode !== 'exam') return;
+    const t = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(t);
+  }, [mode]);
+
+  const examQuestionId = mode === 'exam' ? questions[currentIndex]?.id : undefined;
+  useEffect(() => {
+    if (!examQuestionId || !deadlinesKey) return;
+    setDeadlines((prev) => {
+      if (prev[examQuestionId]) return prev;
+      const next = { ...prev, [examQuestionId]: Date.now() + questionSeconds * 1000 };
+      try {
+        localStorage.setItem(deadlinesKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, [examQuestionId, deadlinesKey, questionSeconds]);
+
+  const isExpired = (id: string) => mode === 'exam' && !!deadlines[id] && now >= deadlines[id];
+
+  // When the question on screen runs out of time, move on to the next one that still has time.
+  const currentExpired = examQuestionId ? isExpired(examQuestionId) : false;
+  useEffect(() => {
+    if (!currentExpired) return;
+    const t = setTimeout(() => {
+      const order = [...questions.slice(currentIndex + 1), ...questions.slice(0, currentIndex)];
+      const open = (q: Question) => !(deadlines[q.id] && Date.now() >= deadlines[q.id]);
+      const target = order.find((q) => open(q) && !answers[q.id]) ?? order.find(open);
+      if (target) setCurrentIndex(questions.indexOf(target));
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [currentExpired, currentIndex, questions, deadlines, answers]);
 
   const handleStart = async (selectedMode: 'exam' | 'practice') => {
     setLoading(selectedMode);
@@ -284,7 +353,7 @@ export function LessonPage({
       {
         key: 'exam' as const,
         title: L.exam,
-        desc: L.examDesc,
+        desc: fmt(L.examDesc, { s: questionSeconds, n: examQuestions.length }),
         icon: ClipboardList,
         tint: 'bg-primary text-ink',
         onClick: () => handleStart('exam'),
@@ -315,7 +384,7 @@ export function LessonPage({
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
                 <Flag className="h-4 w-4" />
-                {fmt(L.questionsCount, { n: questions.length })}
+                {fmt(L.questionsCount, { n: practiceQuestions.length })}
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
                 <Users className="h-4 w-4" />
@@ -330,7 +399,7 @@ export function LessonPage({
             <button
               key={m.key}
               onClick={m.onClick}
-              disabled={!!loading || (m.key !== 'rank' && questions.length === 0)}
+              disabled={!!loading || (m.key === 'practice' && practiceQuestions.length === 0) || (m.key === 'exam' && examQuestions.length === 0)}
               className="card card-hover press group flex items-center gap-4 p-4 text-start cursor-pointer sm:flex-col sm:items-start sm:gap-3 sm:p-5 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${m.tint} shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}>
@@ -354,10 +423,14 @@ export function LessonPage({
   const currentQ = questions[currentIndex];
   if (!currentQ) return null;
 
-  const answeredCount = Object.keys(answers).length;
+  // In an exam, a question whose time ran out counts as done (unanswered).
+  const doneCount = questions.filter((q) => answers[q.id] || isExpired(q.id)).length;
   const hasFeedback = feedback[currentQ.id];
   const hasAnswer = answers[currentQ.id];
   const isLast = currentIndex === questions.length - 1;
+  const timeUp = isExpired(currentQ.id);
+  const locked = (!!hasAnswer && mode === 'practice') || timeUp;
+  const deadline = deadlines[currentQ.id];
 
   const dotStyle = (q: Question, i: number) => {
     const fb = feedback[q.id];
@@ -365,36 +438,19 @@ export function LessonPage({
     const base = i === currentIndex ? 'ring-2 ring-ink ring-offset-2 ring-offset-background ' : '';
     if (mode === 'practice' && fb) return base + (fb.is_correct ? 'bg-success-light text-success-ink border-2 border-success' : 'bg-error-light text-error border-2 border-error');
     if (a) return base + 'bg-primary text-on-primary';
+    if (isExpired(q.id)) return base + 'bg-surface-hover text-muted/60 border-2 border-dashed border-border line-through';
     return base + 'bg-surface text-muted border-2 border-border';
   };
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-2.5 sm:gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href={`/subjects/${subjectId}`}
-          aria-label={L.exitLesson}
-          className="press flex h-9 w-9 items-center justify-center rounded-full bg-surface text-ink shadow-sm sm:h-10 sm:w-10 hover:bg-surface-hover"
-        >
-          <X className="h-5 w-5" strokeWidth={2.5} />
-        </Link>
-        <span dir="auto" className="min-w-0 truncate text-base font-bold text-muted">
+      <div className="flex flex-col items-center gap-1.5">
+        <span dir="auto" className="max-w-full truncate text-center text-sm font-medium text-muted">
           {lesson.title}
         </span>
-        {mode === 'exam' && startedAt ? (
-          <ElapsedTimer since={startedAt} />
-        ) : (
-          <span className="rounded-full bg-pastel-teal px-4 py-2 text-base font-extrabold text-ink">
-            {mode === 'exam' ? L.examBadge : L.practiceBadge}
-          </span>
+        {mode === 'exam' && deadline && (
+          <QuestionTimer left={Math.max(0, deadline - now)} total={questionSeconds} label={L.timeLeft} />
         )}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <div className="flex justify-between text-xs font-bold text-muted">
-          <span>{fmt(L.questionOf, { i: currentIndex + 1, n: questions.length })}</span>
-          <span>{fmt(L.answeredOf, { a: answeredCount, n: questions.length })}</span>
-        </div>
       </div>
 
       {questions.length > 1 && (
@@ -430,7 +486,7 @@ export function LessonPage({
             content={currentQ.content}
             onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
             feedback={hasFeedback}
-            disabled={!!hasAnswer && mode === 'practice'}
+            disabled={locked}
             selectedOption={hasAnswer?.response}
           />
         )}
@@ -440,7 +496,7 @@ export function LessonPage({
             content={currentQ.content}
             onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
             feedback={hasFeedback}
-            disabled={!!hasAnswer && mode === 'practice'}
+            disabled={locked}
             selectedValue={hasAnswer?.response}
           />
         )}
@@ -451,22 +507,17 @@ export function LessonPage({
               content={{ ...currentQ.content, question: undefined }}
               onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
               feedback={hasFeedback}
-              disabled={!!hasAnswer && mode === 'practice'}
+              disabled={locked}
               savedResponse={hasAnswer?.response}
             />
           </div>
         )}
-        {currentQ.type === 'matching' && (
-          <div className="card p-4 sm:p-5">
-            <MatchingQuestion
-              key={currentQ.id}
-              content={{ ...currentQ.content, question: undefined }}
-              onAnswer={(resp) => handleAnswer(currentQ.id, resp)}
-              feedback={hasFeedback}
-              disabled={!!hasAnswer && mode === 'practice'}
-              savedPairs={hasAnswer?.response}
-            />
-          </div>
+
+        {timeUp && (
+          <p className="flex items-center gap-2 rounded-xl bg-error-light px-3 py-2 text-[13px] font-bold text-error animate-slide-in" role="status">
+            <Clock className="h-4 w-4 shrink-0" />
+            {hasAnswer ? L.timeUpAnswered : L.timeUp}
+          </p>
         )}
 
         {mode === 'practice' && hasAnswer && !hasFeedback && !('is_correct' in hasAnswer) && (
@@ -509,7 +560,7 @@ export function LessonPage({
           {L.previous}
         </button>
 
-        {answeredCount === questions.length ? (
+        {doneCount === questions.length ? (
           <Button onClick={handleFinish} loading={loading === 'finish'} className="h-11 max-w-44 flex-1 text-base font-extrabold sm:h-12">
             <Flag className="h-5 w-5" />
             {mode === 'exam' ? L.finishExam : L.finishPractice}
@@ -525,6 +576,14 @@ export function LessonPage({
           </Button>
         )}
       </div>
+
+      <Link
+        href={`/subjects/${subjectId}`}
+        className="press mx-auto flex h-9 items-center gap-1.5 rounded-full border-2 border-border bg-surface px-5 text-sm font-bold text-ink hover:border-ink"
+      >
+        <BookOpen className="h-4 w-4" />
+        {L.backToLessons}
+      </Link>
     </div>
   );
 }

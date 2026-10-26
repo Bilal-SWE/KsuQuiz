@@ -165,7 +165,9 @@ export function ExamResults({
                 {q.type === 'mcq' && (
                   <div className="ms-7 space-y-1 text-sm">
                     <p className={item.is_correct ? 'text-success-ink' : 'text-error'}>
-                      {R.yourAnswer} {q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}
+                      {item.response == null
+                        ? R.noAnswer
+                        : `${R.yourAnswer} ${q.content.options?.find((o: any) => o.id === item.response)?.text ?? item.response}`}
                     </p>
                     {!item.is_correct && (
                       <p className="text-success-ink">
@@ -178,7 +180,9 @@ export function ExamResults({
                 {q.type === 'true_false' && (
                   <div className="ms-7 space-y-1 text-sm">
                     <p className={item.is_correct ? 'text-success-ink' : 'text-error'}>
-                      {R.yourAnswer} {item.response ? t.question.true : t.question.false}
+                      {item.response == null
+                        ? R.noAnswer
+                        : `${R.yourAnswer} ${item.response ? t.question.true : t.question.false}`}
                     </p>
                     {!item.is_correct && (
                       <p className="text-success-ink">
@@ -197,10 +201,6 @@ export function ExamResults({
                       savedResponse={item.response}
                     />
                   </div>
-                )}
-
-                {q.type === 'matching' && !item.is_correct && (
-                  <p className="ms-7 text-sm text-error">{R.someMatchesWrong}</p>
                 )}
 
                 {(item.explanation || item.option_explanation) && (

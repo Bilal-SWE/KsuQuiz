@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 const typeLabels: Record<string, string> = {
   mcq: 'اختيار من متعدد',
   true_false: 'صح / خطأ',
-  matching: 'مطابقة',
   fill_blanks: 'املأ الفراغات',
 };
 
@@ -39,18 +38,6 @@ export function QuestionPreview({ question }: { question: { type: string; conten
         <p className="text-sm">
           الإجابة: <span className="font-medium text-green-700">{content.correct ? 'صح' : 'خطأ'}</span>
         </p>
-      )}
-
-      {question.type === 'matching' && content.left && (
-        <div className="text-sm space-y-1">
-          {content.left.map((l: any, i: number) => (
-            <div key={l.id} className="flex gap-2">
-              <span className="text-muted">{l.text}</span>
-              <span>←→</span>
-              <span className="text-green-700">{content.right?.[i]?.text}</span>
-            </div>
-          ))}
-        </div>
       )}
 
       {question.type === 'fill_blanks' && content.items && (

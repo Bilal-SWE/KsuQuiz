@@ -17,6 +17,7 @@ export async function SiteFooter({ className = '' }: { className?: string }) {
         <p>
           © {new Date().getFullYear()} {APP_NAME}
         </p>
+        <p className="w-full text-center text-[11px] text-muted/80">{t.footer.note}</p>
       </div>
     </footer>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 
 type Subject = {
@@ -33,7 +33,7 @@ export function SubjectCover({ subject, className = '' }: { subject: Subject; cl
     <div className={`relative flex h-full w-full items-center justify-center ${subjectFill(subject.name)} ${className}`}>
       <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
       <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
-      <span className="relative text-3xl font-bold sm:text-4xl">
+      <span className="relative text-2xl font-bold sm:text-3xl">
         {(subject.name.trim().replace(/^ال(?=\S{2})/, '') || subject.name).charAt(0)}
       </span>
     </div>
@@ -43,33 +43,28 @@ export function SubjectCover({ subject, className = '' }: { subject: Subject; cl
 export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?: boolean }) {
   const { t } = useI18n();
   return (
-    <Link href={`/subjects/${subject.id}`} className="card card-hover group flex overflow-hidden press sm:block">
-      <div className="w-24 shrink-0 overflow-hidden sm:aspect-[16/8] sm:w-auto">
-        <div className="h-full min-h-24 w-full transition-transform duration-500 group-hover:scale-105">
+    <Link
+      href={`/subjects/${subject.id}`}
+      title={t.subjectCard.startStudying}
+      className="card card-hover group block overflow-hidden !rounded-2xl press"
+    >
+      <div className="aspect-[16/10] overflow-hidden">
+        <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
           <SubjectCover subject={subject} />
         </div>
       </div>
-      <div className="min-w-0 flex-1 p-3 sm:p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 dir="auto" className="font-bold text-foreground">
+      <div className="px-2.5 py-2 text-center sm:px-3">
+        <div className="flex items-center justify-center gap-1.5">
+          <h3 dir="auto" className="min-w-0 truncate text-sm font-bold text-foreground sm:text-base">
             {subject.name}
           </h3>
-          {enrolled && (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success-light px-2 py-0.5 text-xs font-medium text-success-ink">
-              <Check className="h-3 w-3" />
-              {t.subjectCard.enrolled}
-            </span>
-          )}
+          {enrolled && <Check className="h-3.5 w-3.5 shrink-0 text-success-ink" aria-label={t.subjectCard.enrolled} />}
         </div>
         {subject.description && (
-          <p dir="auto" className="mt-1 text-sm text-muted line-clamp-2">
+          <p dir="auto" className="mt-0.5 truncate text-xs text-muted">
             {subject.description}
           </p>
         )}
-        <span className="mt-3 hidden items-center gap-1 text-xs font-medium text-primary-ink opacity-0 transition-opacity group-hover:opacity-100 sm:inline-flex">
-          <BookOpen className="h-3.5 w-3.5" />
-          {t.subjectCard.startStudying}
-        </span>
       </div>
     </Link>
   );

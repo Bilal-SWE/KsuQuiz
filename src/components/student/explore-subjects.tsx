@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, FolderOpen, LayoutGrid, Plus, Search } from 'lucide-react';
+import { Check, Compass, FolderOpen, LayoutGrid, Plus, Search, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
 import { categoryColor, type Category } from '@/lib/categories';
@@ -97,22 +97,25 @@ export function ExploreSubjects({
   };
 
   const renderGrid = (items: Subject[]) => (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 stagger">
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 stagger">
       {items.map((subject) => {
         const isEnrolled = enrolled.has(subject.id);
         return (
-          <div key={subject.id} className="flex flex-col gap-2">
-            <SubjectCard subject={subject} enrolled={isEnrolled} />
+          <div key={subject.id} className="relative">
+            <SubjectCard subject={subject} />
             <button
+              type="button"
               onClick={() => toggleEnroll(subject.id)}
-              className={`press inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+              title={isEnrolled ? E.inMySubjects : E.addToMySubjects}
+              aria-label={isEnrolled ? E.inMySubjects : E.addToMySubjects}
+              aria-pressed={isEnrolled}
+              className={`press absolute top-1.5 end-1.5 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full shadow-sm transition-colors ${
                 isEnrolled
-                  ? 'border border-border bg-surface text-muted hover:border-error/40 hover:text-error'
-                  : 'bg-primary text-on-primary shadow-[0_6px_16px_-6px_rgb(15_157_138/0.45)] hover:brightness-110'
+                  ? 'bg-primary text-on-primary hover:bg-primary-hover'
+                  : 'border border-border bg-surface text-primary-ink hover:bg-primary-light'
               }`}
             >
-              {isEnrolled ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-              {isEnrolled ? E.inMySubjects : E.addToMySubjects}
+              {isEnrolled ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-4 w-4" strokeWidth={3} />}
             </button>
           </div>
         );
@@ -130,51 +133,75 @@ export function ExploreSubjects({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <section className="hero p-5 sm:p-8 animate-fade-up">
-        <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl font-bold">{E.title}</h1>
-          <p className="mt-1 text-sm text-white/80">{fmt(E.available, { n: subjects.length })}</p>
-          <div className="relative mt-5 max-w-lg">
-            <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
+      <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-4 pt-7 pb-5 text-center sm:px-8 sm:pt-10 sm:pb-6 animate-fade-up">
+        <span className="pointer-events-none absolute -top-16 -start-16 h-48 w-48 rounded-full bg-primary/10" aria-hidden="true" />
+        <span className="pointer-events-none absolute -bottom-20 -end-10 h-40 w-40 rounded-full bg-accent/15" aria-hidden="true" />
+
+        <div className="relative">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-bold text-primary-ink shadow-sm">
+            <Compass className="h-3.5 w-3.5" />
+            {E.eyebrow}
+          </span>
+          <h1 className="mt-3 text-2xl font-extrabold sm:text-4xl">{E.title}</h1>
+          <p className="mx-auto mt-1.5 max-w-md text-sm text-muted sm:text-base">{fmt(E.available, { n: subjects.length })}</p>
+
+          <div className="relative mx-auto mt-5 max-w-xl">
+            <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-ink" />
             <input
+              type="search"
               placeholder={E.search}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-2xl border-0 bg-white py-3.5 ps-12 pe-4 text-sm text-foreground shadow-lg placeholder:text-muted/70 focus:outline-none focus:ring-4 focus:ring-white/40"
+              aria-label={E.search}
+              className="w-full rounded-full border-2 border-transparent bg-surface py-3.5 ps-12 pe-12 text-base text-foreground shadow-[0_10px_30px_-12px_rgb(11_31_51/0.25)] placeholder:text-muted/70 focus:border-primary focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label={E.clearSearch}
+                className="absolute end-3 top-1/2 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-surface-hover text-muted hover:text-ink"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
+          {query.trim() && (
+            <p className="mt-2 text-xs font-medium text-muted" role="status">
+              {fmt(E.resultsCount, { n: filtered.length })}
+            </p>
+          )}
+
+          {categories.length > 0 && (
+            <div className="-mx-4 mt-5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+              <div className="mx-auto flex w-max gap-2 sm:w-auto sm:flex-wrap sm:justify-center">
+                {chips.map((chip) => {
+                  const isActive = active === chip.key;
+                  const col = chip.color ? categoryColor(chip.color) : null;
+                  return (
+                    <button
+                      key={chip.key}
+                      onClick={() => selectCategory(chip.key)}
+                      aria-pressed={isActive}
+                      className={`press inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-bold transition cursor-pointer ${
+                        isActive ? 'bg-ink text-background shadow-md' : 'bg-surface text-muted shadow-sm hover:text-ink'
+                      }`}
+                    >
+                      {chip.key === 'all' ? (
+                        <LayoutGrid className="h-4 w-4" />
+                      ) : (
+                        <span className={`h-2.5 w-2.5 rounded-full ring-1 ring-ink/15 ${col ? col.dot : 'bg-muted/50'}`} />
+                      )}
+                      {chip.name}
+                      <span className={`rounded-full px-1.5 text-xs ${isActive ? 'bg-white/15' : 'bg-surface-hover'}`}>{chip.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
-
-      {categories.length > 0 && (
-        <div className="-mx-4 overflow-x-auto px-4 pb-1">
-          <div className="flex w-max gap-2">
-            {chips.map((chip) => {
-              const isActive = active === chip.key;
-              const col = chip.color ? categoryColor(chip.color) : null;
-              return (
-                <button
-                  key={chip.key}
-                  onClick={() => selectCategory(chip.key)}
-                  className={`press inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition cursor-pointer ${
-                    isActive
-                      ? `${col ? col.fill : 'bg-primary text-on-primary'} shadow-md`
-                      : 'border border-border bg-surface text-muted hover:border-primary/30 hover:text-foreground'
-                  }`}
-                >
-                  {chip.key === 'all' ? (
-                    <LayoutGrid className="h-4 w-4" />
-                  ) : (
-                    <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-white' : col ? col.dot : 'bg-muted/50'}`} />
-                  )}
-                  {chip.name}
-                  <span className={`rounded-full px-1.5 text-xs ${isActive ? 'bg-white/25' : 'bg-surface-hover'}`}>{chip.count}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -195,15 +222,9 @@ export function ExploreSubjects({
                     </span>
                     {g.name}
                   </h2>
-                  {g.key !== UNCATEGORIZED && g.items.length > 3 ? (
-                    <button onClick={() => selectCategory(g.key)} className="text-sm font-medium text-primary-ink hover:underline cursor-pointer">
-                      {fmt(E.viewAll, { n: g.items.length })}
-                    </button>
-                  ) : (
-                    <span className="text-sm text-muted">{fmt(E.subjectsCount, { n: g.items.length })}</span>
-                  )}
+                  <span className="text-sm text-muted">{fmt(E.subjectsCount, { n: g.items.length })}</span>
                 </div>
-                {renderGrid(g.key === UNCATEGORIZED ? g.items : g.items.slice(0, 3))}
+                {renderGrid(g.items)}
               </section>
             );
           })}

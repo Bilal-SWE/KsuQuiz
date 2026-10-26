@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
 import { SiteFooter } from '@/components/shell/site-footer';
-import { LanguageToggle } from '@/i18n/client';
 import { getI18n } from '@/i18n/server';
 import { APP_NAME } from '@/lib/constants';
 
@@ -15,7 +14,6 @@ export default async function PublicLayout({ children }: { children: React.React
             <Logo markClassName="h-8 w-8 sm:h-9 sm:w-9" textClassName="text-lg sm:text-xl" />
           </Link>
           <div className="flex items-center gap-1.5">
-            <LanguageToggle />
             <Link
               href="/auth/signup"
               className="press rounded-full bg-primary px-4 py-1.5 text-sm font-bold text-on-primary hover:bg-primary-hover"

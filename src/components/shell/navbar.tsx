@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, Crown, FolderOpen, Home, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
+import { BookMarked, Compass, Crown, FolderOpen, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
 import { SubscribeButton } from '@/components/shell/subscribe-button';
 import { Logo } from '@/components/ui/logo';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { APP_NAME } from '@/lib/constants';
-import { LanguageToggle, useI18n } from '@/i18n/client';
+import { useI18n } from '@/i18n/client';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -23,13 +23,13 @@ export function Navbar() {
         { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ]
     : [
-        { href: '/', label: t.nav.mySubjects, icon: Home, exact: true },
-        { href: '/explore', label: t.nav.explore, icon: Compass, exact: true },
+        { href: '/', label: t.nav.explore, icon: Compass, exact: true },
+        { href: '/my-subjects', label: t.nav.mySubjects, icon: BookMarked, exact: true },
         { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ];
 
   const isActive = (href: string, exact: boolean) => {
-    if (href === '/' && !isAdmin) return pathname === '/' || pathname.startsWith('/subjects');
+    if (href === '/my-subjects') return pathname === href || pathname.startsWith('/subjects');
     if (href === '/admin')
       return pathname.startsWith('/admin') && !pathname.startsWith('/admin/users') && !pathname.startsWith('/admin/categories');
     return exact ? pathname === href : pathname.startsWith(href);
@@ -64,7 +64,6 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-1">
-            <LanguageToggle />
             {!isAdmin && (
               <SubscribeButton
                 title={t.nav.subscribe}

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { BookOpenCheck, Info, Scale, Smartphone, Target } from 'lucide-react';
+import { BookOpenCheck, Info, Scale, Smartphone, Target, TriangleAlert } from 'lucide-react';
 import { LegalPage } from '@/components/shell/legal-page';
 import { getI18n } from '@/i18n/server';
 import { APP_NAME } from '@/lib/constants';
@@ -13,7 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
 const content = {
   ar: {
     whatTitle: `ما هو ${APP_NAME}؟`,
-    what: `${APP_NAME} منصة إلكترونية لتدريب طلاب الجامعة على أسئلة موادهم الدراسية. يجد الطالب في المنصة دروساً مقسمة حسب المواد، ولكل درس أسئلة متنوعة يتدرب عليها بطريقتين: وضع التمرين الذي يعرض الإجابة والشرح بعد كل سؤال، ووضع الاختبار الذي يقيس المستوى ويعرض النتيجة في النهاية.`,
+    what: `${APP_NAME} منصة كويزات تدريبية لطلاب الجامعة، تساعدهم على مراجعة أسئلة موادهم الدراسية. يجد الطالب في المنصة دروساً مقسمة حسب المواد، ولكل درس كويز من أسئلة متنوعة يحله بطريقتين: وضع التمرين الذي يعرض الإجابة والشرح بعد كل سؤال، ووضع الاختبار الذي يقيس المستوى ويعرض النتيجة في النهاية.`,
+    noteTitle: 'تنبيه مهم',
+    note: 'جميع الأسئلة في المنصة أسئلة تدريبية أُعدّت للمراجعة والتدرّب، وليست أسئلة تجميعات، ولا تغني عن الرجوع إلى المحاضرات والمراجع المعتمدة.',
     offerTitle: 'ماذا نقدم؟',
     offer: [
       'أسئلة اختيار من متعدد، وصح أو خطأ، واملأ الفراغات من بنك كلمات.',
@@ -35,7 +37,9 @@ const content = {
   },
   en: {
     whatTitle: `What is ${APP_NAME}?`,
-    what: `${APP_NAME} is an online platform where university students practice questions from their courses. Lessons are organized by subject, and each lesson has varied questions students can practice in two ways: practice mode, which shows the answer and an explanation after each question, and exam mode, which measures their level and shows the score at the end.`,
+    what: `${APP_NAME} is a practice quiz platform that helps university students revise questions from their courses. Lessons are organized by subject, and each lesson has a quiz of varied questions students can take in two ways: practice mode, which shows the answer and an explanation after each question, and exam mode, which measures their level and shows the score at the end.`,
+    noteTitle: 'Please note',
+    note: 'All questions on the platform are practice questions written for revision. They are not compiled past-exam questions and do not replace your lectures and approved references.',
     offerTitle: 'What we offer',
     offer: [
       'Multiple choice, true or false, and fill-in-the-blank questions with a word bank.',
@@ -66,6 +70,13 @@ export default async function AboutPage() {
     <LegalPage title={t.legal.aboutTitle} subtitle={t.legal.aboutSubtitle} icon={Info}>
       <h2>{c.whatTitle}</h2>
       <p>{c.what}</p>
+      <div className="my-4 flex gap-3 rounded-2xl bg-accent-light p-4">
+        <TriangleAlert className="mt-1 h-5 w-5 shrink-0 text-accent-ink" />
+        <div>
+          <p className="mb-1! font-bold text-foreground">{c.noteTitle}</p>
+          <p className="mb-0! text-sm leading-relaxed">{c.note}</p>
+        </div>
+      </div>
 
       <h2>{c.offerTitle}</h2>
       <ul>

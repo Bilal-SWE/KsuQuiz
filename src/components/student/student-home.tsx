@@ -37,7 +37,7 @@ export function StudentHome({ subjects }: { subjects: Subject[] }) {
           <p className="mt-2 max-w-md text-sm text-white/80">{H.heroText}</p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Link
-              href="/explore"
+              href="/"
               className="press inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-primary-ink shadow-lg hover:bg-white/90"
             >
               <Compass className="h-4 w-4" />
@@ -65,13 +65,13 @@ export function StudentHome({ subjects }: { subjects: Subject[] }) {
             title={H.emptyTitle}
             description={H.emptyDesc}
             action={
-              <Link href="/explore">
+              <Link href="/">
                 <Button>{H.browse}</Button>
               </Link>
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 stagger">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 stagger">
             {subjects.map((subject) => (
               <SubjectCard key={subject.id} subject={subject} enrolled />
             ))}

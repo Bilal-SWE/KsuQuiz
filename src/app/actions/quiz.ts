@@ -18,6 +18,11 @@ export async function startAttempt(lessonId: string, mode: 'exam' | 'practice') 
   return data;
 }
 
+// Practice and exam have separate question sets (columns from migration 014; missing means both).
+function inMode(question: Record<string, any>, mode: string) {
+  return mode === 'exam' ? question.in_exam !== false : question.in_practice !== false;
+}
+
 function gradeQuestion(
   type: string,
   content: Record<string, any>,
@@ -30,13 +35,6 @@ function gradeQuestion(
       return response === content.correct;
     case 'fill_blanks':
       return gradeFillBlanks(content as any, response);
-    case 'matching': {
-      const pairs = content.pairs as Record<string, string>;
-      const studentPairs = response as Record<string, string>;
-      return Object.entries(pairs).every(
-        ([left, right]) => studentPairs[left] === right,
-      );
-    }
     default:
       return false;
   }
@@ -58,13 +56,14 @@ export async function submitAnswer(
       .single(),
     supabase
       .from('questions')
-      .select('type, content, explanation')
+      .select('*')
       .eq('id', questionId)
       .single(),
   ]);
 
   if (!attempt) throw new Error('المحاولة غير موجودة');
   if (!question) throw new Error('السؤال غير موجود');
+  if (!inMode(question, attempt.mode)) throw new Error('السؤال ليس ضمن هذا الوضع');
 
   const content = question.content as Record<string, any>;
   const isCorrect = gradeQuestion(question.type, content, response);
@@ -108,7 +107,7 @@ export async function finishAttempt(attemptId: string) {
   const [{ data: attempt }, { data: answers }] = await Promise.all([
     supabase
       .from('attempts')
-      .select('id, student_id, lesson_id')
+      .select('id, student_id, lesson_id, mode')
       .eq('id', attemptId)
       .single(),
     supabase
@@ -119,22 +118,28 @@ export async function finishAttempt(attemptId: string) {
 
   if (!attempt) throw new Error('المحاولة غير موجودة');
 
-  const total = answers?.length ?? 0;
-  const score = answers?.filter((a) => a.is_correct).length ?? 0;
+  // Every question in the lesson counts toward the total; ones left unanswered
+  // (for example when the exam timer ran out) count as wrong.
+  const { data: lessonQuestions } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('lesson_id', attempt.lesson_id)
+    .order('sort_order');
+  const questions = (lessonQuestions ?? []).filter((q) => inMode(q, attempt.mode));
 
-  const questionIds = (answers ?? []).map((a) => a.question_id);
-  const [, { data: questions }] = await Promise.all([
-    supabase
-      .from('attempts')
-      .update({ score, total, finished_at: new Date().toISOString() })
-      .eq('id', attemptId),
-    supabase
-      .from('questions')
-      .select('id, type, content, explanation')
-      .in('id', questionIds),
-  ]);
+  const answerFor = new Map((answers ?? []).map((a) => [a.question_id, a]));
+  const all = (questions ?? []).map(
+    (q) => answerFor.get(q.id) ?? { question_id: q.id, response: null, is_correct: false },
+  );
+  const total = all.length;
+  const score = all.filter((a) => a.is_correct).length;
 
-  const review = (answers ?? []).map((answer) => {
+  await supabase
+    .from('attempts')
+    .update({ score, total, finished_at: new Date().toISOString() })
+    .eq('id', attemptId);
+
+  const review = all.map((answer) => {
     const q = questions?.find((q) => q.id === answer.question_id);
     const content = q?.content as Record<string, any>;
     let optionExplanation: string | null = null;
