@@ -14,7 +14,7 @@ export const ar = {
     dashboard: 'لوحة التحكم',
     categories: 'التصنيفات',
     users: 'المستخدمون',
-    subscribe: 'اشترك',
+    subscribe: 'الخطط والاشتراك',
   },
   footer: {
     about: 'من نحن',

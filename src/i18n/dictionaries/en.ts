@@ -16,7 +16,7 @@ export const en: Dictionary = {
     dashboard: 'Dashboard',
     categories: 'Categories',
     users: 'Users',
-    subscribe: 'Subscribe',
+    subscribe: 'Plans',
   },
   footer: {
     about: 'About us',

@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BookMarked, Compass, Crown, FolderOpen, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
-import { SubscribeButton } from '@/components/shell/subscribe-button';
+import { useState } from 'react';
+import { PlansDialog } from '@/components/shell/plans-dialog';
 import { Logo } from '@/components/ui/logo';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { APP_NAME } from '@/lib/constants';
@@ -11,7 +12,8 @@ import { useI18n } from '@/i18n/client';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const [plansOpen, setPlansOpen] = useState(false);
   const { t } = useI18n();
   const isAdmin = profile?.role === 'admin' || profile?.role === 'owner';
 
@@ -65,12 +67,16 @@ export function Navbar() {
 
           <div className="flex items-center gap-1">
             {!isAdmin && (
-              <SubscribeButton
+              <button
+                type="button"
+                onClick={() => setPlansOpen(true)}
                 title={t.nav.subscribe}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-light text-accent-ink hover:bg-accent hover:text-ink transition-colors"
+                aria-label={t.nav.subscribe}
+                aria-haspopup="dialog"
+                className="press flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-accent-light text-accent-ink hover:bg-accent hover:text-ink transition-colors"
               >
                 <Crown className="h-[18px] w-[18px]" />
-              </SubscribeButton>
+              </button>
             )}
             <Link
               href="/profile"
@@ -105,6 +111,7 @@ export function Navbar() {
           })}
         </div>
       </nav>
+      <PlansDialog userId={user?.id} open={plansOpen} onClose={() => setPlansOpen(false)} />
     </>
   );
 }

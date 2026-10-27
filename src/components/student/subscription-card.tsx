@@ -2,20 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Crown, ExternalLink, Sparkles } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { SubscribeButton } from '@/components/shell/subscribe-button';
-
-type Subscription = {
-  status: string;
-  renews_at: string | null;
-  ends_at: string | null;
-  customer_portal_url: string | null;
-};
-
-const isActive = (s: Subscription | null) =>
-  !!s &&
-  (['active', 'on_trial', 'past_due'].includes(s.status) ||
-    (s.status === 'cancelled' && !!s.ends_at && new Date(s.ends_at) > new Date()));
+import { fetchMySubscription, isActiveSubscription as isActive, type Subscription } from '@/lib/subscription';
 
 const formatDate = (iso: string | null) =>
   iso ? new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { dateStyle: 'long' }).format(new Date(iso)) : '';
@@ -28,14 +16,10 @@ export function SubscriptionCard({ userId }: { userId: string }) {
   const [waiting, setWaiting] = useState(false);
 
   const load = useCallback(async () => {
-    const { data } = await createClient()
-      .from('subscriptions' as any)
-      .select('status, renews_at, ends_at, customer_portal_url')
-      .eq('user_id', userId)
-      .maybeSingle();
-    setSub((data as Subscription | null) ?? null);
+    const data = await fetchMySubscription(userId);
+    setSub(data);
     setLoaded(true);
-    return data as Subscription | null;
+    return data;
   }, [userId]);
 
   useEffect(() => {
