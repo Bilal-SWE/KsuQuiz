@@ -34,6 +34,12 @@ type Lesson = {
   status: string;
 };
 
+const LESSON_STATUS_STYLE: Record<string, string> = {
+  published: 'bg-success-light text-success-ink',
+  soon: 'bg-accent-light text-accent-ink',
+  draft: 'bg-surface-hover text-muted',
+};
+
 export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLessons }: { subject: Subject; lessons: Lesson[] }) {
   const router = useRouter();
   const { profile } = useAuth();
@@ -69,11 +75,16 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
     });
   };
 
-  const handleToggleLessonStatus = async (lesson: Lesson) => {
-    const newStatus = lesson.status === 'published' ? 'draft' : 'published';
-    setLessons((prev) => prev.map((l) => l.id === lesson.id ? { ...l, status: newStatus } : l));
+  const handleLessonStatus = (lesson: Lesson, newStatus: string) => {
+    const before = lesson.status;
+    setLessons((prev) => prev.map((l) => (l.id === lesson.id ? { ...l, status: newStatus } : l)));
     startTransition(async () => {
-      await updateLesson(lesson.id, { status: newStatus });
+      try {
+        await updateLesson(lesson.id, { status: newStatus });
+      } catch (err: any) {
+        setLessons((prev) => prev.map((l) => (l.id === lesson.id ? { ...l, status: before } : l)));
+        alert(err.message);
+      }
     });
   };
 
@@ -179,16 +190,17 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
                   </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={lesson.status === 'published' ? 'success' : 'warning'}>
-                    {lesson.status === 'published' ? 'منشور' : 'مسودة'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    className="text-xs px-2 py-1"
-                    onClick={() => handleToggleLessonStatus(lesson)}
+                  <select
+                    value={lesson.status}
+                    onChange={(e) => handleLessonStatus(lesson, e.target.value)}
+                    aria-label={`حالة الدرس ${lesson.title}`}
+                    title="منشور: يظهر ويُفتح. قريباً: يظهر للطالب ولا يُفتح. مسودة: مخفي عن الطلاب."
+                    className={`cursor-pointer rounded-full border-0 px-3 py-1 text-xs font-bold outline-none focus:ring-2 focus:ring-primary/40 ${LESSON_STATUS_STYLE[lesson.status] ?? LESSON_STATUS_STYLE.draft}`}
                   >
-                    {lesson.status === 'published' ? 'إخفاء' : 'نشر'}
-                  </Button>
+                    <option value="published">منشور</option>
+                    <option value="soon">قريباً</option>
+                    <option value="draft">مسودة</option>
+                  </select>
                   <Button
                     variant="ghost"
                     className="text-xs px-2 py-1 text-error"

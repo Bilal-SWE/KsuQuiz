@@ -67,7 +67,7 @@ export type Database = {
           subject_id: string;
           title: string;
           sort_order: number;
-          status: 'draft' | 'published';
+          status: 'draft' | 'published' | 'soon';
           created_by: string;
           updated_by: string;
           created_at: string;
@@ -78,7 +78,7 @@ export type Database = {
           subject_id: string;
           title: string;
           sort_order: number;
-          status?: 'draft' | 'published';
+          status?: 'draft' | 'published' | 'soon';
           created_by: string;
           updated_by: string;
           created_at?: string;
@@ -89,7 +89,7 @@ export type Database = {
           subject_id?: string;
           title?: string;
           sort_order?: number;
-          status?: 'draft' | 'published';
+          status?: 'draft' | 'published' | 'soon';
           created_by?: string;
           updated_by?: string;
           created_at?: string;

@@ -230,11 +230,16 @@ export async function updateLesson(
 
   const updates: Record<string, any> = { updated_by: userId };
   if (data.title !== undefined) updates.title = data.title;
-  if (data.status !== undefined) updates.status = data.status;
+  if (data.status !== undefined) {
+    if (!['draft', 'published', 'soon'].includes(data.status)) throw new Error('حالة غير معروفة');
+    updates.status = data.status;
+  }
   if (data.sort_order !== undefined) updates.sort_order = data.sort_order;
 
   const { error } = await supabase.from('lessons').update(updates).eq('id', id);
-  if (error) throw new Error('فشل في تحديث الدرس');
+  if (error) {
+    throw new Error(/lessons_status_check/.test(error.message) ? 'شغّل ملف التحديث 016 في قاعدة البيانات أولاً' : 'فشل في تحديث الدرس');
+  }
   revalidatePath('/admin');
 }
 

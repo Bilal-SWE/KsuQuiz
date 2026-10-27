@@ -42,21 +42,22 @@ export function SubscriptionCard({ userId }: { userId: string }) {
     return () => clearInterval(t);
   }, [waiting, load]);
 
-  if (!loaded) return <div className="card h-28 animate-pulse p-5" />;
+  if (!loaded) return <div className="card h-32 animate-pulse !rounded-3xl p-5" />;
 
   const active = isActive(sub);
 
   if (active && sub) {
     const cancelled = sub.status === 'cancelled';
     return (
-      <section className="card space-y-3 p-5">
-        <div className="flex items-center gap-3">
+      <section className="relative space-y-4 overflow-hidden rounded-3xl bg-ink p-5 text-background">
+        <span className="pointer-events-none absolute -top-10 -end-10 h-28 w-28 rounded-full bg-primary/40" aria-hidden="true" />
+        <div className="relative flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-ink">
             <Crown className="h-5 w-5" />
           </span>
           <div>
             <h2 className="font-bold">الاشتراك الشهري</h2>
-            <p className="text-sm text-muted">
+            <p className="text-sm text-on-ink-muted">
               {cancelled
                 ? `ملغى، ويبقى فعّالاً حتى ${formatDate(sub.ends_at)}`
                 : sub.status === 'past_due'
@@ -70,7 +71,7 @@ export function SubscriptionCard({ userId }: { userId: string }) {
             href={sub.customer_portal_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="press inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-surface px-4 py-2 text-sm font-bold hover:border-ink"
+            className="press relative flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-surface text-sm font-bold text-ink hover:bg-surface-hover"
           >
             إدارة الاشتراك أو إلغاؤه
             <ExternalLink className="h-3.5 w-3.5" />
@@ -81,9 +82,9 @@ export function SubscriptionCard({ userId }: { userId: string }) {
   }
 
   return (
-    <section className="card space-y-3 p-5">
+    <section className="card space-y-4 !rounded-3xl p-5">
       <div className="flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-light text-primary-ink">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-light text-accent-ink">
           <Sparkles className="h-5 w-5" />
         </span>
         <div>
@@ -94,7 +95,7 @@ export function SubscriptionCard({ userId }: { userId: string }) {
         </div>
       </div>
       {!waiting && (
-        <SubscribeButton className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-extrabold text-on-primary hover:bg-primary-hover">
+        <SubscribeButton className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-extrabold text-on-primary hover:bg-primary-hover">
           <Crown className="h-4 w-4" />
           اشترك بـ 4.99 ريال شهرياً
         </SubscribeButton>

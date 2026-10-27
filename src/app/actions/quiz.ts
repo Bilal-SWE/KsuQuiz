@@ -159,5 +159,48 @@ export async function finishAttempt(attemptId: string) {
     };
   });
 
-  return { score, total, review };
+  return { score, total, review, rank: attempt.mode === 'exam' ? await lessonRank(supabase, { ...attempt, score }) : null };
+}
+
+export type LessonRank = {
+  rank: number;
+  competitors: number;
+  // The score the leaderboard counts: the student's best exam attempt in this lesson.
+  countedScore: number;
+  countedTotal: number;
+  // False when an earlier attempt scored higher, so this one is not the counted score.
+  countsThisAttempt: boolean;
+  // The top five of the lesson leaderboard, plus the student's own row if they are not in it.
+  top: LeaderRow[];
+  me: LeaderRow;
+};
+
+export type LeaderRow = { rank: number; name: string; score: number; total: number; seconds: number; isMe: boolean };
+
+// Where the student stands in this lesson's leaderboard right after finishing an exam.
+async function lessonRank(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  attempt: { id: string; student_id: string; lesson_id: string; score: number },
+): Promise<LessonRank | null> {
+  const { data: rows } = await supabase.rpc('get_lesson_leaderboard', { p_lesson_id: attempt.lesson_id });
+  const list = (rows as any[]) ?? [];
+  const mine = list.find((r) => r.student_id === attempt.student_id);
+  if (!mine) return null;
+  const toRow = (r: any): LeaderRow => ({
+    rank: Number(r.rank),
+    name: r.full_name || '',
+    score: r.score,
+    total: r.total,
+    seconds: r.duration_seconds ?? 0,
+    isMe: r.student_id === attempt.student_id,
+  });
+  return {
+    top: list.slice(0, 5).map(toRow),
+    me: toRow(mine),
+    rank: Number(mine.rank),
+    competitors: list.length,
+    countedScore: mine.score,
+    countedTotal: mine.total,
+    countsThisAttempt: mine.score <= attempt.score,
+  };
 }

@@ -3,42 +3,39 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Check, Crown, ExternalLink, Minus, X } from 'lucide-react';
+import { Check, Crown, ExternalLink, Sparkles, X } from 'lucide-react';
 import { SubscribeButton } from '@/components/shell/subscribe-button';
 import { fetchMySubscription, isActiveSubscription, type Subscription } from '@/lib/subscription';
 
-// One row per feature: what the free plan gets and what the monthly plan gets.
-// true = included, false = not included, a string = included with that note.
-const ROWS: { label: string; free: boolean | string; paid: boolean | string }[] = [
-  { label: 'أول درسين من كل مادة', free: true, paid: true },
-  { label: 'جميع الدروس في كل المواد', free: false, paid: true },
-  { label: 'وضع التمرين مع الشرح', free: 'الدروس المجانية', paid: 'كل الدروس' },
-  { label: 'وضع الاختبار بالمؤقت', free: 'الدروس المجانية', paid: 'كل الدروس' },
-  { label: 'الترتيب لكل اختبار والترتيب العام', free: true, paid: true },
-  { label: 'الإلغاء في أي وقت', free: false, paid: true },
+// What each plan includes; `false` marks something the plan does not have.
+const FREE: { text: string; included: boolean }[] = [
+  { text: 'أول درسين من كل مادة', included: true },
+  { text: 'التمرين والاختبار في أول درسين', included: true },
+  { text: 'الترتيب لكل اختبار والترتيب العام', included: true },
+  { text: 'باقي الدروس في المواد', included: false },
 ];
 
-function Cell({ value }: { value: boolean | string }) {
-  if (value === true)
-    return (
-      <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-success-light text-success-ink">
-        <Check className="h-3.5 w-3.5" strokeWidth={3} />
-      </span>
-    );
-  if (value === false)
-    return (
-      <span className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-surface-hover text-muted/60">
-        <Minus className="h-3.5 w-3.5" strokeWidth={3} />
-      </span>
-    );
-  return <span className="block text-center text-xs font-bold text-primary-ink">{value}</span>;
-}
+const MONTHLY = [
+  'جميع الدروس في كل المواد',
+  'التمرين والاختبار في كل درس',
+  'شرح لكل إجابة',
+  'الترتيب لكل اختبار والترتيب العام',
+  'الإلغاء في أي وقت',
+];
 
 const formatDate = (iso: string | null) =>
   iso ? new Intl.DateTimeFormat('ar-SA-u-ca-gregory', { dateStyle: 'medium' }).format(new Date(iso)) : '';
 
-// The crown in the header opens this: free vs monthly side by side, with the action that
-// fits the student (subscribe, or manage an existing subscription).
+function CurrentBadge({ dark }: { dark?: boolean }) {
+  return (
+    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${dark ? 'bg-accent text-ink' : 'bg-ink text-background'}`}>
+      خطتك الحالية
+    </span>
+  );
+}
+
+// The crown in the header opens this: the free and monthly plans side by side, with the
+// action that fits the student (subscribe, or manage an existing subscription).
 export function PlansDialog({ userId, open, onClose }: { userId?: string; open: boolean; onClose: () => void }) {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -78,118 +75,133 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
       role="dialog"
       aria-modal="true"
       aria-labelledby="plans-title"
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/50 p-0 backdrop-blur-sm animate-fade-up sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/50 backdrop-blur-sm animate-fade-up sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="relative max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-surface shadow-2xl sm:rounded-[28px]"
+        className="relative max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-[28px] bg-background shadow-2xl sm:rounded-[28px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border bg-surface/95 px-5 py-4 backdrop-blur">
-          <div>
-            <h2 id="plans-title" className="text-lg font-extrabold">
-              الخطط والاشتراك
-            </h2>
-            <p className="text-xs text-muted">قارن بين الخطة المجانية والاشتراك الشهري</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق"
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted hover:bg-surface-hover hover:text-ink"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="إغلاق"
+          className="absolute top-3 end-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-surface text-muted shadow-sm hover:text-ink"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="px-5 pt-7 pb-4 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-ink">
+            <Crown className="h-6 w-6" />
+          </span>
+          <h2 id="plans-title" className="mt-3 text-xl font-extrabold sm:text-2xl">
+            اختر خطتك
+          </h2>
+          <p className="mt-1 text-sm text-muted">ابدأ مجاناً، واشترك متى احتجت لفتح كل الدروس</p>
         </div>
 
-        <div className="p-4 sm:p-5">
-          {/* Plan headers */}
-          <div className="grid grid-cols-[1fr_88px_88px] items-end gap-2 sm:grid-cols-[1fr_110px_110px]">
-            <span />
-            <div className="relative rounded-2xl bg-surface-hover px-2 pt-3 pb-2.5 text-center">
-              {loaded && !subscribed && (
-                <span className="absolute -top-2.5 inset-x-0 mx-auto w-fit rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-background">
-                  خطتك الحالية
-                </span>
-              )}
-              <p className="text-sm font-bold">المجانية</p>
-              <p className="mt-1 text-lg font-extrabold">0</p>
-              <p className="text-[11px] text-muted">ريال</p>
-            </div>
-            <div className="relative rounded-2xl bg-ink px-2 pt-3 pb-2.5 text-center text-background">
-              {loaded && subscribed && (
-                <span className="absolute -top-2.5 inset-x-0 mx-auto w-fit rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-ink">
-                  خطتك الحالية
-                </span>
-              )}
-              <p className="flex items-center justify-center gap-1 text-sm font-bold">
-                <Crown className="h-3.5 w-3.5 text-accent" />
+        <div className="grid gap-3 px-4 pb-5 sm:grid-cols-2 sm:px-5">
+          {/* Monthly plan (first on phones) */}
+          <section className="relative flex flex-col overflow-hidden rounded-3xl bg-ink p-5 text-background sm:order-2">
+            <span className="pointer-events-none absolute -top-12 -end-12 h-32 w-32 rounded-full bg-primary/40" aria-hidden="true" />
+            <div className="relative flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-lg font-extrabold">
+                <Crown className="h-5 w-5 text-accent" />
                 الشهرية
-              </p>
-              <p className="mt-1 text-lg font-extrabold tabular-nums">4.99</p>
-              <p className="text-[11px] text-on-ink-muted">ريال / شهر</p>
+              </h3>
+              {loaded && subscribed && <CurrentBadge dark />}
             </div>
-          </div>
+            <p className="relative mt-3 flex items-end gap-1.5">
+              <span className="text-4xl font-extrabold tabular-nums">4.99</span>
+              <span className="pb-1 text-sm text-on-ink-muted">ريال / شهرياً</span>
+            </p>
+            <ul className="relative mt-4 flex-1 space-y-2.5">
+              {MONTHLY.map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                  {f}
+                </li>
+              ))}
+            </ul>
 
-          {/* Feature comparison */}
-          <dl className="mt-3 divide-y divide-border">
-            {ROWS.map((r) => (
-              <div key={r.label} className="grid grid-cols-[1fr_88px_88px] items-center gap-2 py-2.5 sm:grid-cols-[1fr_110px_110px]">
-                <dt className="text-sm font-medium">{r.label}</dt>
-                <dd>
-                  <Cell value={r.free} />
-                </dd>
-                <dd>
-                  <Cell value={r.paid} />
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        <div className="sticky bottom-0 space-y-2 border-t border-border bg-surface/95 px-5 py-4 backdrop-blur">
-          {!loaded ? (
-            <div className="h-12 animate-pulse rounded-full bg-surface-hover" />
-          ) : subscribed ? (
-            <>
-              <p className="text-center text-xs text-muted">
-                {cancelled ? `اشتراكك ملغى ويبقى فعّالاً حتى ${formatDate(sub!.ends_at)}` : `اشتراكك فعّال ويتجدد في ${formatDate(sub!.renews_at)}`}
-              </p>
-              {sub?.customer_portal_url ? (
-                <a
-                  href={sub.customer_portal_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-base font-extrabold text-background hover:bg-ink-raised"
-                >
-                  إدارة الاشتراك
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+            <div className="relative mt-5">
+              {!loaded ? (
+                <div className="h-12 animate-pulse rounded-full bg-ink-raised" />
+              ) : subscribed ? (
+                <>
+                  <p className="mb-2 text-center text-xs text-on-ink-muted">
+                    {cancelled ? `ملغى، ويبقى فعّالاً حتى ${formatDate(sub!.ends_at)}` : `يتجدد في ${formatDate(sub!.renews_at)}`}
+                  </p>
+                  {sub?.customer_portal_url ? (
+                    <a
+                      href={sub.customer_portal_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface text-base font-extrabold text-ink hover:bg-surface-hover"
+                    >
+                      إدارة الاشتراك
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <Link
+                      href="/profile"
+                      onClick={onClose}
+                      className="press flex h-12 w-full items-center justify-center rounded-full bg-surface text-base font-extrabold text-ink hover:bg-surface-hover"
+                    >
+                      إدارة الاشتراك
+                    </Link>
+                  )}
+                </>
               ) : (
-                <Link
-                  href="/profile"
-                  onClick={onClose}
-                  className="press flex h-12 w-full items-center justify-center rounded-full bg-ink text-base font-extrabold text-background hover:bg-ink-raised"
-                >
-                  إدارة الاشتراك
-                </Link>
+                <SubscribeButton className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-base font-extrabold text-ink hover:brightness-105">
+                  اشترك الآن
+                </SubscribeButton>
               )}
-            </>
-          ) : (
-            <>
-              <SubscribeButton className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-base font-extrabold text-on-primary hover:bg-primary-hover">
-                <Crown className="h-5 w-5" />
-                اشترك الآن بـ 4.99 ريال شهرياً
-              </SubscribeButton>
-              <p className="text-center text-xs text-muted">
-                يتجدد شهرياً، ويمكنك الإلغاء في أي وقت.{' '}
-                <Link href="/refund" onClick={onClose} className="text-primary-ink hover:underline">
-                  سياسة الاسترجاع
-                </Link>
-              </p>
-            </>
-          )}
+            </div>
+          </section>
+
+          {/* Free plan */}
+          <section className="flex flex-col rounded-3xl border border-border bg-surface p-5 sm:order-1">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-lg font-extrabold">
+                <Sparkles className="h-5 w-5 text-primary-ink" />
+                المجانية
+              </h3>
+              {loaded && !subscribed && <CurrentBadge />}
+            </div>
+            <p className="mt-3 flex items-end gap-1.5">
+              <span className="text-4xl font-extrabold tabular-nums">0</span>
+              <span className="pb-1 text-sm text-muted">ريال</span>
+            </p>
+            <ul className="mt-4 flex-1 space-y-2.5">
+              {FREE.map((f) => (
+                <li key={f.text} className={`flex items-center gap-2 text-sm ${f.included ? '' : 'text-muted'}`}>
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                      f.included ? 'bg-success-light text-success-ink' : 'bg-error-light text-error'
+                    }`}
+                  >
+                    {f.included ? <Check className="h-3 w-3" strokeWidth={3} /> : <X className="h-3 w-3" strokeWidth={3} />}
+                  </span>
+                  {f.text}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 flex h-12 items-center justify-center rounded-full bg-surface-hover text-sm font-bold text-muted">
+              {loaded && !subscribed ? 'خطتك الحالية' : 'متاحة للجميع'}
+            </p>
+          </section>
         </div>
+
+        <p className="border-t border-border px-5 py-3 text-center text-xs text-muted">
+          يتجدد الاشتراك شهرياً، ويمكنك الإلغاء في أي وقت.{' '}
+          <Link href="/refund" onClick={onClose} className="text-primary-ink hover:underline">
+            سياسة الاسترجاع
+          </Link>
+        </p>
       </div>
     </div>,
     document.body,

@@ -131,3 +131,68 @@ export function LeaderboardTable({
     </div>
   );
 }
+
+const MEDALS: Record<number, string> = {
+  1: 'bg-accent text-ink',
+  2: 'bg-[#D5DDE3] text-ink',
+  3: 'bg-[#E8B98A] text-ink',
+};
+
+// Card-style ranking for one lesson: rank, initial, name, correct answers, and time per row.
+export function RankingList({ rows, currentUserId, emptyText }: { rows: LeaderboardRow[]; currentUserId: string; emptyText: string }) {
+  const B = useI18n().t.leaderboard;
+  if (rows.length === 0) {
+    return (
+      <div className="card flex flex-col items-center gap-2 !rounded-3xl py-10 text-center">
+        <Medal className="h-10 w-10 text-primary/40 animate-float" />
+        <p className="text-sm text-muted">{emptyText}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="card !rounded-3xl p-2">
+      <div className="grid grid-cols-[32px_1fr_56px_56px] gap-2 px-3 pt-1 pb-2 text-[11px] font-bold text-muted">
+        <span>#</span>
+        <span className="text-start">{B.student}</span>
+        <span className="text-center">{B.correct}</span>
+        <span className="text-center">{B.time}</span>
+      </div>
+      <ol className="space-y-1">
+        {rows.map((r) => {
+          const isMe = r.student_id === currentUserId;
+          return (
+            <li
+              key={r.student_id}
+              className={`grid grid-cols-[32px_1fr_56px_56px] items-center gap-2 rounded-2xl px-3 py-2.5 text-sm ${
+                isMe ? 'bg-primary-light ring-1 ring-primary/30' : 'odd:bg-surface-hover/50'
+              }`}
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold tabular-nums ${
+                  MEDALS[r.rank] ?? 'bg-surface text-muted ring-1 ring-border'
+                }`}
+              >
+                {r.rank}
+              </span>
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-ink ring-1 ring-border">
+                  {(r.full_name || '?').charAt(0)}
+                </span>
+                <span className={`min-w-0 truncate ${isMe ? 'font-extrabold' : 'font-medium'}`}>
+                  <bdi>{r.full_name || B.studentFallback}</bdi>
+                  {isMe && <span className="ms-1 text-xs font-bold text-primary-ink">{B.you}</span>}
+                </span>
+              </span>
+              <span className="text-center font-bold tabular-nums" dir="ltr">
+                {r.score}/{r.total}
+              </span>
+              <span className="text-center text-xs text-muted tabular-nums" dir="ltr">
+                {formatDuration(r.seconds)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}

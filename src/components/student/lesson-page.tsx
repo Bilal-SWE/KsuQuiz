@@ -19,13 +19,13 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { startAttempt, submitAnswer, finishAttempt } from '@/app/actions/quiz';
+import { startAttempt, submitAnswer, finishAttempt, type LessonRank } from '@/app/actions/quiz';
 import { McqQuestion } from '@/components/student/questions/mcq';
 import { TrueFalseQuestion } from '@/components/student/questions/true-false';
 import { FillBlanksQuestion } from '@/components/student/questions/fill-blanks';
 import { ExamResults } from '@/components/student/exam-results';
 import { ImageZoom } from '@/components/ui/image-zoom';
-import { LeaderboardTable, Podium, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { RankingList, type LeaderboardRow } from '@/components/student/leaderboard-table';
 import { formatDuration } from '@/lib/format';
 import { useI18n } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
@@ -90,12 +90,14 @@ export function LessonPage({
   const router = useRouter();
   const { t } = useI18n();
   const L = t.lesson;
-  // An unfinished exam resumes directly (restarting would reset its timer); an unfinished
-  // practice asks whether to continue or start over.
+  // An unfinished exam resumes directly (restarting would reset its timer). An unfinished
+  // practice asks whether to continue or start over, but only if something was answered;
+  // a practice opened and left without answers just shows the mode picker again.
+  const emptyPractice = unfinishedAttempt?.mode === 'practice' && existingAnswers.length === 0;
   const [mode, setMode] = useState<'select' | 'resume' | 'exam' | 'practice'>(
-    unfinishedAttempt ? (unfinishedAttempt.mode === 'practice' ? 'resume' : 'exam') : 'select',
+    !unfinishedAttempt || emptyPractice ? 'select' : unfinishedAttempt.mode === 'practice' ? 'resume' : 'exam',
   );
-  const [attemptId, setAttemptId] = useState<string | null>(unfinishedAttempt?.id ?? null);
+  const [attemptId, setAttemptId] = useState<string | null>(emptyPractice ? null : (unfinishedAttempt?.id ?? null));
   const [startedAt, setStartedAt] = useState<number | null>(
     unfinishedAttempt?.started_at ? new Date(unfinishedAttempt.started_at).getTime() : null,
   );
@@ -107,7 +109,7 @@ export function LessonPage({
     return map;
   });
   const [feedback, setFeedback] = useState<Record<string, any>>({});
-  const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[] } | null>(null);
+  const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[]; rank?: LessonRank | null } | null>(null);
   const [showRank, setShowRank] = useState(false);
 
   // Practice and exam are separate sets chosen by the admin; each mode only sees its own.
@@ -367,28 +369,59 @@ export function LessonPage({
 
   if (mode === 'select' && showRank) {
     return (
-      <div className="max-w-2xl mx-auto space-y-5 animate-fade-up">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-accent-ink" />
-              {L.rankTitle}
-            </h1>
-            <p className="text-sm text-muted">{lesson.title}</p>
-          </div>
-          <Button variant="secondary" onClick={() => setShowRank(false)}>
-            <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
-            {L.back}
-          </Button>
+      <div className="mx-auto flex max-w-xl flex-col gap-4 animate-fade-up">
+        <div className="text-center">
+          <span dir="auto" className="block truncate text-sm font-medium text-muted">
+            {lesson.title}
+          </span>
+          <h1 className="mt-2 inline-flex items-center gap-2 text-2xl font-extrabold">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-ink">
+              <Trophy className="h-5 w-5" />
+            </span>
+            {L.rankTitle}
+          </h1>
         </div>
-        {leaderboard.length >= 3 && <Podium rows={leaderboard.slice(0, 3)} currentUserId={currentUserId} />}
+
         {myRow && (
-          <p className="rounded-xl bg-primary-light px-4 py-2.5 text-sm font-medium text-primary-ink">
-            {fmt(L.rankSummary, { rank: myRow.rank, total: leaderboard.length, score: myRow.score, questions: myRow.total })}
-          </p>
+          <section className="relative overflow-hidden rounded-[28px] bg-ink px-5 py-5 text-background">
+            <span className="pointer-events-none absolute -top-10 -end-10 h-32 w-32 rounded-full bg-primary/40" aria-hidden="true" />
+            <div className="relative flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-accent text-ink">
+                <span className="text-[10px] font-bold">{L.yourRank}</span>
+                <span className="text-2xl font-extrabold leading-none tabular-nums">{myRow.rank}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-on-ink-muted">{fmt(L.rankAmong, { n: leaderboard.length })}</p>
+                <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
+                  <span>
+                    {L.rankScore}{' '}
+                    <span className="tabular-nums" dir="ltr">
+                      {myRow.score}/{myRow.total}
+                    </span>
+                  </span>
+                  <span>
+                    {L.rankTime}{' '}
+                    <span className="tabular-nums" dir="ltr">
+                      {formatDuration(myRow.seconds)}
+                    </span>
+                  </span>
+                </p>
+              </div>
+            </div>
+          </section>
         )}
-        <LeaderboardTable rows={leaderboard} currentUserId={currentUserId} emptyText={L.rankEmpty} />
-        <p className="text-xs text-muted">{L.firstOnly}</p>
+
+        <RankingList rows={leaderboard} currentUserId={currentUserId} emptyText={L.rankEmpty} />
+        <p className="text-center text-xs text-muted">{L.firstOnly}</p>
+
+        <button
+          type="button"
+          onClick={() => setShowRank(false)}
+          className="press mx-auto flex h-10 cursor-pointer items-center gap-1.5 rounded-full border-2 border-border bg-surface px-6 text-sm font-bold text-ink hover:border-ink"
+        >
+          <ArrowRight className="h-4 w-4 ltr:-scale-x-100" />
+          {L.back}
+        </button>
       </div>
     );
   }

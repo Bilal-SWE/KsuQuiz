@@ -18,9 +18,9 @@ export default async function SubjectPage({ params }: { params: Promise<{ id: st
       .single(),
     supabase
       .from('lessons')
-      .select('id, title, sort_order')
+      .select('id, title, sort_order, status')
       .eq('subject_id', id)
-      .eq('status', 'published')
+      .in('status', ['published', 'soon'])
       .order('sort_order'),
   ]);
 

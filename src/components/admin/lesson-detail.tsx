@@ -216,7 +216,7 @@ export function AdminLessonDetail({
       <div className="mb-6 flex items-center gap-2">
         <h1 className="text-xl font-bold">{lesson.title}</h1>
         <Badge variant={lesson.status === 'published' ? 'success' : 'warning'}>
-          {lesson.status === 'published' ? 'منشور' : 'مسودة'}
+          {lesson.status === 'published' ? 'منشور' : lesson.status === 'soon' ? 'قريباً' : 'مسودة'}
         </Badge>
       </div>
 

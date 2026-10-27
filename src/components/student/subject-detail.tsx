@@ -1,12 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Lock, RotateCcw } from 'lucide-react';
+import { ArrowRight, Clock, Lock } from 'lucide-react';
 import { FILLS } from '@/components/student/subject-card';
 import { useI18n } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
 
-type Lesson = { id: string; title: string; sort_order: number };
+type Lesson = { id: string; title: string; sort_order: number; status?: string };
 type Attempt = { lesson_id: string; score: number | null; total: number | null; finished_at: string | null };
 
 export function SubjectDetail({
@@ -61,9 +61,12 @@ export function SubjectDetail({
         ) : (
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 stagger">
             {lessons.map((lesson, i) => {
-              const locked = freeLessons !== null && i >= freeLessons;
+              // "Soon" lessons are listed but cannot be opened; the free allowance counts
+              // only published lessons, matching can_access_lesson in the database.
+              const soon = lesson.status === 'soon';
+              const publishedIndex = lessons.slice(0, i).filter((l) => l.status !== 'soon').length;
+              const locked = !soon && freeLessons !== null && publishedIndex >= freeLessons;
               const best = bestPct(lesson.id);
-              const tries = finishedFor(lesson.id).length;
               const scoreCls =
                 best === null
                   ? ''
@@ -72,20 +75,22 @@ export function SubjectDetail({
                     : best >= 50
                       ? 'bg-warning-light text-warning-ink'
                       : 'bg-error-light text-error';
-              return (
-                <Link
-                  key={lesson.id}
-                  href={`/subjects/${subject.id}/lessons/${lesson.id}`}
-                  title={best === null ? S.startLesson : S.continue}
-                  className="card card-hover group block overflow-hidden !rounded-2xl press"
-                >
+              const body = (
+                <>
                   <div className="aspect-[16/10] overflow-hidden">
                     <div
                       className={`relative flex h-full w-full items-center justify-center ${FILLS[i % FILLS.length]} transition-transform duration-500 group-hover:scale-105`}
                     >
                       <span className="absolute -start-6 -top-6 h-24 w-24 rounded-full bg-white/20" />
                       <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
-                      <span className={`relative text-2xl font-bold sm:text-3xl ${locked ? 'opacity-40' : ''}`}>{i + 1}</span>
+                      <span className={`relative text-2xl font-bold sm:text-3xl ${locked || soon ? 'opacity-40' : ''}`}>{i + 1}</span>
+                      {soon && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-accent-ink shadow-md">
+                            <Clock className="h-4 w-4" />
+                          </span>
+                        </span>
+                      )}
                       {locked && (
                         <span className="absolute inset-0 flex items-center justify-center">
                           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-background shadow-md">
@@ -104,19 +109,29 @@ export function SubjectDetail({
                     <h3 dir="auto" className="truncate text-sm font-bold text-foreground sm:text-base">
                       {lesson.title}
                     </h3>
-                    <p className="mt-0.5 flex items-center justify-center gap-1 truncate text-xs text-muted">
-                      {locked ? (
-                        <span className="font-bold text-accent-ink">{S.locked}</span>
-                      ) : tries > 0 ? (
-                        <>
-                          <RotateCcw className="h-3 w-3 shrink-0" />
-                          {fmt(S.attempts, { n: tries })}
-                        </>
-                      ) : (
-                        S.notStarted
-                      )}
-                    </p>
+                    {(soon || locked) && (
+                      <p className="mt-0.5 truncate text-xs font-bold text-accent-ink">{soon ? S.soon : S.locked}</p>
+                    )}
                   </div>
+                </>
+              );
+              return soon ? (
+                <div
+                  key={lesson.id}
+                  aria-disabled="true"
+                  title={S.soonHint}
+                  className="card block cursor-not-allowed overflow-hidden !rounded-2xl opacity-70 grayscale-[40%]"
+                >
+                  {body}
+                </div>
+              ) : (
+                <Link
+                  key={lesson.id}
+                  href={`/subjects/${subject.id}/lessons/${lesson.id}`}
+                  title={best === null ? S.startLesson : S.continue}
+                  className="card card-hover group block overflow-hidden !rounded-2xl press"
+                >
+                  {body}
                 </Link>
               );
             })}

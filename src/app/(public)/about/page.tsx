@@ -26,7 +26,7 @@ const content = {
     valuesTitle: 'مبادئنا',
     values: [
       { title: 'الفهم قبل الحفظ', desc: 'كل سؤال معه شرح يوضح سبب الإجابة الصحيحة وسبب خطأ غيرها.' },
-      { title: 'منافسة عادلة', desc: 'الترتيب يحسب أول محاولة اختبار فقط، فلا يتقدم أحد بتكرار الأسئلة وحفظها.' },
+      { title: 'منافسة محفّزة', desc: 'الترتيب يحسب أفضل نتيجة لك في كل اختبار، فكل محاولة فرصة لتحسين مركزك.' },
       { title: 'متاح في أي وقت', desc: 'مصمم ليعمل بسلاسة على الجوال والكمبيوتر.' },
     ],
     goalTitle: 'هدفنا',
@@ -50,7 +50,7 @@ const content = {
     valuesTitle: 'Our principles',
     values: [
       { title: 'Understanding over memorizing', desc: 'Every question explains why the right answer is right and why the others are wrong.' },
-      { title: 'Fair competition', desc: 'Leaderboards count only your first exam attempt, so nobody gets ahead by memorizing repeated questions.' },
+      { title: 'Motivating competition', desc: 'Leaderboards count your best score in each exam, so every attempt is a chance to move up.' },
       { title: 'Available anytime', desc: 'Designed to work smoothly on phones and computers.' },
     ],
     goalTitle: 'Our goal',

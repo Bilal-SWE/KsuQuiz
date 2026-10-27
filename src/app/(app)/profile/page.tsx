@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { BookMarked, ChevronDown, CircleCheck, KeyRound, LogOut, Mail, RotateCcw, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useI18n } from '@/i18n/client';
@@ -10,11 +10,58 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SubscriptionCard } from '@/components/student/subscription-card';
 
+type Stats = { subjects: number; lessons: number; attempts: number };
+
+// One settings row that opens in place to show its form.
+function SettingRow({
+  icon: Icon,
+  title,
+  value,
+  open,
+  onToggle,
+  children,
+}: {
+  icon: React.ElementType;
+  title: string;
+  value?: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-start hover:bg-surface-hover"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary-ink">
+          <Icon className="h-[18px] w-[18px]" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold">{title}</span>
+          {value && (
+            <span dir="auto" className="block truncate text-xs text-muted">
+              {value}
+            </span>
+          )}
+        </span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="space-y-3 px-4 pb-4 animate-fade-up">{children}</div>}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, profile } = useAuth();
   const { t } = useI18n();
   const P = t.profile;
+  const [openRow, setOpenRow] = useState<'name' | 'password' | null>(null);
+  const [stats, setStats] = useState<Stats | null>(null);
+
   const [fullName, setFullName] = useState('');
   const [nameStatus, setNameStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [savingName, setSavingName] = useState(false);
@@ -24,9 +71,28 @@ export default function ProfilePage() {
   const [pwStatus, setPwStatus] = useState<{ ok: boolean; msg: string } | null>(null);
   const [savingPw, setSavingPw] = useState(false);
 
+  const isStudent = profile?.role === 'student';
+
   useEffect(() => {
     if (profile) setFullName(profile.full_name ?? '');
   }, [profile]);
+
+  // Quick numbers for the header: subjects added, lessons finished, and finished attempts.
+  useEffect(() => {
+    if (!user || !isStudent) return;
+    const supabase = createClient();
+    Promise.all([
+      supabase.from('enrollments').select('subject_id', { count: 'exact', head: true }).eq('student_id', user.id),
+      supabase.from('attempts').select('lesson_id').eq('student_id', user.id).not('finished_at', 'is', null),
+    ]).then(([enrollments, attempts]) => {
+      const finished = attempts.data ?? [];
+      setStats({
+        subjects: enrollments.count ?? 0,
+        lessons: new Set(finished.map((a) => a.lesson_id)).size,
+        attempts: finished.length,
+      });
+    });
+  }, [user, isStudent]);
 
   const saveName = async () => {
     const name = fullName.trim();
@@ -72,75 +138,122 @@ export default function ProfilePage() {
     router.refresh();
   };
 
+  const toggle = (row: 'name' | 'password') => setOpenRow((cur) => (cur === row ? null : row));
   const initials = (profile?.full_name || user?.email || '?').trim().charAt(0);
+  const statItems = stats
+    ? [
+        { icon: BookMarked, value: stats.subjects, label: P.statSubjects },
+        { icon: CircleCheck, value: stats.lessons, label: P.statLessons },
+        { icon: RotateCcw, value: stats.attempts, label: P.statAttempts },
+      ]
+    : [];
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 animate-fade-up">
-      <div className="card flex items-center gap-4 p-5">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-on-primary">
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold truncate">{profile?.full_name || P.fallbackTitle}</h1>
-          <p className="text-sm text-muted truncate" dir="ltr">
+    <div className="mx-auto max-w-xl space-y-4 animate-fade-up">
+      {/* Header */}
+      <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-5 pt-8 pb-5 text-center">
+        <span className="pointer-events-none absolute -top-14 -end-14 h-40 w-40 rounded-full bg-primary/10" aria-hidden="true" />
+        <div className="relative">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary text-3xl font-extrabold text-on-primary shadow-[0_10px_24px_-10px_rgb(15_157_138/0.7)] ring-4 ring-surface">
+            {initials}
+          </div>
+          <h1 dir="auto" className="mt-3 truncate text-xl font-extrabold sm:text-2xl">
+            {profile?.full_name || P.fallbackTitle}
+          </h1>
+          <p className="truncate text-sm text-muted" dir="ltr">
             {user?.email}
           </p>
-          {profile && (
-            <span className="mt-1 inline-block rounded-full bg-primary-light px-2.5 py-0.5 text-xs font-medium text-primary-ink">
+          {profile && !isStudent && (
+            <span className="mt-2 inline-block rounded-full bg-ink px-3 py-0.5 text-xs font-bold text-background">
               {P.roles[profile.role] ?? profile.role}
             </span>
           )}
-        </div>
-      </div>
 
-      {user && profile?.role === 'student' && <SubscriptionCard userId={user.id} />}
-
-      <section className="card p-5 space-y-4">
-        <h2 className="font-bold">{P.personalData}</h2>
-        <Input id="full_name" label={P.fullName} value={fullName} onChange={(e) => setFullName(e.target.value)} />
-        <Input id="email" label={P.email} value={user?.email ?? ''} disabled dir="ltr" className="opacity-70" />
-        <div className="flex items-center gap-3">
-          <Button onClick={saveName} loading={savingName}>
-            {P.save}
-          </Button>
-          {nameStatus && <p className={`text-sm ${nameStatus.ok ? 'text-success-ink' : 'text-error'}`}>{nameStatus.msg}</p>}
-        </div>
-      </section>
-
-      <section className="card p-5 space-y-4">
-        <h2 className="font-bold">{P.changePassword}</h2>
-        <Input
-          id="password"
-          type="password"
-          label={P.newPassword}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-        />
-        <Input
-          id="confirm"
-          type="password"
-          label={P.confirmPassword}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          autoComplete="new-password"
-        />
-        <div className="flex items-center gap-3">
-          <Button onClick={savePassword} loading={savingPw}>
-            {P.changePassword}
-          </Button>
-          {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success-ink' : 'text-error'}`}>{pwStatus.msg}</p>}
+          {isStudent && (
+            <dl className="mt-5 grid grid-cols-3 gap-2">
+              {(stats ? statItems : [0, 1, 2]).map((s, i) =>
+                typeof s === 'number' ? (
+                  <div key={i} className="h-[74px] animate-pulse rounded-2xl bg-surface/70" />
+                ) : (
+                  <div key={s.label} className="rounded-2xl bg-surface px-2 py-3 shadow-sm">
+                    <dd className="flex items-center justify-center gap-1 text-xl font-extrabold tabular-nums">
+                      <s.icon className="h-4 w-4 text-primary-ink" />
+                      {s.value}
+                    </dd>
+                    <dt className="mt-0.5 text-xs text-muted">{s.label}</dt>
+                  </div>
+                ),
+              )}
+            </dl>
+          )}
         </div>
       </section>
 
-      <button
-        type="button"
-        onClick={logout}
-        className="press flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-error/30 px-4 py-3 text-sm font-bold text-error hover:bg-error-light"
-      >
-        <LogOut className="h-4 w-4 ltr:-scale-x-100" />
-        {t.common.logout}
-      </button>
+      {user && isStudent && <SubscriptionCard userId={user.id} />}
+
+      {/* Account settings */}
+      <section className="card overflow-hidden !rounded-3xl">
+        <h2 className="px-4 pt-4 pb-1 text-xs font-bold text-muted">{P.accountSettings}</h2>
+        <div className="divide-y divide-border">
+          <SettingRow icon={UserRound} title={P.fullName} value={profile?.full_name ?? ''} open={openRow === 'name'} onToggle={() => toggle('name')}>
+            <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} aria-label={P.fullName} />
+            <div className="flex items-center gap-3">
+              <Button onClick={saveName} loading={savingName}>
+                {P.save}
+              </Button>
+              {nameStatus && <p className={`text-sm ${nameStatus.ok ? 'text-success-ink' : 'text-error'}`}>{nameStatus.msg}</p>}
+            </div>
+          </SettingRow>
+
+          <div className="flex items-center gap-3 px-4 py-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-hover text-muted">
+              <Mail className="h-[18px] w-[18px]" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold">{P.email}</span>
+              <span className="block truncate text-xs text-muted" dir="ltr">
+                {user?.email}
+              </span>
+            </span>
+          </div>
+
+          <SettingRow icon={KeyRound} title={P.changePassword} value="••••••••" open={openRow === 'password'} onToggle={() => toggle('password')}>
+            <Input
+              id="password"
+              type="password"
+              label={P.newPassword}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+            />
+            <Input
+              id="confirm"
+              type="password"
+              label={P.confirmPassword}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+            <div className="flex items-center gap-3">
+              <Button onClick={savePassword} loading={savingPw}>
+                {P.changePassword}
+              </Button>
+              {pwStatus && <p className={`text-sm ${pwStatus.ok ? 'text-success-ink' : 'text-error'}`}>{pwStatus.msg}</p>}
+            </div>
+          </SettingRow>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-start text-error hover:bg-error-light"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-error-light">
+              <LogOut className="h-[18px] w-[18px] ltr:-scale-x-100" />
+            </span>
+            <span className="text-sm font-bold">{t.common.logout}</span>
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
