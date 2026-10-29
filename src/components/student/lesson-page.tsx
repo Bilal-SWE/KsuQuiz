@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Clock,
   Flag,
+  ListChecks,
   Trophy,
   Users,
   X,
@@ -43,9 +44,13 @@ type Question = {
 type Props = {
   subjectId: string;
   lesson: { id: string; title: string; question_seconds?: number };
+  subjectName: string;
+  lessonNumber: number;
   questions: Question[];
   unfinishedAttempt: { id: string; mode: string; started_at?: string } | null;
   existingAnswers: { question_id: string; response: any; is_correct: boolean | null }[];
+  // Right/wrong and explanations for questions already answered in a resumed practice.
+  existingFeedback?: Record<string, any>;
   leaderboard: LeaderboardRow[];
   currentUserId: string;
 };
@@ -81,9 +86,12 @@ const DEFAULT_QUESTION_SECONDS = 60;
 export function LessonPage({
   subjectId,
   lesson,
+  subjectName,
+  lessonNumber,
   questions: allQuestions,
   unfinishedAttempt,
   existingAnswers,
+  existingFeedback = {},
   leaderboard,
   currentUserId,
 }: Props) {
@@ -108,7 +116,7 @@ export function LessonPage({
     existingAnswers.forEach((a) => { map[a.question_id] = a; });
     return map;
   });
-  const [feedback, setFeedback] = useState<Record<string, any>>({});
+  const [feedback, setFeedback] = useState<Record<string, any>>(existingFeedback);
   const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[]; rank?: LessonRank | null } | null>(null);
   const [showRank, setShowRank] = useState(false);
 
@@ -117,6 +125,8 @@ export function LessonPage({
   const examQuestions = useMemo(() => allQuestions.filter((q) => q.in_exam !== false), [allQuestions]);
   const questions = mode === 'exam' ? examQuestions : practiceQuestions;
   const pendingSaves = useRef(new Set<Promise<void>>());
+  // Answers still being checked by the server; in practice mode navigation waits for them.
+  const [savingCount, setSavingCount] = useState(0);
 
   // Exam mode: each question gets its own deadline the first time it is shown. The deadlines
   // are kept per attempt in localStorage so a reload doesn't hand out fresh time.
@@ -232,8 +242,10 @@ export function LessonPage({
       })
       .finally(() => {
         pendingSaves.current.delete(save);
+        setSavingCount((n) => n - 1);
       });
     pendingSaves.current.add(save);
+    setSavingCount((n) => n + 1);
   }, [attemptId, L.saveFailed]);
 
   const handleFinish = async () => {
@@ -371,10 +383,7 @@ export function LessonPage({
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-4 animate-fade-up">
         <div className="text-center">
-          <span dir="auto" className="block truncate text-sm font-medium text-muted">
-            {lesson.title}
-          </span>
-          <h1 className="mt-2 inline-flex items-center gap-2 text-2xl font-extrabold">
+          <h1 className="inline-flex items-center gap-2 text-2xl font-extrabold">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-ink">
               <Trophy className="h-5 w-5" />
             </span>
@@ -383,30 +392,21 @@ export function LessonPage({
         </div>
 
         {myRow && (
-          <section className="relative overflow-hidden rounded-[28px] bg-ink px-5 py-5 text-background">
-            <span className="pointer-events-none absolute -top-10 -end-10 h-32 w-32 rounded-full bg-primary/40" aria-hidden="true" />
-            <div className="relative flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-accent text-ink">
-                <span className="text-[10px] font-bold">{L.yourRank}</span>
-                <span className="text-2xl font-extrabold leading-none tabular-nums">{myRow.rank}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-on-ink-muted">{fmt(L.rankAmong, { n: leaderboard.length })}</p>
-                <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
-                  <span>
-                    {L.rankScore}{' '}
-                    <span className="tabular-nums" dir="ltr">
-                      {myRow.score}/{myRow.total}
-                    </span>
-                  </span>
-                  <span>
-                    {L.rankTime}{' '}
-                    <span className="tabular-nums" dir="ltr">
-                      {formatDuration(myRow.seconds)}
-                    </span>
-                  </span>
-                </p>
-              </div>
+          <section className="card flex items-stretch !rounded-3xl p-5">
+            <div className="flex min-w-0 flex-1 flex-col justify-center text-start">
+              <span dir="auto" className="truncate text-sm font-medium text-muted">
+                {subjectName}
+              </span>
+              <span className="mt-1 text-xl font-extrabold">{fmt(L.lessonN, { n: lessonNumber })}</span>
+            </div>
+            <span className="mx-4 w-px bg-border" aria-hidden="true" />
+            <div className="flex flex-col items-center justify-center text-center">
+              <span className="text-xs font-bold text-muted">{L.yourRank}</span>
+              <span className="mt-0.5 text-3xl font-extrabold leading-none text-primary-ink tabular-nums" dir="ltr">
+                {myRow.rank}
+                <span className="text-lg text-muted"> / {leaderboard.length}</span>
+              </span>
+              <span className="mt-1 text-xs text-muted">{L.students}</span>
             </div>
           </section>
         )}
@@ -427,81 +427,90 @@ export function LessonPage({
   }
 
   if (mode === 'select') {
-    const modes = [
-      {
-        key: 'practice' as const,
-        title: L.practice,
-        desc: L.practiceDesc,
-        icon: BookOpenCheck,
-        tint: 'bg-success text-ink',
-        onClick: () => handleStart('practice'),
-      },
-      {
-        key: 'exam' as const,
-        title: L.exam,
-        desc: fmt(L.examDesc, { s: questionSeconds, n: examQuestions.length }),
-        icon: ClipboardList,
-        tint: 'bg-primary text-ink',
-        onClick: () => handleStart('exam'),
-      },
-      {
-        key: 'rank' as const,
-        title: L.rank,
-        desc: myRow
-          ? fmt(L.rankMine, { rank: myRow.rank, total: leaderboard.length })
-          : fmt(L.rankCount, { n: leaderboard.length }),
-        icon: Trophy,
-        tint: 'bg-accent text-ink',
-        onClick: () => setShowRank(true),
-      },
-    ];
-
     return (
       <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
-        <section className="hero p-5 sm:p-8 animate-fade-up">
-          <div className="relative z-10">
-            <Link href={`/subjects/${subjectId}`} className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
+        <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-4 pt-6 pb-7 text-center sm:px-8 sm:pt-8 sm:pb-9 animate-fade-up">
+          <span className="pointer-events-none absolute -top-16 -start-16 h-48 w-48 rounded-full bg-primary/10" aria-hidden="true" />
+          <span className="pointer-events-none absolute -bottom-20 -end-10 h-40 w-40 rounded-full bg-accent/15" aria-hidden="true" />
+          <div className="relative">
+            <Link
+              href={`/subjects/${subjectId}`}
+              className="press inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs font-bold text-muted shadow-sm hover:text-ink"
+            >
               <ArrowRight className="h-3.5 w-3.5 ltr:-scale-x-100" />
               {L.backToLessons}
             </Link>
-            <h1 dir="auto" className="mt-2 text-2xl sm:text-3xl font-bold">
+            <h1 dir="auto" className="mt-3 text-2xl font-extrabold leading-snug sm:text-3xl">
               {lesson.title}
             </h1>
-            <div className="mt-4 flex flex-wrap gap-2 text-sm">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
-                <Flag className="h-4 w-4" />
+            <div className="mt-3 flex flex-wrap justify-center gap-2 text-sm font-bold">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-ink shadow-sm">
+                <ListChecks className="h-4 w-4 text-primary-ink" />
                 {fmt(L.questionsCount, { n: practiceQuestions.length })}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/25">
-                <Users className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-ink shadow-sm">
+                <Users className="h-4 w-4 text-primary-ink" />
                 {fmt(L.competitors, { n: leaderboard.length })}
               </span>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-3 sm:grid-cols-3 stagger">
-          {modes.map((m) => (
+        {/* Practice and exam side by side, ranking below. Text and icon are centered
+            together, text first. */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 animate-fade-up">
+          {[
+            {
+              key: 'practice' as const,
+              icon: BookOpenCheck,
+              box: 'border-success/25 bg-success-light hover:border-success/50',
+              title: 'text-success-ink',
+              tile: 'bg-success text-white',
+              label: L.practice,
+              count: practiceQuestions.length,
+            },
+            {
+              key: 'exam' as const,
+              icon: ClipboardList,
+              box: 'border-primary/25 bg-primary-light hover:border-primary/50',
+              title: 'text-primary-ink',
+              tile: 'bg-primary text-white',
+              label: L.exam,
+              count: examQuestions.length,
+            },
+          ].map((m) => (
             <button
               key={m.key}
-              onClick={m.onClick}
-              disabled={!!loading || (m.key === 'practice' && practiceQuestions.length === 0) || (m.key === 'exam' && examQuestions.length === 0)}
-              className="card card-hover press group flex items-center gap-4 p-4 text-start cursor-pointer sm:flex-col sm:items-start sm:gap-3 sm:p-5 disabled:opacity-60 disabled:cursor-not-allowed"
+              type="button"
+              onClick={() => handleStart(m.key)}
+              disabled={!!loading || m.count === 0}
+              className={`press flex cursor-pointer items-center justify-center gap-3 rounded-2xl border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:p-4 ${m.box}`}
             >
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${m.tint} shadow-md transition-transform group-hover:scale-110 group-hover:-rotate-6`}>
+              <span className="min-w-0">
+                <span className={`block truncate text-sm font-extrabold sm:text-base ${m.title}`}>{m.label}</span>
+                <span className="block text-xs text-muted">{fmt(L.questionsCount, { n: m.count })}</span>
+              </span>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${m.tile}`}>
                 {loading === m.key ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                 ) : (
-                  <m.icon className="h-6 w-6" />
+                  <m.icon className="h-5 w-5" />
                 )}
-              </span>
-              <span>
-                <span className="block font-bold">{m.title}</span>
-                <span className="mt-0.5 block text-xs text-muted">{m.desc}</span>
               </span>
             </button>
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowRank(true)}
+          className="press flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl border border-accent/30 bg-accent-light px-4 py-3 text-start text-sm font-extrabold text-accent-ink transition-colors hover:border-accent/60"
+        >
+          {L.rank}
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-ink">
+            <Trophy className="h-4 w-4" />
+          </span>
+        </button>
       </div>
     );
   }
@@ -514,6 +523,7 @@ export function LessonPage({
   const hasFeedback = feedback[currentQ.id];
   const hasAnswer = answers[currentQ.id];
   const isLast = currentIndex === questions.length - 1;
+  const navLocked = mode === 'practice' && savingCount > 0;
   const timeUp = isExpired(currentQ.id);
   const locked = (!!hasAnswer && mode === 'practice') || timeUp;
   const deadline = deadlines[currentQ.id];
@@ -545,8 +555,9 @@ export function LessonPage({
             <button
               key={q.id}
               onClick={() => setCurrentIndex(i)}
+              disabled={navLocked}
               aria-label={fmt(L.questionNumber, { n: i + 1 })}
-              className={`press h-7 w-7 cursor-pointer rounded-full text-xs font-bold sm:h-10 sm:w-10 sm:text-sm transition ${dotStyle(q, i)}`}
+              className={`press h-7 w-7 cursor-pointer rounded-full text-xs font-bold disabled:cursor-wait disabled:opacity-60 sm:h-10 sm:w-10 sm:text-sm transition ${dotStyle(q, i)}`}
             >
               {i + 1}
             </button>
@@ -639,7 +650,7 @@ export function LessonPage({
         <button
           type="button"
           onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || navLocked}
           className="press flex h-11 max-w-44 flex-1 sm:h-12 cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-border bg-surface text-base font-bold text-ink hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ArrowRight className="h-5 w-5 ltr:-scale-x-100" />
@@ -647,14 +658,14 @@ export function LessonPage({
         </button>
 
         {doneCount === questions.length ? (
-          <Button onClick={handleFinish} loading={loading === 'finish'} className="h-11 max-w-44 flex-1 text-base font-extrabold sm:h-12">
+          <Button onClick={handleFinish} loading={loading === 'finish'} disabled={navLocked} className="h-11 max-w-44 flex-1 text-base font-extrabold sm:h-12">
             <Flag className="h-5 w-5" />
             {mode === 'exam' ? L.finishExam : L.finishPractice}
           </Button>
         ) : (
           <Button
             onClick={() => setCurrentIndex((i) => Math.min(questions.length - 1, i + 1))}
-            disabled={isLast}
+            disabled={isLast || navLocked}
             className="h-11 max-w-44 flex-1 text-base font-extrabold sm:h-12"
           >
             {L.next}

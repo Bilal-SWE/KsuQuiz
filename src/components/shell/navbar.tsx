@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookMarked, Compass, Crown, FolderOpen, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
+import { BookMarked, Crown, Home, FolderOpen, LayoutDashboard, Trophy, User, Users } from 'lucide-react';
 import { useState } from 'react';
 import { PlansDialog } from '@/components/shell/plans-dialog';
 import { Logo } from '@/components/ui/logo';
@@ -25,7 +25,7 @@ export function Navbar() {
         { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ]
     : [
-        { href: '/', label: t.nav.explore, icon: Compass, exact: true },
+        { href: '/', label: t.nav.explore, icon: Home, exact: true },
         { href: '/my-subjects', label: t.nav.mySubjects, icon: BookMarked, exact: true },
         { href: '/leaderboard', label: t.nav.leaderboard, icon: Trophy, exact: true },
       ];

@@ -1,14 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { Check } from 'lucide-react';
+import { Check, ListChecks } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
+import { fmt } from '@/i18n/format';
 
 type Subject = {
   id: string;
   name: string;
   description: string | null;
   cover_image: string | null;
+  question_count?: number;
 };
 
 // The design's pastel card fills; navy text keeps 4.5:1 on each.
@@ -48,10 +50,16 @@ export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?
       title={t.subjectCard.startStudying}
       className="card card-hover group block overflow-hidden !rounded-2xl press"
     >
-      <div className="aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden">
         <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
           <SubjectCover subject={subject} />
         </div>
+        {subject.question_count !== undefined && (
+          <span className="absolute top-1.5 start-1.5 inline-flex items-center gap-1 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-bold text-ink shadow-sm backdrop-blur">
+            <ListChecks className="h-3 w-3 text-primary-ink" />
+            {fmt(t.subjectCard.questions, { n: subject.question_count })}
+          </span>
+        )}
       </div>
       <div className="px-2.5 py-2 text-center sm:px-3">
         <div className="flex items-center justify-center gap-1.5">

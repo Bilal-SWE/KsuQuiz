@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function updateSession(request: NextRequest) {
+  // Server actions (submitting an answer, finishing a quiz) come from a page that already
+  // passed this check. Skipping the Supabase Auth round trip here makes answers faster;
+  // the database still verifies the session token on every query through RLS.
+  if (request.method === 'POST' && request.headers.has('next-action')) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(

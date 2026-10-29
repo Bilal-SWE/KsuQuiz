@@ -26,14 +26,20 @@ export default async function SubjectPage({ params }: { params: Promise<{ id: st
 
   if (!subject) notFound();
 
-  const [{ data: attempts }, fullAccess] = await Promise.all([
+  const lessonIds = (lessons ?? []).map((l) => l.id);
+  const [{ data: attempts }, fullAccess, { data: questionRows }] = await Promise.all([
     supabase
       .from('attempts')
       .select('lesson_id, score, total, finished_at')
       .eq('student_id', session.user.id)
       .in('lesson_id', (lessons ?? []).map((l) => l.id)),
     hasFullAccess(supabase, session.user.id),
+    // Students can read questions of published lessons only, so 'soon' lessons count as zero.
+    supabase.from('questions').select('lesson_id').in('lesson_id', lessonIds),
   ]);
+
+  const questionCounts: Record<string, number> = {};
+  for (const q of questionRows ?? []) questionCounts[q.lesson_id] = (questionCounts[q.lesson_id] ?? 0) + 1;
 
   return (
     <SubjectDetail
@@ -41,6 +47,7 @@ export default async function SubjectPage({ params }: { params: Promise<{ id: st
       lessons={lessons ?? []}
       attempts={attempts ?? []}
       freeLessons={fullAccess ? null : FREE_LESSONS_PER_SUBJECT}
+      questionCounts={questionCounts}
     />
   );
 }

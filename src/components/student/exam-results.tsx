@@ -149,14 +149,6 @@ function TopFive({ rank }: { rank: LessonRank }) {
   );
 }
 
-function verdictKey(pct: number) {
-  if (pct === 100) return 'perfect' as const;
-  if (pct >= 85) return 'excellent' as const;
-  if (pct >= 70) return 'good' as const;
-  if (pct >= 50) return 'fair' as const;
-  return 'low' as const;
-}
-
 type Status = 'correct' | 'wrong' | 'unanswered';
 const statusOf = (item: ReviewItem): Status =>
   item.response == null ? 'unanswered' : item.is_correct ? 'correct' : 'wrong';
@@ -183,7 +175,6 @@ export function ExamResults({
   const pct = result.total > 0 ? Math.round((result.score / result.total) * 100) : 0;
   const { t } = useI18n();
   const R = t.results;
-  const v = R.verdicts[verdictKey(pct)];
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [onlyMistakes, setOnlyMistakes] = useState(false);
 
@@ -218,10 +209,6 @@ export function ExamResults({
 
       <section className="card relative flex flex-col items-center gap-4 !rounded-[28px] px-5 py-7 text-center animate-fade-up">
         <ScoreRing score={result.score} total={result.total} pct={pct} />
-        <div>
-          <h1 className="text-xl font-extrabold sm:text-2xl">{v.title}</h1>
-          <p className="mt-1 text-sm text-muted sm:text-base">{v.sub}</p>
-        </div>
         <div className="flex flex-wrap justify-center gap-2 text-sm font-bold">
           <span className="inline-flex items-center gap-1 rounded-full bg-success-light px-3 py-1 text-success-ink">
             <CircleCheck className="h-4 w-4" />

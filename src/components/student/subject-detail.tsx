@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Clock, Lock } from 'lucide-react';
+import { ArrowRight, Clock, ListChecks, Lock } from 'lucide-react';
 import { FILLS } from '@/components/student/subject-card';
 import { useI18n } from '@/i18n/client';
 import { fmt } from '@/i18n/format';
@@ -14,12 +14,14 @@ export function SubjectDetail({
   lessons,
   attempts,
   freeLessons,
+  questionCounts,
 }: {
   subject: { id: string; name: string; description: string | null; cover_image: string | null };
   lessons: Lesson[];
   attempts: Attempt[];
   // How many lessons a free student can open; null when everything is unlocked.
   freeLessons: number | null;
+  questionCounts: Record<string, number>;
 }) {
   const { t } = useI18n();
   const S = t.subject;
@@ -33,17 +35,22 @@ export function SubjectDetail({
 
   return (
     <div className="space-y-5 sm:space-y-8">
-      <section className="hero p-5 sm:p-8 animate-fade-up">
-        <div className="relative z-10">
-          <Link href="/my-subjects" className="inline-flex items-center gap-1 text-xs text-white/80 hover:text-white">
+      <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-4 pt-6 pb-7 text-center sm:px-8 sm:pt-8 sm:pb-9 animate-fade-up">
+        <span className="pointer-events-none absolute -top-16 -start-16 h-48 w-48 rounded-full bg-primary/10" aria-hidden="true" />
+        <span className="pointer-events-none absolute -bottom-20 -end-10 h-40 w-40 rounded-full bg-accent/15" aria-hidden="true" />
+        <div className="relative">
+          <Link
+            href="/my-subjects"
+            className="press inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1 text-xs font-bold text-muted shadow-sm hover:text-ink"
+          >
             <ArrowRight className="h-3.5 w-3.5 ltr:-scale-x-100" />
             {S.back}
           </Link>
-          <h1 dir="auto" className="mt-2 text-2xl sm:text-3xl font-bold">
+          <h1 dir="auto" className="mt-3 text-2xl font-extrabold sm:text-4xl">
             {subject.name}
           </h1>
           {subject.description && (
-            <p dir="auto" className="mt-2 max-w-md text-sm text-white/80">
+            <p dir="auto" className="mx-auto mt-1.5 max-w-md text-sm text-muted sm:text-base">
               {subject.description}
             </p>
           )}
@@ -67,14 +74,6 @@ export function SubjectDetail({
               const publishedIndex = lessons.slice(0, i).filter((l) => l.status !== 'soon').length;
               const locked = !soon && freeLessons !== null && publishedIndex >= freeLessons;
               const best = bestPct(lesson.id);
-              const scoreCls =
-                best === null
-                  ? ''
-                  : best >= 70
-                    ? 'bg-success-light text-success-ink'
-                    : best >= 50
-                      ? 'bg-warning-light text-warning-ink'
-                      : 'bg-error-light text-error';
               const body = (
                 <>
                   <div className="aspect-[16/10] overflow-hidden">
@@ -85,22 +84,25 @@ export function SubjectDetail({
                       <span className="absolute -bottom-6 end-8 h-10 w-10 rounded-full bg-white/25" />
                       <span className={`relative text-2xl font-bold sm:text-3xl ${locked || soon ? 'opacity-40' : ''}`}>{i + 1}</span>
                       {soon && (
-                        <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
                           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-accent-ink shadow-md">
                             <Clock className="h-4 w-4" />
                           </span>
+                          <span className="rounded-full bg-surface/90 px-2.5 py-0.5 text-[11px] font-bold text-accent-ink shadow-sm">{S.soon}</span>
                         </span>
                       )}
                       {locked && (
-                        <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
                           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink text-background shadow-md">
                             <Lock className="h-4 w-4" />
                           </span>
+                          <span className="rounded-full bg-ink px-2.5 py-0.5 text-[11px] font-bold text-background shadow-sm">{S.locked}</span>
                         </span>
                       )}
-                      {best !== null && (
-                        <span className={`absolute top-1.5 end-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold tabular-nums ${scoreCls}`}>
-                          {best}%
+                      {!soon && (
+                        <span className="absolute top-1.5 start-1.5 inline-flex items-center gap-1 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-bold text-ink shadow-sm">
+                          <ListChecks className="h-3 w-3 text-primary-ink" />
+                          {fmt(t.subjectCard.questions, { n: questionCounts[lesson.id] ?? 0 })}
                         </span>
                       )}
                     </div>
@@ -109,9 +111,6 @@ export function SubjectDetail({
                     <h3 dir="auto" className="truncate text-sm font-bold text-foreground sm:text-base">
                       {lesson.title}
                     </h3>
-                    {(soon || locked) && (
-                      <p className="mt-0.5 truncate text-xs font-bold text-accent-ink">{soon ? S.soon : S.locked}</p>
-                    )}
                   </div>
                 </>
               );

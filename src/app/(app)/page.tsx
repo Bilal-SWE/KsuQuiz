@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { ExploreSubjects } from '@/components/student/explore-subjects';
 import type { Category } from '@/lib/categories';
 import { sortByName } from '@/lib/sort';
+import { getQuestionCounts } from '@/lib/question-counts';
 
 export default async function HomePage({
   searchParams,
@@ -14,7 +15,7 @@ export default async function HomePage({
   if (!session) redirect('/auth/login');
 
   const params = await searchParams;
-  const [{ data: profile }, { data: subjects }, { data: enrollments }, { data: categories }] = await Promise.all([
+  const [{ data: profile }, { data: subjects }, { data: enrollments }, { data: categories }, questionCounts] = await Promise.all([
     supabase.from('profiles').select('role').eq('id', session.user.id).single(),
     supabase
       .from('subjects')
@@ -25,6 +26,7 @@ export default async function HomePage({
       .select('subject_id')
       .eq('student_id', session.user.id),
     supabase.from('categories').select('id, name, color, sort_order').order('sort_order'),
+    getQuestionCounts(supabase),
   ]);
 
   if (profile?.role === 'admin' || profile?.role === 'owner') redirect('/admin');
@@ -39,6 +41,7 @@ export default async function HomePage({
         description: s.description,
         cover_image: s.cover_image,
         category_id: s.category_id ?? null,
+        question_count: questionCounts[s.id] ?? 0,
       }))}
       categories={(categories as Category[]) ?? []}
       enrolledIds={[...enrolledIds]}

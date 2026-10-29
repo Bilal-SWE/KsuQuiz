@@ -42,12 +42,29 @@ function gradeQuestion(
   }
 }
 
+// Set once the database reports submit_answer is missing, so later answers skip straight
+// to the regular path instead of paying for a failed call each time.
+let submitRpcMissing = false;
+
 export async function submitAnswer(
   attemptId: string,
   questionId: string,
   response: any,
 ) {
   const supabase = await createClient();
+
+  // Fast path (migration 019): multiple-choice and true/false answers (a string or boolean
+  // response) are graded and saved by one database call. Anything else, or a database
+  // without that function yet, takes the regular path below.
+  if (!submitRpcMissing && typeof response !== 'object') {
+    const { data, error } = await supabase.rpc('submit_answer' as any, {
+      p_attempt: attemptId,
+      p_question: questionId,
+      p_response: response,
+    });
+    if (!error && data) return data as Record<string, any>;
+    if (error && /submit_answer|PGRST202|42883/.test(`${error.code} ${error.message}`)) submitRpcMissing = true;
+  }
 
   // Fetch attempt and question in parallel — RLS ensures student owns the attempt
   const [{ data: attempt }, { data: question }] = await Promise.all([

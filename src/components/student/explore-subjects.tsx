@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Compass, FolderOpen, Plus, Search, X } from 'lucide-react';
+import { Check, FolderOpen, Plus, Search, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeArabic } from '@/lib/arabic';
 import { categoryColor, type Category } from '@/lib/categories';
@@ -16,6 +16,7 @@ type Subject = {
   description: string | null;
   cover_image: string | null;
   category_id: string | null;
+  question_count?: number;
 };
 
 const UNCATEGORIZED = 'none';
@@ -106,12 +107,7 @@ export function ExploreSubjects({
         <span className="pointer-events-none absolute -bottom-20 -end-10 h-40 w-40 rounded-full bg-accent/15" aria-hidden="true" />
 
         <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-bold text-primary-ink shadow-sm">
-            <Compass className="h-3.5 w-3.5" />
-            {E.eyebrow}
-          </span>
-          <h1 className="mt-3 text-2xl font-extrabold sm:text-4xl">{E.title}</h1>
-          <p className="mx-auto mt-1.5 max-w-md text-sm text-muted sm:text-base">{fmt(E.available, { n: subjects.length })}</p>
+          <h1 className="text-2xl font-extrabold sm:text-4xl">{E.title}</h1>
 
           <div className="relative mx-auto mt-5 max-w-xl">
             <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-ink" />
