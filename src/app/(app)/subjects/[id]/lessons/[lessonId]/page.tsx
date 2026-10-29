@@ -67,12 +67,13 @@ export default async function LessonRoute({
   ]);
 
   const leaderboard: LeaderboardRow[] = ((leaderboardData as any[]) ?? []).map((r) => ({
-    rank: Number(r.rank),
+    rank: r.rank != null ? Number(r.rank) : 0,
     student_id: r.student_id,
     full_name: r.full_name,
-    score: r.score,
-    total: r.total,
-    seconds: r.duration_seconds,
+    score: r.score ?? 0,
+    total: r.total ?? 0,
+    seconds: r.duration_seconds ?? 0,
+    attempts: Number(r.attempt_count ?? 0),
   }));
 
   if (!lesson || lesson.subject_id !== subjectId) notFound();

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { BookMarked, ChevronDown, CircleCheck, KeyRound, LogOut, Mail, RotateCcw, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
@@ -55,7 +54,6 @@ function SettingRow({
 }
 
 export default function ProfilePage() {
-  const router = useRouter();
   const { user, profile } = useAuth();
   const { t } = useI18n();
   const P = t.profile;
@@ -132,10 +130,12 @@ export default function ProfilePage() {
     }
   };
 
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const logout = async () => {
+    setLoggingOut(true);
     await createClient().auth.signOut();
-    router.push('/welcome');
-    router.refresh();
+    window.location.href = '/welcome';
   };
 
   const toggle = (row: 'name' | 'password') => setOpenRow((cur) => (cur === row ? null : row));
@@ -245,10 +245,15 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={logout}
-            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-start text-error hover:bg-error-light"
+            disabled={loggingOut}
+            className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-start text-error hover:bg-error-light disabled:opacity-60"
           >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-error-light">
-              <LogOut className="h-[18px] w-[18px] ltr:-scale-x-100" />
+              {loggingOut ? (
+                <span className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-error/30 border-t-error" />
+              ) : (
+                <LogOut className="h-[18px] w-[18px] ltr:-scale-x-100" />
+              )}
             </span>
             <span className="text-sm font-bold">{t.common.logout}</span>
           </button>

@@ -12,6 +12,7 @@ export type LeaderboardRow = {
   total: number;
   seconds: number;
   exams?: number;
+  attempts?: number;
 };
 
 const rankStyle: Record<number, string> = {
@@ -98,10 +99,10 @@ export function LeaderboardTable({
                 <td className="py-2.5 px-3">
                   <span
                     className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-                      rankStyle[r.rank] ?? 'bg-surface-hover text-muted'
+                      r.rank === 0 ? 'bg-surface-hover text-muted/40' : (rankStyle[r.rank] ?? 'bg-surface-hover text-muted')
                     }`}
                   >
-                    {r.rank}
+                    {r.rank === 0 ? '–' : r.rank}
                   </span>
                 </td>
                 <td className="py-2.5 px-3">
@@ -115,13 +116,12 @@ export function LeaderboardTable({
                     </span>
                   </div>
                 </td>
-                {showExams && <td className="py-2.5 px-3 text-center hidden sm:table-cell">{r.exams}</td>}
-                <td className="py-2.5 px-3 text-center font-bold">
-                  {r.score}
-                  <span className="font-normal text-muted"> / {r.total}</span>
+                {showExams && <td className="py-2.5 px-3 text-center hidden sm:table-cell">{r.rank === 0 ? '–' : r.exams}</td>}
+                <td className={`py-2.5 px-3 text-center ${r.rank === 0 ? 'text-muted/40' : 'font-bold'}`}>
+                  {r.rank === 0 ? '–' : <>{r.score}<span className="font-normal text-muted"> / {r.total}</span></>}
                 </td>
-                <td className="py-2.5 px-3 text-center tabular-nums text-muted" dir="ltr">
-                  {formatDuration(r.seconds)}
+                <td className={`py-2.5 px-3 text-center tabular-nums ${r.rank === 0 ? 'text-muted/40' : 'text-muted'}`} dir="ltr">
+                  {r.rank === 0 ? '–' : formatDuration(r.seconds)}
                 </td>
               </tr>
             );
@@ -151,9 +151,10 @@ export function RankingList({ rows, currentUserId, emptyText }: { rows: Leaderbo
   }
   return (
     <div className="card !rounded-3xl p-2">
-      <div className="grid grid-cols-[32px_1fr_56px_56px] gap-2 px-3 pt-1 pb-2 text-[11px] font-bold text-muted">
+      <div className="grid grid-cols-[32px_1fr_40px_56px_56px] gap-2 px-3 pt-1 pb-2 text-[11px] font-bold text-muted">
         <span>#</span>
         <span className="text-start">{B.student}</span>
+        <span className="text-center">{B.attempts}</span>
         <span className="text-center">{B.correct}</span>
         <span className="text-center">{B.time}</span>
       </div>
@@ -163,16 +164,16 @@ export function RankingList({ rows, currentUserId, emptyText }: { rows: Leaderbo
           return (
             <li
               key={r.student_id}
-              className={`grid grid-cols-[32px_1fr_56px_56px] items-center gap-2 rounded-2xl px-3 py-2.5 text-sm ${
+              className={`grid grid-cols-[32px_1fr_40px_56px_56px] items-center gap-2 rounded-2xl px-3 py-2.5 text-sm ${
                 isMe ? 'bg-primary-light ring-1 ring-primary/30' : 'odd:bg-surface-hover/50'
               }`}
             >
               <span
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-extrabold tabular-nums ${
-                  MEDALS[r.rank] ?? 'bg-surface text-muted ring-1 ring-border'
+                  r.rank === 0 ? 'bg-surface text-muted/40 ring-1 ring-border/50' : (MEDALS[r.rank] ?? 'bg-surface text-muted ring-1 ring-border')
                 }`}
               >
-                {r.rank}
+                {r.rank === 0 ? '–' : r.rank}
               </span>
               <span className="flex min-w-0 items-center gap-2">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-ink ring-1 ring-border">
@@ -183,11 +184,14 @@ export function RankingList({ rows, currentUserId, emptyText }: { rows: Leaderbo
                   {isMe && <span className="ms-1 text-xs font-bold text-primary-ink">{B.you}</span>}
                 </span>
               </span>
-              <span className="text-center font-bold tabular-nums" dir="ltr">
-                {r.score}/{r.total}
-              </span>
               <span className="text-center text-xs text-muted tabular-nums" dir="ltr">
-                {formatDuration(r.seconds)}
+                {r.attempts || '–'}
+              </span>
+              <span className={`text-center tabular-nums ${r.rank === 0 ? 'text-muted/40' : 'font-bold'}`} dir="ltr">
+                {r.rank === 0 ? '–' : `${r.score}/${r.total}`}
+              </span>
+              <span className={`text-center text-xs tabular-nums ${r.rank === 0 ? 'text-muted/40' : 'text-muted'}`} dir="ltr">
+                {r.rank === 0 ? '–' : formatDuration(r.seconds)}
               </span>
             </li>
           );

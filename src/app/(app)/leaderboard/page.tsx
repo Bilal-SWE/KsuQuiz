@@ -15,7 +15,7 @@ export default async function LeaderboardPage() {
   const B = t.leaderboard;
 
   const rows: LeaderboardRow[] = ((data as any[]) ?? []).map((r) => ({
-    rank: Number(r.rank),
+    rank: r.rank != null ? Number(r.rank) : 0,
     student_id: r.student_id,
     full_name: r.full_name,
     score: Number(r.total_score),
@@ -67,7 +67,7 @@ export default async function LeaderboardPage() {
         </div>
       )}
 
-      {rows.length >= 3 && <Podium rows={rows.slice(0, 3)} currentUserId={session.user.id} />}
+      {rows.filter((r) => r.rank > 0).length >= 3 && <Podium rows={rows.filter((r) => r.rank > 0).slice(0, 3)} currentUserId={session.user.id} />}
 
       <LeaderboardTable rows={rows} currentUserId={session.user.id} showExams emptyText={B.empty} />
     </div>

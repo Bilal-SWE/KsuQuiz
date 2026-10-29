@@ -62,7 +62,7 @@ function ScoreRing({ score, total, pct }: { score: number; total: number; pct: n
 
   const R = 52;
   const C = 2 * Math.PI * R;
-  const color = pct >= 70 ? 'stroke-success' : pct >= 50 ? 'stroke-accent' : 'stroke-error';
+  const color = 'stroke-success';
   return (
     <div className="relative h-36 w-36">
       <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden="true">
@@ -230,7 +230,7 @@ export function ExamResults({
           <div className="w-full border-t border-border pt-4">
             <p className="mb-2 text-start text-sm font-bold">{R.rankTitle}</p>
             <TopFive rank={result.rank} />
-            {!result.rank.countsThisAttempt && <p className="mt-2 text-xs text-muted">{R.rankBestOnly}</p>}
+            {!result.rank.countsThisAttempt && <p className="mt-2 text-sm text-muted">{R.rankBestOnly}</p>}
           </div>
         )}
       </section>

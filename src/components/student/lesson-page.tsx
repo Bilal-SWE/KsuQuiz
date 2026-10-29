@@ -98,13 +98,8 @@ export function LessonPage({
   const router = useRouter();
   const { t } = useI18n();
   const L = t.lesson;
-  // An unfinished exam resumes directly (restarting would reset its timer). An unfinished
-  // practice asks whether to continue or start over, but only if something was answered;
-  // a practice opened and left without answers just shows the mode picker again.
   const emptyPractice = unfinishedAttempt?.mode === 'practice' && existingAnswers.length === 0;
-  const [mode, setMode] = useState<'select' | 'resume' | 'exam' | 'practice'>(
-    !unfinishedAttempt || emptyPractice ? 'select' : unfinishedAttempt.mode === 'practice' ? 'resume' : 'exam',
-  );
+  const [mode, setMode] = useState<'select' | 'resume' | 'exam' | 'practice'>('select');
   const [attemptId, setAttemptId] = useState<string | null>(emptyPractice ? null : (unfinishedAttempt?.id ?? null));
   const [startedAt, setStartedAt] = useState<number | null>(
     unfinishedAttempt?.started_at ? new Date(unfinishedAttempt.started_at).getTime() : null,
@@ -120,29 +115,59 @@ export function LessonPage({
   const [examResult, setExamResult] = useState<{ score: number; total: number; review: any[]; rank?: LessonRank | null } | null>(null);
   const [showRank, setShowRank] = useState(false);
 
+  // Auto-finish an exam when leaving the page (navigation or browser close).
+  const modeRef = useRef(mode);
+  const attemptIdRef = useRef(attemptId);
+  modeRef.current = mode;
+  attemptIdRef.current = attemptId;
+
+  useEffect(() => {
+    const autoFinish = () => {
+      if (modeRef.current === 'exam' && attemptIdRef.current) {
+        navigator.sendBeacon(
+          '/api/attempts/finish',
+          new Blob([JSON.stringify({ attemptId: attemptIdRef.current })], { type: 'application/json' }),
+        );
+      }
+    };
+    window.addEventListener('beforeunload', autoFinish);
+    return () => {
+      window.removeEventListener('beforeunload', autoFinish);
+      if (modeRef.current === 'exam' && attemptIdRef.current) {
+        finishAttempt(attemptIdRef.current).catch(() => {});
+      }
+    };
+  }, []);
+
   // Practice and exam are separate sets chosen by the admin; each mode only sees its own.
   const practiceQuestions = useMemo(() => allQuestions.filter((q) => q.in_practice !== false), [allQuestions]);
   const examQuestions = useMemo(() => allQuestions.filter((q) => q.in_exam !== false), [allQuestions]);
   const questions = mode === 'exam' ? examQuestions : practiceQuestions;
   const pendingSaves = useRef(new Set<Promise<void>>());
+  const handleFinishRef = useRef<() => void>(() => {});
   // Answers still being checked by the server; in practice mode navigation waits for them.
   const [savingCount, setSavingCount] = useState(0);
 
-  // Exam mode: each question gets its own deadline the first time it is shown. The deadlines
-  // are kept per attempt in localStorage so a reload doesn't hand out fresh time.
+  // Exam mode: total timer for the entire exam (question_seconds × number of exam questions).
   const questionSeconds = lesson.question_seconds ?? DEFAULT_QUESTION_SECONDS;
-  const [deadlines, setDeadlines] = useState<Record<string, number>>({});
+  const [examDeadline, setExamDeadline] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const deadlinesKey = attemptId ? `exam-deadlines-${attemptId}` : null;
 
+  // Set the exam deadline when entering exam mode.
   useEffect(() => {
-    if (mode !== 'exam' || !deadlinesKey) return;
+    if (mode !== 'exam' || !attemptId) return;
+    const key = `exam-deadline-${attemptId}`;
     try {
-      setDeadlines(JSON.parse(localStorage.getItem(deadlinesKey) ?? '{}'));
-    } catch {
-      setDeadlines({});
-    }
-  }, [mode, deadlinesKey]);
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        setExamDeadline(Number(stored));
+        return;
+      }
+    } catch {}
+    const dl = Date.now() + questionSeconds * 1000;
+    setExamDeadline(dl);
+    try { localStorage.setItem(key, String(dl)); } catch {}
+  }, [mode, attemptId, questionSeconds, examQuestions.length]);
 
   useEffect(() => {
     if (mode !== 'exam') return;
@@ -150,39 +175,31 @@ export function LessonPage({
     return () => clearInterval(t);
   }, [mode]);
 
-  const examQuestionId = mode === 'exam' ? questions[currentIndex]?.id : undefined;
-  useEffect(() => {
-    if (!examQuestionId || !deadlinesKey) return;
-    setDeadlines((prev) => {
-      if (prev[examQuestionId]) return prev;
-      const next = { ...prev, [examQuestionId]: Date.now() + questionSeconds * 1000 };
-      try {
-        localStorage.setItem(deadlinesKey, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  }, [examQuestionId, deadlinesKey, questionSeconds]);
+  const examTimeUp = mode === 'exam' && !!examDeadline && now >= examDeadline;
 
-  const isExpired = (id: string) => mode === 'exam' && !!deadlines[id] && now >= deadlines[id];
-
-  // When the question on screen runs out of time, move on to the next one that still has time.
-  const currentExpired = examQuestionId ? isExpired(examQuestionId) : false;
+  // Auto-finish the exam when total time runs out.
   useEffect(() => {
-    if (!currentExpired) return;
-    const t = setTimeout(() => {
-      const order = [...questions.slice(currentIndex + 1), ...questions.slice(0, currentIndex)];
-      const open = (q: Question) => !(deadlines[q.id] && Date.now() >= deadlines[q.id]);
-      const target = order.find((q) => open(q) && !answers[q.id]) ?? order.find(open);
-      if (target) setCurrentIndex(questions.indexOf(target));
-    }, 1500);
-    return () => clearTimeout(t);
-  }, [currentExpired, currentIndex, questions, deadlines, answers]);
+    if (!examTimeUp || !attemptId) return;
+    handleFinishRef.current();
+  }, [examTimeUp, attemptId]);
 
   const handleStart = async (selectedMode: 'exam' | 'practice') => {
+    const hasAnswered = practiceQuestions.some((q) => answers[q.id]);
+    if (selectedMode === 'practice' && unfinishedAttempt?.mode === 'practice' && hasAnswered) {
+      setMode('resume');
+      return;
+    }
+    // Finish any lingering unfinished exam before starting a new attempt.
+    if (unfinishedAttempt?.mode === 'exam' && attemptId) {
+      finishAttempt(attemptId).catch(() => {});
+    }
     setLoading(selectedMode);
     const attempt = await startAttempt(lesson.id, selectedMode);
     setAttemptId(attempt.id);
     setStartedAt(Date.now());
+    setAnswers({});
+    setFeedback({});
+    setCurrentIndex(0);
     setMode(selectedMode);
     setLoading(false);
   };
@@ -194,10 +211,16 @@ export function LessonPage({
   };
 
   const handleRestart = async () => {
+    setMode('select');
     setAnswers({});
     setFeedback({});
     setCurrentIndex(0);
-    await handleStart('practice');
+    setLoading('practice');
+    const attempt = await startAttempt(lesson.id, 'practice');
+    setAttemptId(attempt.id);
+    setStartedAt(Date.now());
+    setMode('practice');
+    setLoading(false);
   };
 
   const handleRetry = () => {
@@ -256,11 +279,12 @@ export function LessonPage({
     setExamResult(result);
     setLoading(false);
   };
+  handleFinishRef.current = handleFinish;
 
   if (examResult) {
     return (
       <ExamResults
-        lessonTitle={lesson.title}
+        lessonTitle={[subjectName, fmt(L.lessonN, { n: lessonNumber })].filter(Boolean).join(" · ")}
         result={examResult}
         questions={questions}
         onBack={() => router.push(`/subjects/${subjectId}`)}
@@ -518,15 +542,12 @@ export function LessonPage({
   const currentQ = questions[currentIndex];
   if (!currentQ) return null;
 
-  // In an exam, a question whose time ran out counts as done (unanswered).
-  const doneCount = questions.filter((q) => answers[q.id] || isExpired(q.id)).length;
+  const doneCount = questions.filter((q) => answers[q.id]).length;
   const hasFeedback = feedback[currentQ.id];
   const hasAnswer = answers[currentQ.id];
   const isLast = currentIndex === questions.length - 1;
   const navLocked = mode === 'practice' && savingCount > 0;
-  const timeUp = isExpired(currentQ.id);
-  const locked = (!!hasAnswer && mode === 'practice') || timeUp;
-  const deadline = deadlines[currentQ.id];
+  const locked = (!!hasAnswer && mode === 'practice') || examTimeUp;
 
   const dotStyle = (q: Question, i: number) => {
     const fb = feedback[q.id];
@@ -534,7 +555,6 @@ export function LessonPage({
     const base = i === currentIndex ? 'ring-2 ring-ink ring-offset-2 ring-offset-background ' : '';
     if (mode === 'practice' && fb) return base + (fb.is_correct ? 'bg-success-light text-success-ink border-2 border-success' : 'bg-error-light text-error border-2 border-error');
     if (a) return base + 'bg-primary text-on-primary';
-    if (isExpired(q.id)) return base + 'bg-surface-hover text-muted/60 border-2 border-dashed border-border line-through';
     return base + 'bg-surface text-muted border-2 border-border';
   };
 
@@ -544,8 +564,8 @@ export function LessonPage({
         <span dir="auto" className="max-w-full truncate text-center text-sm font-medium text-muted">
           {lesson.title}
         </span>
-        {mode === 'exam' && deadline && (
-          <QuestionTimer left={Math.max(0, deadline - now)} total={questionSeconds} label={L.timeLeft} />
+        {mode === 'exam' && examDeadline && (
+          <QuestionTimer left={Math.max(0, examDeadline - now)} total={questionSeconds} label={L.timeLeft} />
         )}
       </div>
 
@@ -610,10 +630,10 @@ export function LessonPage({
           </div>
         )}
 
-        {timeUp && (
+        {examTimeUp && (
           <p className="flex items-center gap-2 rounded-xl bg-error-light px-3 py-2 text-[13px] font-bold text-error animate-slide-in" role="status">
             <Clock className="h-4 w-4 shrink-0" />
-            {hasAnswer ? L.timeUpAnswered : L.timeUp}
+            {L.timeUp}
           </p>
         )}
 

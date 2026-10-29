@@ -128,7 +128,7 @@ export function AdminLessonDetail({
   const notInExam = questions.filter((q) => !inExam(q));
 
   const saveSeconds = () => {
-    const n = Math.min(600, Math.max(10, Number(questionSeconds) || 60));
+    const n = Math.min(7200, Math.max(30, Number(questionSeconds) || 60));
     setQuestionSeconds(String(n));
     if (n === (lesson.question_seconds ?? 60) && !secondsSaved) return;
     startTransition(async () => {
@@ -251,12 +251,12 @@ export function AdminLessonDetail({
             <span className="text-sm">ترتيب الخيارات بشكل عشوائي</span>
           </label>
           <label className="flex items-center gap-2">
-            <span className="text-sm">وقت كل سؤال في وضع الاختبار</span>
+            <span className="text-sm">مدة الاختبار</span>
             <input
               type="number"
-              min={10}
-              max={600}
-              step={5}
+              min={30}
+              max={7200}
+              step={30}
               value={questionSeconds}
               onChange={(e) => {
                 setQuestionSeconds(e.target.value);
@@ -264,7 +264,7 @@ export function AdminLessonDetail({
               }}
               onBlur={saveSeconds}
               onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-              className="w-20 rounded-lg border border-border bg-surface px-2 py-1 text-center text-sm tabular-nums outline-none focus:border-primary"
+              className="w-24 rounded-lg border border-border bg-surface px-2 py-1 text-center text-sm tabular-nums outline-none focus:border-primary"
             />
             <span className="text-sm text-muted">ثانية</span>
             {secondsSaved && <span className="text-xs text-success-ink">تم الحفظ</span>}
@@ -294,7 +294,7 @@ export function AdminLessonDetail({
           <div>
             <h3 className="font-bold">الأسئلة ({questions.length})</h3>
             <p className="text-sm text-muted">
-              في التمرين: {practiceCount} · في الاختبار: {examCount} ({questionSeconds} ثانية لكل سؤال)
+              في التمرين: {practiceCount} · في الاختبار: {examCount} (مدة الاختبار: {questionSeconds} ثانية)
             </p>
           </div>
           {notInExam.length > 0 && (
