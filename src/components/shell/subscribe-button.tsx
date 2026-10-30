@@ -4,16 +4,21 @@ import { useState } from 'react';
 import { Crown } from 'lucide-react';
 import { useI18n } from '@/i18n/client';
 import { startCheckout } from '@/app/actions/billing';
+import type { CheckoutPlan } from '@/lib/lemonsqueezy';
 
 // Sends the visitor to the Lemon Squeezy checkout (or to sign-up / their profile).
 export function SubscribeButton({
   className = '',
   title,
   children,
+  plan,
+  buddyEmails,
 }: {
   className?: string;
   title?: string;
   children?: React.ReactNode;
+  plan?: CheckoutPlan;
+  buddyEmails?: string[];
 }) {
   const [loading, setLoading] = useState(false);
   const { t } = useI18n();
@@ -22,7 +27,7 @@ export function SubscribeButton({
     if (loading) return;
     setLoading(true);
     try {
-      const { url } = await startCheckout();
+      const { url } = await startCheckout(plan, buddyEmails);
       window.location.href = url;
     } catch (err: any) {
       alert(err?.message || t.subscribe.failed);

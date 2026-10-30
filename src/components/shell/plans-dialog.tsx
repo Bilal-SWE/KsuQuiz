@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Check, Crown, ExternalLink, Sparkles, X } from 'lucide-react';
+import { Check, Crown, ExternalLink, Sparkles, Users, X } from 'lucide-react';
 import { SubscribeButton } from '@/components/shell/subscribe-button';
 import { fetchMySubscription, isActiveSubscription, type Subscription } from '@/lib/subscription';
 
-// What each plan includes; `false` marks something the plan does not have.
 const FREE: { text: string; included: boolean }[] = [
   { text: 'أول درسين من كل مادة', included: true },
   { text: 'التمرين والاختبار في أول درسين', included: true },
@@ -15,7 +14,7 @@ const FREE: { text: string; included: boolean }[] = [
   { text: 'باقي الدروس في المواد', included: false },
 ];
 
-const MONTHLY = [
+const PLAN_FEATURES = [
   'جميع الدروس في كل المواد',
   'التمرين والاختبار في كل درس',
   'شرح لكل إجابة',
@@ -34,11 +33,24 @@ function CurrentBadge({ dark }: { dark?: boolean }) {
   );
 }
 
-// The crown in the header opens this: the free and monthly plans side by side, with the
-// action that fits the student (subscribe, or manage an existing subscription).
+function EmailInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  return (
+    <input
+      type="email"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      dir="ltr"
+      className="w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-background placeholder:text-white/40 focus:border-accent focus:outline-none"
+    />
+  );
+}
+
 export function PlansDialog({ userId, open, onClose }: { userId?: string; open: boolean; onClose: () => void }) {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [buddyEmail1, setBuddyEmail1] = useState('');
+  const [buddyEmail2, setBuddyEmail2] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -70,6 +82,33 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
   const subscribed = isActiveSubscription(sub);
   const cancelled = subscribed && sub?.status === 'cancelled';
 
+  const manageSub = subscribed && (
+    <>
+      <p className="mb-2 text-center text-xs text-on-ink-muted">
+        {cancelled ? `ملغى، ويبقى فعّالاً حتى ${formatDate(sub!.ends_at)}` : `يتجدد في ${formatDate(sub!.renews_at)}`}
+      </p>
+      {sub?.customer_portal_url ? (
+        <a
+          href={sub.customer_portal_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="press flex h-11 w-full items-center justify-center gap-2 rounded-full bg-surface text-sm font-extrabold text-ink hover:bg-surface-hover"
+        >
+          إدارة الاشتراك
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      ) : (
+        <Link
+          href="/profile"
+          onClick={onClose}
+          className="press flex h-11 w-full items-center justify-center rounded-full bg-surface text-sm font-extrabold text-ink hover:bg-surface-hover"
+        >
+          إدارة الاشتراك
+        </Link>
+      )}
+    </>
+  );
+
   return createPortal(
     <div
       role="dialog"
@@ -79,7 +118,7 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
       onClick={onClose}
     >
       <div
-        className="relative max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-[28px] bg-background shadow-2xl sm:rounded-[28px]"
+        className="relative max-h-[92dvh] w-full max-w-5xl overflow-y-auto rounded-t-[28px] bg-background shadow-2xl sm:rounded-[28px]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -101,8 +140,8 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
           <p className="mt-1 text-sm text-muted">ابدأ مجاناً، واشترك متى احتجت لفتح كل الدروس</p>
         </div>
 
-        <div className="grid gap-3 px-4 pb-5 sm:grid-cols-2 sm:px-5">
-          {/* Monthly plan (first on phones) */}
+        <div className="grid gap-3 px-4 pb-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-5">
+          {/* Solo plan */}
           <section className="relative flex flex-col overflow-hidden rounded-3xl bg-ink p-5 text-background sm:order-2">
             <span className="pointer-events-none absolute -top-12 -end-12 h-32 w-32 rounded-full bg-primary/40" aria-hidden="true" />
             <div className="relative flex items-center justify-between gap-2">
@@ -112,12 +151,13 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
               </h3>
               {loaded && subscribed && <CurrentBadge dark />}
             </div>
-            <p className="relative mt-3 flex items-end gap-1.5">
+            <p className="relative mt-2 text-xs text-on-ink-muted">لشخص واحد</p>
+            <p className="relative mt-2 flex items-end gap-1.5">
               <span className="text-4xl font-extrabold tabular-nums">4.99</span>
               <span className="pb-1 text-sm text-on-ink-muted">ريال / شهرياً</span>
             </p>
-            <ul className="relative mt-4 flex-1 space-y-2.5">
-              {MONTHLY.map((f) => (
+            <ul className="relative mt-4 flex-1 space-y-2">
+              {PLAN_FEATURES.map((f) => (
                 <li key={f} className="flex items-center gap-2 text-sm">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-on-primary">
                     <Check className="h-3 w-3" strokeWidth={3} />
@@ -126,37 +166,11 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
                 </li>
               ))}
             </ul>
-
             <div className="relative mt-5">
               {!loaded ? (
-                <div className="h-12 animate-pulse rounded-full bg-ink-raised" />
-              ) : subscribed ? (
-                <>
-                  <p className="mb-2 text-center text-xs text-on-ink-muted">
-                    {cancelled ? `ملغى، ويبقى فعّالاً حتى ${formatDate(sub!.ends_at)}` : `يتجدد في ${formatDate(sub!.renews_at)}`}
-                  </p>
-                  {sub?.customer_portal_url ? (
-                    <a
-                      href={sub.customer_portal_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="press flex h-12 w-full items-center justify-center gap-2 rounded-full bg-surface text-base font-extrabold text-ink hover:bg-surface-hover"
-                    >
-                      إدارة الاشتراك
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  ) : (
-                    <Link
-                      href="/profile"
-                      onClick={onClose}
-                      className="press flex h-12 w-full items-center justify-center rounded-full bg-surface text-base font-extrabold text-ink hover:bg-surface-hover"
-                    >
-                      إدارة الاشتراك
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <SubscribeButton className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-base font-extrabold text-ink hover:brightness-105">
+                <div className="h-11 animate-pulse rounded-full bg-ink-raised" />
+              ) : subscribed ? manageSub : (
+                <SubscribeButton plan="solo" className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-accent text-sm font-extrabold text-ink hover:brightness-105">
                   اشترك الآن
                 </SubscribeButton>
               )}
@@ -176,7 +190,7 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
               <span className="text-4xl font-extrabold tabular-nums">0</span>
               <span className="pb-1 text-sm text-muted">ريال</span>
             </p>
-            <ul className="mt-4 flex-1 space-y-2.5">
+            <ul className="mt-4 flex-1 space-y-2">
               {FREE.map((f) => (
                 <li key={f.text} className={`flex items-center gap-2 text-sm ${f.included ? '' : 'text-muted'}`}>
                   <span
@@ -190,9 +204,100 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
                 </li>
               ))}
             </ul>
-            <p className="mt-5 flex h-12 items-center justify-center rounded-full bg-surface-hover text-sm font-bold text-muted">
+            <p className="mt-5 flex h-11 items-center justify-center rounded-full bg-surface-hover text-sm font-bold text-muted">
               {loaded && !subscribed ? 'خطتك الحالية' : 'متاحة للجميع'}
             </p>
+          </section>
+
+          {/* Duo plan */}
+          <section className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-sky to-[#2563eb] p-5 text-white sm:order-3">
+            <span className="pointer-events-none absolute -top-10 -end-10 h-28 w-28 rounded-full bg-white/10" aria-hidden="true" />
+            <div className="relative flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-lg font-extrabold">
+                <Users className="h-5 w-5" />
+                القطة الثنائية
+              </h3>
+            </div>
+            <p className="relative mt-1 text-xs text-white/70">أنت وصديقك، اشتراك واحد</p>
+            <p className="relative mt-2 flex items-end gap-1.5">
+              <span className="text-4xl font-extrabold tabular-nums">6.99</span>
+              <span className="pb-1 text-sm text-white/70">ريال / شهرياً</span>
+            </p>
+            <p className="relative mt-1 text-xs text-white/60">3.50 ريال لكل شخص</p>
+            <ul className="relative mt-3 flex-1 space-y-2">
+              <li className="flex items-center gap-2 text-sm">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </span>
+                كل مميزات الشهرية لشخصين
+              </li>
+              <li className="flex items-center gap-2 text-sm">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </span>
+                أدخل إيميل صديقك وسيحصل على كل الدروس
+              </li>
+            </ul>
+            <div className="relative mt-4 space-y-2">
+              <EmailInput value={buddyEmail1} onChange={setBuddyEmail1} placeholder="إيميل صديقك" />
+              {!loaded ? (
+                <div className="h-11 animate-pulse rounded-full bg-white/10" />
+              ) : subscribed ? manageSub : (
+                <SubscribeButton
+                  plan="duo"
+                  buddyEmails={[buddyEmail1]}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-extrabold text-sky hover:bg-white/90"
+                >
+                  اشترك مع صديقك
+                </SubscribeButton>
+              )}
+            </div>
+          </section>
+
+          {/* Trio plan */}
+          <section className="relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-[#7c3aed] to-[#5b21b6] p-5 text-white sm:order-4">
+            <span className="pointer-events-none absolute -top-10 -end-10 h-28 w-28 rounded-full bg-white/10" aria-hidden="true" />
+            <div className="relative flex items-center justify-between gap-2">
+              <h3 className="flex items-center gap-1.5 text-lg font-extrabold">
+                <Users className="h-5 w-5" />
+                القطة الثلاثية
+              </h3>
+            </div>
+            <p className="relative mt-1 text-xs text-white/70">أنت وصديقين، اشتراك واحد</p>
+            <p className="relative mt-2 flex items-end gap-1.5">
+              <span className="text-4xl font-extrabold tabular-nums">9.99</span>
+              <span className="pb-1 text-sm text-white/70">ريال / شهرياً</span>
+            </p>
+            <p className="relative mt-1 text-xs text-white/60">3.33 ريال لكل شخص</p>
+            <ul className="relative mt-3 flex-1 space-y-2">
+              <li className="flex items-center gap-2 text-sm">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </span>
+                كل مميزات الشهرية لثلاث أشخاص
+              </li>
+              <li className="flex items-center gap-2 text-sm">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </span>
+                أدخل إيميلات أصدقائك وسيحصلون على كل الدروس
+              </li>
+            </ul>
+            <div className="relative mt-4 space-y-2">
+              <EmailInput value={buddyEmail1} onChange={setBuddyEmail1} placeholder="إيميل الصديق الأول" />
+              <EmailInput value={buddyEmail2} onChange={setBuddyEmail2} placeholder="إيميل الصديق الثاني" />
+              {!loaded ? (
+                <div className="h-11 animate-pulse rounded-full bg-white/10" />
+              ) : subscribed ? manageSub : (
+                <SubscribeButton
+                  plan="trio"
+                  buddyEmails={[buddyEmail1, buddyEmail2]}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-extrabold text-[#7c3aed] hover:bg-white/90"
+                >
+                  اشترك مع أصدقائك
+                </SubscribeButton>
+              )}
+            </div>
           </section>
         </div>
 

@@ -59,8 +59,30 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error('Saving subscription failed', error);
-    // A non-200 makes Lemon Squeezy retry the event later.
     return NextResponse.json({ error: 'save failed' }, { status: 500 });
   }
+
+  // Save buddy records on first subscription creation (duo/trio plans).
+  const customData = payload?.meta?.custom_data;
+  const plan: string | undefined = customData?.plan;
+  const buddyEmails: string[] = customData?.buddy_emails ?? [];
+
+  if (event === 'subscription_created' && (plan === 'duo' || plan === 'trio') && buddyEmails.length > 0) {
+    await supabase.from('buddy_subscriptions').delete().eq('subscription_user_id', userId);
+
+    for (const email of buddyEmails) {
+      const normalised = email.trim().toLowerCase();
+      const { data: buddyUserId } = await supabase
+        .rpc('find_user_id_by_email', { p_email: normalised });
+
+      await supabase.from('buddy_subscriptions').insert({
+        subscription_user_id: userId,
+        buddy_email: normalised,
+        buddy_user_id: buddyUserId ?? null,
+        plan,
+      });
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

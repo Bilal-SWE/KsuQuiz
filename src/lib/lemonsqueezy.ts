@@ -9,14 +9,28 @@ function env(name: string) {
   return value;
 }
 
-// Creates a hosted checkout for the monthly plan. The student's id travels as custom
-// data and comes back in every webhook, which is how a payment is tied to an account.
+export type CheckoutPlan = 'solo' | 'duo' | 'trio';
+
+function variantId(plan: CheckoutPlan): string {
+  if (plan === 'duo') return env('LEMONSQUEEZY_DUO_VARIANT_ID');
+  if (plan === 'trio') return env('LEMONSQUEEZY_TRIO_VARIANT_ID');
+  return env('LEMONSQUEEZY_VARIANT_ID');
+}
+
+// Creates a hosted checkout. The student's id and buddy emails travel as custom
+// data and come back in every webhook, which is how a payment is tied to an account.
 export async function createSubscriptionCheckout(opts: {
   userId: string;
   email?: string | null;
   name?: string | null;
   redirectUrl: string;
+  plan?: CheckoutPlan;
+  buddyEmails?: string[];
 }): Promise<string> {
+  const plan = opts.plan ?? 'solo';
+  const custom: Record<string, any> = { user_id: opts.userId, plan };
+  if (opts.buddyEmails?.length) custom.buddy_emails = opts.buddyEmails;
+
   const res = await fetch(`${API}/checkouts`, {
     method: 'POST',
     headers: {
@@ -31,13 +45,13 @@ export async function createSubscriptionCheckout(opts: {
           checkout_data: {
             email: opts.email ?? undefined,
             name: opts.name ?? undefined,
-            custom: { user_id: opts.userId },
+            custom,
           },
           product_options: { redirect_url: opts.redirectUrl },
         },
         relationships: {
           store: { data: { type: 'stores', id: env('LEMONSQUEEZY_STORE_ID') } },
-          variant: { data: { type: 'variants', id: env('LEMONSQUEEZY_VARIANT_ID') } },
+          variant: { data: { type: 'variants', id: variantId(plan) } },
         },
       },
     }),
