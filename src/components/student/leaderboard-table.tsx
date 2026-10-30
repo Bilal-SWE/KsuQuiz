@@ -81,10 +81,10 @@ export function LeaderboardTable({
       <table className="w-full text-sm whitespace-nowrap [&_th]:px-2 [&_td]:px-2 sm:[&_th]:px-3 sm:[&_td]:px-3">
         <thead className="bg-surface-hover text-muted">
           <tr>
-            <th className="py-2.5 px-3 text-start font-medium w-14">#</th>
-            <th className="py-2.5 px-3 text-start font-medium">{B.student}</th>
-            {showExams && <th className="py-2.5 px-3 text-center font-medium hidden sm:table-cell">{B.exams}</th>}
-            <th className="py-2.5 px-3 text-center font-medium">{B.correct}</th>
+            <th className="py-2.5 px-3 text-start font-medium w-14 border-e border-border">#</th>
+            <th className="py-2.5 px-3 text-start font-medium border-e border-border">{B.student}</th>
+            {showExams && <th className="py-2.5 px-3 text-center font-medium hidden sm:table-cell border-e border-border">{B.exams}</th>}
+            <th className="py-2.5 px-3 text-center font-medium border-e border-border">{B.correct}</th>
             <th className="py-2.5 px-3 text-center font-medium">{B.time}</th>
           </tr>
         </thead>
@@ -96,7 +96,7 @@ export function LeaderboardTable({
                 key={r.student_id}
                 className={`border-t border-border transition-colors ${isMe ? 'bg-primary-light/70' : 'hover:bg-surface-hover/60'}`}
               >
-                <td className="py-2.5 px-3">
+                <td className="py-2.5 px-3 border-e border-border">
                   <span
                     className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
                       r.rank === 0 ? 'bg-surface-hover text-muted/40' : (rankStyle[r.rank] ?? 'bg-surface-hover text-muted')
@@ -105,7 +105,7 @@ export function LeaderboardTable({
                     {r.rank === 0 ? '–' : r.rank}
                   </span>
                 </td>
-                <td className="py-2.5 px-3">
+                <td className="py-2.5 px-3 border-e border-border">
                   <div className="flex items-center gap-2">
                     <span className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary-ink">
                       {(r.full_name || '?').charAt(0)}
@@ -116,8 +116,8 @@ export function LeaderboardTable({
                     </span>
                   </div>
                 </td>
-                {showExams && <td className="py-2.5 px-3 text-center hidden sm:table-cell">{r.rank === 0 ? '–' : r.exams}</td>}
-                <td className={`py-2.5 px-3 text-center ${r.rank === 0 ? 'text-muted/40' : 'font-bold'}`}>
+                {showExams && <td className="py-2.5 px-3 text-center hidden sm:table-cell border-e border-border">{r.rank === 0 ? '–' : r.exams}</td>}
+                <td className={`py-2.5 px-3 text-center border-e border-border ${r.rank === 0 ? 'text-muted/40' : 'font-bold'}`}>
                   {r.rank === 0 ? '–' : <>{r.score}<span className="font-normal text-muted"> / {r.total}</span></>}
                 </td>
                 <td className={`py-2.5 px-3 text-center tabular-nums ${r.rank === 0 ? 'text-muted/40' : 'text-muted'}`} dir="ltr">

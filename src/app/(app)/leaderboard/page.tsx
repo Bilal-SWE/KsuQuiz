@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Clock, ListChecks, Target, Trophy } from 'lucide-react';
 import { LeaderboardTable, Podium, type LeaderboardRow } from '@/components/student/leaderboard-table';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { formatDuration } from '@/lib/format';
 import { getI18n } from '@/i18n/server';
 import { fmt } from '@/i18n/format';
@@ -38,23 +39,18 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
-      <section className="hero p-5 sm:p-8 animate-fade-up">
-        <div className="relative z-10 flex items-center gap-4">
-          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30 animate-float">
-            <Trophy className="h-7 w-7" />
-          </span>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">{B.title}</h1>
-            <p className="mt-1 text-sm text-white/80">{B.subtitle}</p>
-          </div>
+      <section className="relative rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-5 py-6 sm:px-8 sm:py-8 animate-fade-up">
+        <div className="relative flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-extrabold sm:text-3xl">{B.title}</h1>
+          <InfoTooltip label={B.infoLabel} title={B.infoTitle} items={B.infoCriteria} />
         </div>
       </section>
 
       {stats.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger">
           {stats.map((s) => (
-            <div key={s.label} className="card p-4">
-              <span className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl ${s.tone}`}>
+            <div key={s.label} className="card p-4 text-center">
+              <span className={`mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl ${s.tone}`}>
                 <s.icon className="h-5 w-5" />
               </span>
               <p className="text-xs text-muted">{s.label}</p>
