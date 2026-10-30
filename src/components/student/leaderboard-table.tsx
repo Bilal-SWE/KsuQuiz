@@ -36,7 +36,7 @@ export function Podium({ rows, currentUserId }: { rows: LeaderboardRow[]; curren
           >
             {(r.full_name || '?').charAt(0)}
           </div>
-          <p className={`mt-2 w-full truncate text-center text-sm font-bold ${r.student_id === currentUserId ? 'text-primary-ink' : ''}`}>
+          <p dir="auto" className={`mt-2 w-full truncate text-center text-sm font-bold ${r.student_id === currentUserId ? 'text-primary-ink' : ''}`}>
             <bdi>{r.full_name || B.studentFallback}</bdi>
           </p>
           <p className="text-xs text-muted">
@@ -110,7 +110,7 @@ export function LeaderboardTable({
                     <span className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary-ink">
                       {(r.full_name || '?').charAt(0)}
                     </span>
-                    <span className="font-medium truncate max-w-[9rem] sm:max-w-none">
+                    <span className="font-medium truncate max-w-[9rem] sm:max-w-none" dir="auto">
                       <bdi>{r.full_name || B.studentFallback}</bdi>
                       {isMe && <span className="ms-1 text-xs text-primary-ink">{B.you}</span>}
                     </span>
@@ -179,7 +179,7 @@ export function RankingList({ rows, currentUserId, emptyText }: { rows: Leaderbo
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface text-xs font-bold text-primary-ink ring-1 ring-border">
                   {(r.full_name || '?').charAt(0)}
                 </span>
-                <span className={`min-w-0 truncate ${isMe ? 'font-extrabold' : 'font-medium'}`}>
+                <span dir="auto" className={`min-w-0 truncate ${isMe ? 'font-extrabold' : 'font-medium'}`}>
                   <bdi>{r.full_name || B.studentFallback}</bdi>
                   {isMe && <span className="ms-1 text-xs font-bold text-primary-ink">{B.you}</span>}
                 </span>

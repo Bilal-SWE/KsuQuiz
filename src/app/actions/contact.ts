@@ -24,10 +24,10 @@ export async function submitContactMessage(
   }
 
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const { website, ...data } = parsed.data;
 
-  const { error } = await supabase.from('contact_messages').insert({ ...data, user_id: session?.user.id ?? null });
+  const { error } = await supabase.from('contact_messages').insert({ ...data, user_id: user?.id ?? null });
   if (error) return { ok: false, error: 'failed' };
   return { ok: true };
 }

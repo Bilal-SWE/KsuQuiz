@@ -90,7 +90,6 @@ export const ar = {
       'أدخل إيميل صديقك وسيحصل على كل الدروس',
     ],
     duoCta: 'اشترك مع صديقك',
-    duoBuddyPlaceholder: 'إيميل صديقك',
     trioName: 'القطة الثلاثية',
     trioTagline: 'أنت وصديقين، اشتراك واحد',
     trioPrice: '9.99 ريال',
@@ -100,8 +99,7 @@ export const ar = {
       'أدخل إيميلات أصدقائك وسيحصلون على كل الدروس',
     ],
     trioCta: 'اشترك مع أصدقائك',
-    trioBuddy1Placeholder: 'إيميل الصديق الأول',
-    trioBuddy2Placeholder: 'إيميل الصديق الثاني',
+    showDetails: 'عرض التفاصيل',
     refundNote: 'تفاصيل الإلغاء والاسترداد في',
   },
   subscribe: {

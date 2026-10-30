@@ -92,7 +92,6 @@ export const en: Dictionary = {
       "Enter your friend's email and they get every lesson",
     ],
     duoCta: 'Subscribe with a friend',
-    duoBuddyPlaceholder: "Friend's email",
     trioName: 'Trio plan',
     trioTagline: 'You and two friends, one subscription',
     trioPrice: 'SAR 9.99',
@@ -102,8 +101,7 @@ export const en: Dictionary = {
       "Enter your friends' emails and they get every lesson",
     ],
     trioCta: 'Subscribe with friends',
-    trioBuddy1Placeholder: "First friend's email",
-    trioBuddy2Placeholder: "Second friend's email",
+    showDetails: 'Show details',
     refundNote: 'Cancellation and refund details are in our',
   },
   subscribe: {

@@ -8,7 +8,11 @@ export const FREE_LESSONS_PER_SUBJECT = 2;
 
 export async function canAccessLesson(supabase: SupabaseClient<any>, lessonId: string) {
   const { data, error } = await supabase.rpc('can_access_lesson', { p_lesson_id: lessonId });
-  return error ? true : !!data;
+  if (error) {
+    const msg = `${error.code} ${error.message}`;
+    return /PGRST202|42883/.test(msg);
+  }
+  return !!data;
 }
 
 // Subscribers and admins see every lesson.
@@ -17,6 +21,9 @@ export async function hasFullAccess(supabase: SupabaseClient<any>, userId: strin
     supabase.rpc('has_active_subscription', { p_user_id: userId }),
     supabase.from('profiles').select('role').eq('id', userId).single(),
   ]);
-  if (error) return true;
+  if (error) {
+    const msg = `${error.code} ${error.message}`;
+    return /PGRST202|42883/.test(msg);
+  }
   return !!active || profile?.role === 'admin' || profile?.role === 'owner';
 }

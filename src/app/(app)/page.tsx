@@ -11,12 +11,12 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/auth/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
 
   const params = await searchParams;
   const [{ data: profile }, { data: subjects }, { data: enrollments }, { data: categories }, questionCounts] = await Promise.all([
-    supabase.from('profiles').select('role').eq('id', session.user.id).single(),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
     supabase
       .from('subjects')
       .select('*')
@@ -24,7 +24,7 @@ export default async function HomePage({
     supabase
       .from('enrollments')
       .select('subject_id')
-      .eq('student_id', session.user.id),
+      .eq('student_id', user.id),
     supabase.from('categories').select('id, name, color, sort_order').order('sort_order'),
     getQuestionCounts(supabase),
   ]);

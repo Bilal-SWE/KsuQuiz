@@ -6,8 +6,8 @@ import { FREE_LESSONS_PER_SUBJECT, hasFullAccess } from '@/lib/access';
 export default async function SubjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/auth/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
 
   const [{ data: subject }, { data: lessons }] = await Promise.all([
     supabase
@@ -31,9 +31,9 @@ export default async function SubjectPage({ params }: { params: Promise<{ id: st
     supabase
       .from('attempts')
       .select('lesson_id, score, total, finished_at')
-      .eq('student_id', session.user.id)
+      .eq('student_id', user.id)
       .in('lesson_id', (lessons ?? []).map((l) => l.id)),
-    hasFullAccess(supabase, session.user.id),
+    hasFullAccess(supabase, user.id),
     // Students can read questions of published lessons only, so 'soon' lessons count as zero.
     supabase.from('questions').select('lesson_id').in('lesson_id', lessonIds),
   ]);

@@ -6,20 +6,20 @@ import { revalidatePath } from 'next/cache';
 
 async function requireAdmin() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('غير مسجل الدخول');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('غير مسجل الدخول');
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
 
   if (profile?.role !== 'admin' && profile?.role !== 'owner') {
     throw new Error('غير مصرح');
   }
 
-  return { supabase, userId: session.user.id, role: profile.role };
+  return { supabase, userId: user.id, role: profile.role };
 }
 
 // =================== CONTACT MESSAGES ===================
@@ -354,12 +354,19 @@ export async function deleteQuestion(id: string) {
 
 // =================== IMAGE UPLOAD ===================
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 export async function uploadImage(formData: FormData): Promise<string> {
   const { supabase } = await requireAdmin();
   const file = formData.get('file') as File;
   if (!file) throw new Error('لم يتم تحديد ملف');
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) throw new Error('نوع الملف غير مسموح');
+  if (file.size > MAX_IMAGE_SIZE) throw new Error('حجم الملف أكبر من 5 ميجا');
 
-  const ext = file.name.split('.').pop() ?? 'webp';
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'webp';
+  if (!ALLOWED_IMAGE_EXTS.includes(ext)) throw new Error('نوع الملف غير مسموح');
   const fileName = `${crypto.randomUUID()}.${ext}`;
   const path = `questions/${fileName}`;
 

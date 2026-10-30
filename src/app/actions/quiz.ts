@@ -6,13 +6,13 @@ import { canAccessLesson } from '@/lib/access';
 
 export async function startAttempt(lessonId: string, mode: 'exam' | 'practice') {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('غير مسجل الدخول');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('غير مسجل الدخول');
   if (!(await canAccessLesson(supabase, lessonId))) throw new Error('هذا الدرس للمشتركين');
 
   const { data, error } = await supabase
     .from('attempts')
-    .insert({ student_id: session.user.id, lesson_id: lessonId, mode })
+    .insert({ student_id: user.id, lesson_id: lessonId, mode })
     .select('id')
     .single();
 

@@ -4,14 +4,14 @@ import { UserManagement } from '@/components/admin/user-management';
 
 export default async function UsersPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/auth/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
 
   const [{ data: profile }, { data: users }] = await Promise.all([
     supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single(),
     supabase
       .from('profiles')
@@ -21,5 +21,5 @@ export default async function UsersPage() {
 
   if (profile?.role !== 'owner' && profile?.role !== 'admin') redirect('/');
 
-  return <UserManagement users={users ?? []} currentUserId={session.user.id} currentRole={profile.role} />;
+  return <UserManagement users={users ?? []} currentUserId={user.id} currentRole={profile.role} />;
 }

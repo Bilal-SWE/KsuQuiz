@@ -34,8 +34,8 @@ export default async function LessonRoute({
 }) {
   const { id: subjectId, lessonId } = await params;
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) redirect('/auth/login');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
 
   const [
     { data: lesson },
@@ -57,7 +57,7 @@ export default async function LessonRoute({
     supabase
       .from('attempts')
       .select('id, mode, started_at')
-      .eq('student_id', session.user.id)
+      .eq('student_id', user.id)
       .eq('lesson_id', lessonId)
       .is('finished_at', null)
       .order('started_at', { ascending: false })
@@ -87,10 +87,10 @@ export default async function LessonRoute({
   const { count: finishedAttempts } = await supabase
     .from('attempts')
     .select('id', { count: 'exact', head: true })
-    .eq('student_id', session.user.id)
+    .eq('student_id', user.id)
     .eq('lesson_id', lessonId)
     .not('finished_at', 'is', null);
-  const seed = `${session.user.id}:${lessonId}:${finishedAttempts ?? 0}`;
+  const seed = `${user.id}:${lessonId}:${finishedAttempts ?? 0}`;
 
   const shouldShuffleQuestions = (lesson as any).shuffle_questions ?? false;
   const shouldShuffleOptions = (lesson as any).shuffle_options ?? false;
@@ -172,7 +172,7 @@ export default async function LessonRoute({
       existingAnswers={existingAnswers}
       existingFeedback={existingFeedback}
       leaderboard={leaderboard}
-      currentUserId={session.user.id}
+      currentUserId={user.id}
     />
   );
 }

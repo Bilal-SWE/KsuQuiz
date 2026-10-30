@@ -6,15 +6,15 @@ import { getQuestionCounts } from '@/lib/question-counts';
 
 export default async function MySubjectsPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!session) redirect('/auth/login');
+  if (!user) redirect('/auth/login');
 
   const [{ data: profile }, { data: enrollments }, questionCounts] = await Promise.all([
     supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single(),
     supabase
       .from('enrollments')
@@ -22,7 +22,7 @@ export default async function MySubjectsPage() {
         subject_id,
         subjects (id, name, description, cover_image, status)
       `)
-      .eq('student_id', session.user.id),
+      .eq('student_id', user.id),
     getQuestionCounts(supabase),
   ]);
 
