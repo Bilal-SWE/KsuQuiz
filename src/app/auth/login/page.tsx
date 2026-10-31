@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthShell } from '@/components/shell/auth-shell';
+import { GoogleButton } from '@/components/auth/google-button';
 import { useI18n } from '@/i18n/client';
 
 export default function LoginPage() {
@@ -35,7 +36,11 @@ export default function LoginPage() {
     const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
 
     if (authError) {
-      setError(t.auth.errors.invalidCredentials);
+      if (authError.message === 'Email not confirmed') {
+        setError(t.auth.errors.emailNotConfirmed);
+      } else {
+        setError(t.auth.errors.invalidCredentials);
+      }
       setLoading(false);
       return;
     }
@@ -74,6 +79,13 @@ export default function LoginPage() {
           {t.auth.loginButton}
         </Button>
       </form>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+        <div className="relative flex justify-center text-xs"><span className="bg-surface px-3 text-muted">{t.auth.orContinueWith}</span></div>
+      </div>
+
+      <GoogleButton />
 
       <p className="text-sm text-muted text-center mt-6">
         {t.auth.noAccount}{' '}

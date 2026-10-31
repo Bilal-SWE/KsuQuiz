@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthShell } from '@/components/shell/auth-shell';
+import { GoogleButton } from '@/components/auth/google-button';
 import { useI18n } from '@/i18n/client';
 
 export default function SignupPage() {
@@ -37,21 +38,30 @@ export default function SignupPage() {
 
     setLoading(true);
     const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: fullName.trim() } },
+      options: {
+        data: { full_name: fullName.trim() },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
 
     if (authError) {
       if (authError.message === 'User already registered') {
         setError(t.auth.errors.alreadyRegistered);
-      } else if (authError.message.includes('email') && authError.message.includes('confirm')) {
-        setError(t.auth.errors.confirmEmail);
       } else {
         setError(t.auth.errors.generic);
       }
       setLoading(false);
+      return;
+    }
+
+    const needsVerification = data.user && !data.user.identities?.length;
+    const emailUnconfirmed = data.user && !data.session;
+
+    if (needsVerification || emailUnconfirmed) {
+      router.push(`/auth/verify?email=${encodeURIComponent(email.trim())}`);
       return;
     }
 
@@ -96,6 +106,13 @@ export default function SignupPage() {
           {t.auth.signupButton}
         </Button>
       </form>
+
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
+        <div className="relative flex justify-center text-xs"><span className="bg-surface px-3 text-muted">{t.auth.orContinueWith}</span></div>
+      </div>
+
+      <GoogleButton />
 
       <p className="text-sm text-muted text-center mt-6">
         {t.auth.haveAccount}{' '}

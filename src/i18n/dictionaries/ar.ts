@@ -40,6 +40,8 @@ export const ar = {
     signupButton: 'إنشاء حساب',
     noAccount: 'ليس لديك حساب؟',
     createAccount: 'إنشاء حساب جديد',
+    orContinueWith: 'أو',
+    googleButton: 'المتابعة مع Google',
     haveAccount: 'لديك حساب بالفعل؟',
     errors: {
       nameRequired: 'الاسم مطلوب',
@@ -49,7 +51,17 @@ export const ar = {
       invalidCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
       alreadyRegistered: 'هذا البريد الإلكتروني مسجل بالفعل',
       confirmEmail: 'تم إنشاء الحساب. يرجى تأكيد بريدك الإلكتروني',
+      emailNotConfirmed: 'يرجى تفعيل حسابك من الرابط المرسل إلى بريدك الإلكتروني',
       generic: 'حدث خطأ، حاول مرة أخرى',
+    },
+    verify: {
+      title: 'تحقق من بريدك الإلكتروني',
+      subtitle: 'أرسلنا رابط تفعيل إلى بريدك الإلكتروني. اضغط على الرابط لتفعيل حسابك.',
+      checkSpam: 'إذا لم تجد الرسالة، تحقق من مجلد الرسائل غير المرغوب فيها (Spam).',
+      resendButton: 'إعادة إرسال رابط التفعيل',
+      resent: 'تم إعادة إرسال الرابط بنجاح!',
+      resendError: 'فشل في إعادة الإرسال، حاول مرة أخرى',
+      backToLogin: 'العودة لتسجيل الدخول',
     },
   },
   landing: {
