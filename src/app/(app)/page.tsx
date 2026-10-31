@@ -35,7 +35,7 @@ export default async function HomePage({
 
   return (
     <ExploreSubjects
-      subjects={sortByName(subjects ?? []).map((s: any) => ({
+      subjects={sortByName(subjects ?? []).sort((a: any, b: any) => (a.status === 'soon' ? 1 : 0) - (b.status === 'soon' ? 1 : 0)).map((s: any) => ({
         id: s.id,
         name: s.name,
         description: s.description,

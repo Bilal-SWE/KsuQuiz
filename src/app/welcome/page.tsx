@@ -35,7 +35,7 @@ export default async function WelcomePage() {
 
   const lessonsPer: Record<string, number> = {};
   for (const l of lessonRows ?? []) lessonsPer[l.subject_id] = (lessonsPer[l.subject_id] ?? 0) + 1;
-  const subjects = sortByName((subjectRows ?? []) as any[]).map((s) => ({ ...s, lessons: lessonsPer[s.id] ?? 0 }));
+  const subjects = sortByName((subjectRows ?? []) as any[]).sort((a: any, b: any) => (a.status === 'soon' ? 1 : 0) - (b.status === 'soon' ? 1 : 0)).map((s) => ({ ...s, lessons: lessonsPer[s.id] ?? 0 }));
   const previewSubjects = subjects.slice(0, 4);
 
   const stats = [
