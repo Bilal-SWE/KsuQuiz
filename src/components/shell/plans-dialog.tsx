@@ -162,63 +162,54 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
           <X className="h-5 w-5" />
         </button>
 
-        <div className="px-4 pt-5 pb-4 text-center sm:px-5 sm:pt-7 sm:pb-5">
-          <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-ink sm:h-12 sm:w-12">
-            <Crown className="h-5 w-5 sm:h-6 sm:w-6" />
+        {/* Header with gradient */}
+        <div className="relative overflow-hidden bg-gradient-to-b from-primary/15 via-primary/5 to-transparent px-4 pt-6 pb-5 text-center sm:px-5 sm:pt-8 sm:pb-6">
+          <span className="pointer-events-none absolute -top-10 -start-10 h-32 w-32 rounded-full bg-primary/10" aria-hidden="true" />
+          <span className="pointer-events-none absolute -bottom-8 -end-8 h-24 w-24 rounded-full bg-accent/15" aria-hidden="true" />
+          <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-amber-400 shadow-[0_8px_20px_-6px_rgb(245_158_11/0.5)] sm:h-16 sm:w-16">
+            <Crown className="h-7 w-7 text-white sm:h-8 sm:w-8" />
           </span>
-          <h2 id="plans-title" className="mt-2 text-lg font-extrabold sm:mt-3 sm:text-2xl">
+          <h2 id="plans-title" className="relative mt-3 text-xl font-extrabold sm:mt-4 sm:text-2xl">
             اختر خطتك
           </h2>
-          <p className="mt-0.5 text-xs text-muted sm:mt-1 sm:text-sm">ابدأ مجاناً، واشترك متى احتجت لفتح كل الدروس</p>
+          <p className="relative mt-1 text-xs text-muted sm:text-sm">ابدأ مجاناً، واشترك متى احتجت لفتح كل الدروس</p>
         </div>
 
         {/* Two plan cards side by side */}
         <div className="grid grid-cols-2 gap-2.5 px-3 pb-3 sm:gap-4 sm:px-5 sm:pb-5">
-          {/* Free */}
-          <div className="rounded-2xl border border-border bg-surface p-3 sm:p-4">
-            <div className="mb-3 text-center sm:mb-4">
-              <Sparkles className="mx-auto h-6 w-6 text-primary-ink sm:h-7 sm:w-7" />
-              <div className="mt-1.5 text-base font-extrabold sm:text-lg">مجانية</div>
-            </div>
-            <ul className="space-y-2.5 sm:space-y-3">
-              {FREE_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-success-ink" strokeWidth={3} />
-                  <span className="text-xs font-medium leading-tight sm:text-sm">{f}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-4 text-center sm:mt-5">
-              {loaded && !subscribed ? (
-                <span className="text-xs font-bold text-muted">خطتك الحالية</span>
-              ) : (
-                <span className="text-xs text-muted">—</span>
-              )}
-            </div>
-          </div>
-
-          {/* Monthly */}
-          <div className="rounded-2xl border-2 border-primary bg-primary/5 p-3 sm:p-4">
-            <div className="mb-3 text-center sm:mb-4">
-              <Crown className="mx-auto h-6 w-6 text-accent sm:h-7 sm:w-7" />
-              <div className="mt-1.5 text-base font-extrabold sm:text-lg">شهرية</div>
-              <div className="text-lg font-bold text-primary-ink sm:text-xl">4.99 <span className="text-xs font-medium text-muted">ريال</span></div>
+          {/* Monthly — highlighted, comes first (right in RTL) */}
+          <div className="relative rounded-2xl border-2 border-primary bg-gradient-to-b from-primary/10 to-transparent p-3 shadow-[0_8px_30px_-10px_rgb(15_157_138/0.3)] sm:p-4">
+            <span className="absolute -top-2.5 start-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-[10px] font-bold text-on-primary shadow-sm sm:text-xs">
+              الأفضل قيمة
+            </span>
+            <div className="mb-4 pt-2 text-center sm:mb-5">
+              <Crown className="mx-auto h-7 w-7 text-accent sm:h-8 sm:w-8" />
+              <div className="mt-2 text-base font-extrabold sm:text-lg">شهرية</div>
+              <div className="mt-1 flex items-baseline justify-center gap-1">
+                <span className="text-2xl font-black text-primary-ink sm:text-3xl">4.99</span>
+                <span className="text-xs font-medium text-muted">ريال/شهر</span>
+              </div>
             </div>
             <ul className="space-y-2.5 sm:space-y-3">
               {PAID_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary-ink" strokeWidth={3} />
+                <li key={f} className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                    <Check className="h-3 w-3 text-primary-ink" strokeWidth={3} />
+                  </span>
                   <span className="text-xs font-medium leading-tight sm:text-sm">{f}</span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 text-center sm:mt-5">
+            <div className="mt-5 text-center sm:mt-6">
               {!loaded ? (
-                <div className="mx-auto h-8 w-20 animate-pulse rounded-full bg-surface" />
+                <div className="mx-auto h-10 w-24 animate-pulse rounded-full bg-surface" />
               ) : subscribed ? (
                 <>
-                  <span className="text-xs font-bold text-primary-ink">خطتك الحالية</span>
-                  <p className="mt-1 text-[10px] text-muted">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary-ink">
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    خطتك الحالية
+                  </span>
+                  <p className="mt-1.5 text-[10px] text-muted sm:text-[11px]">
                     {cancelled ? `ملغى، فعّال حتى ${formatDate(sub!.ends_at)}` : `يتجدد ${formatDate(sub!.renews_at)}`}
                   </p>
                   {sub?.customer_portal_url ? (
@@ -226,7 +217,7 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
                       href={sub.customer_portal_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="press mt-1.5 inline-flex items-center gap-1 rounded-full bg-surface px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-surface-hover"
+                      className="press mt-2 inline-flex items-center gap-1 rounded-full border border-border bg-surface px-4 py-2 text-xs font-bold text-ink shadow-sm hover:bg-surface-hover"
                     >
                       إدارة الاشتراك
                       <ExternalLink className="h-3 w-3" />
@@ -235,16 +226,48 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
                     <Link
                       href="/profile"
                       onClick={onClose}
-                      className="press mt-1.5 inline-flex items-center rounded-full bg-surface px-3 py-1.5 text-[11px] font-bold text-ink hover:bg-surface-hover"
+                      className="press mt-2 inline-flex items-center rounded-full border border-border bg-surface px-4 py-2 text-xs font-bold text-ink shadow-sm hover:bg-surface-hover"
                     >
                       إدارة الاشتراك
                     </Link>
                   )}
                 </>
               ) : (
-                <SubscribeButton plan="solo" className="inline-block rounded-full bg-primary px-5 py-2 text-xs font-bold text-on-primary hover:bg-primary-hover sm:px-6 sm:py-2.5 sm:text-sm">
+                <SubscribeButton plan="solo" className="inline-block w-full rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-on-primary shadow-[0_6px_16px_-6px_rgb(15_157_138/0.45)] hover:brightness-110 active:scale-[0.97] transition sm:px-6">
                   اشترك الآن
                 </SubscribeButton>
+              )}
+            </div>
+          </div>
+
+          {/* Free */}
+          <div className="rounded-2xl border border-border bg-surface p-3 sm:p-4">
+            <div className="mb-4 pt-2 text-center sm:mb-5">
+              <Sparkles className="mx-auto h-7 w-7 text-muted sm:h-8 sm:w-8" />
+              <div className="mt-2 text-base font-extrabold sm:text-lg">مجانية</div>
+              <div className="mt-1 flex items-baseline justify-center gap-1">
+                <span className="text-2xl font-black text-foreground sm:text-3xl">0</span>
+                <span className="text-xs font-medium text-muted">ريال</span>
+              </div>
+            </div>
+            <ul className="space-y-2.5 sm:space-y-3">
+              {FREE_FEATURES.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface-hover">
+                    <Check className="h-3 w-3 text-muted" strokeWidth={3} />
+                  </span>
+                  <span className="text-xs font-medium leading-tight text-foreground/80 sm:text-sm">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-5 text-center sm:mt-6">
+              {loaded && !subscribed ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-surface-hover px-3 py-1 text-xs font-bold text-muted">
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                  خطتك الحالية
+                </span>
+              ) : (
+                <span className="text-xs text-muted">—</span>
               )}
             </div>
           </div>
@@ -252,19 +275,19 @@ export function PlansDialog({ userId, open, onClose }: { userId?: string; open: 
 
         {/* Group subscription button */}
         {!subscribed && loaded && (
-          <div className="px-3 pb-3 sm:px-5 sm:pb-5">
+          <div className="px-3 pb-3 sm:px-5 sm:pb-4">
             <button
               type="button"
               onClick={() => setGroupOpen(true)}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 py-2.5 text-sm font-bold text-ink shadow-sm hover:bg-surface-hover"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border bg-gradient-to-b from-surface to-surface-hover px-5 py-3 text-sm font-bold text-ink shadow-sm hover:shadow-md transition"
             >
-              <Users className="h-4 w-4 text-sky" />
-              اشتراك المجموعات
+              <Users className="h-4.5 w-4.5 text-sky" />
+              اشتراك المجموعات — سعر أقل لكل شخص
             </button>
           </div>
         )}
 
-        <p className="border-t border-border px-4 py-2.5 text-center text-[10px] text-muted sm:px-5 sm:py-3 sm:text-xs">
+        <p className="border-t border-border px-4 py-3 text-center text-[10px] text-muted sm:px-5 sm:py-3.5 sm:text-xs">
           يتجدد الاشتراك شهرياً، ويمكنك الإلغاء في أي وقت.{' '}
           <Link href="/refund" onClick={onClose} className="text-primary-ink hover:underline">
             سياسة الاسترجاع
