@@ -6,7 +6,7 @@ export type DemoQuestion =
 
 export const landingContent = {
   ar: {
-    nav: { try: 'جرّب كويزاً', subjects: 'المواد', how: 'كيف تعمل', faq: 'أسئلة شائعة', login: 'دخول', start: 'ابدأ مجاناً' },
+    nav: { try: 'جرّب كويزاً', subjects: 'المواد', how: 'كيف تعمل', pricing: 'التسعير', faq: 'أسئلة شائعة', login: 'دخول', start: 'ابدأ مجاناً' },
     hero: {
       eyebrow: 'كويزات تدريبية لطلاب الجامعة',
       title1: 'اختبر فهمك',
@@ -59,6 +59,7 @@ export const landingContent = {
       all: 'الكل',
       lessons: '{n} درس',
       empty: 'تُضاف مواد جديدة قريباً.',
+      seeAll: 'سجّل دخولك لرؤية كل المواد',
     },
     modes: {
       title: 'كل كويز تحله بطريقتين',
@@ -106,6 +107,17 @@ export const landingContent = {
         { q: 'هل يعمل الموقع على الجوال؟', a: 'نعم، صُمم أولاً للجوال، ويعمل كذلك على الكمبيوتر بدون تثبيت أي تطبيق.' },
       ],
     },
+    group: {
+      title: 'اشترك مع أصدقائك ووفّر',
+      text: 'ادفع اشتراك واحد وشارك الوصول مع صديق أو صديقين.',
+      plans: [
+        { name: 'القطة الثنائية', price: '6.99', per: '3.50 لكل شخص', desc: 'أنت وصديقك، اشتراك واحد يفتح كل الدروس لكما.' },
+        { name: 'القطة الثلاثية', price: '9.99', per: '3.33 لكل شخص', desc: 'أنت وصديقين، اشتراك واحد يفتح كل الدروس لكم.' },
+      ],
+      howTitle: 'كيف تشترك مع أصدقائك؟',
+      howSteps: ['اختر القطة الثنائية أو الثلاثية', 'أدخل إيميلات أصدقائك المسجلين', 'ادفع مرة واحدة والكل يحصل على كل الدروس'],
+      cta: 'اعرف المزيد عن الأسعار',
+    },
     final: {
       title: 'جاهز لأول كويز؟',
       text: 'أنشئ حسابك وابدأ المراجعة الآن.',
@@ -113,7 +125,7 @@ export const landingContent = {
     },
   },
   en: {
-    nav: { try: 'Try a quiz', subjects: 'Subjects', how: 'How it works', faq: 'FAQ', login: 'Log in', start: 'Start free' },
+    nav: { try: 'Try a quiz', subjects: 'Subjects', how: 'How it works', pricing: 'Pricing', faq: 'FAQ', login: 'Log in', start: 'Start free' },
     hero: {
       eyebrow: 'Practice quizzes for university students',
       title1: 'Test your understanding',
@@ -166,6 +178,7 @@ export const landingContent = {
       all: 'All',
       lessons: 'Lessons: {n}',
       empty: 'New subjects are coming soon.',
+      seeAll: 'Log in to see all subjects',
     },
     modes: {
       title: 'Take every quiz two ways',
@@ -212,6 +225,17 @@ export const landingContent = {
         { q: 'What is the difference between practice and exam?', a: 'Practice shows the answer and explanation after each question. Exam has a timer for every question and hides the answers until the end, then shows your score and a review.' },
         { q: 'Does it work on my phone?', a: 'Yes. It is designed for phones first and works on computers too, with nothing to install.' },
       ],
+    },
+    group: {
+      title: 'Subscribe with friends and save',
+      text: 'Pay one subscription and share access with one or two friends.',
+      plans: [
+        { name: 'Duo plan', price: '6.99', per: 'SAR 3.50 each', desc: 'You and a friend, one subscription that unlocks every lesson for both.' },
+        { name: 'Trio plan', price: '9.99', per: 'SAR 3.33 each', desc: 'You and two friends, one subscription that unlocks every lesson for all three.' },
+      ],
+      howTitle: 'How to subscribe with friends?',
+      howSteps: ['Choose the Duo or Trio plan', "Enter your friends' registered emails", 'Pay once and everyone gets every lesson'],
+      cta: 'See all pricing options',
     },
     final: {
       title: 'Ready for your first quiz?',

@@ -333,7 +333,9 @@ export function CategoryManager({ initial, initialSubjects }: { initial: Categor
                               {s.name}
                             </Link>
                             {s.status !== 'published' && (
-                              <span className="shrink-0 rounded-full bg-warning-light px-2 py-0.5 text-[11px] font-medium text-warning-ink">مسودة</span>
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${s.status === 'soon' ? 'bg-accent-light text-accent-ink' : 'bg-warning-light text-warning-ink'}`}>
+                                {s.status === 'soon' ? 'قريباً' : 'مسودة'}
+                              </span>
                             )}
                             <button
                               onClick={() => moveSubjects([s.id], null)}

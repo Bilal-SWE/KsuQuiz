@@ -137,8 +137,8 @@ export function AdminSubjectsList({ subjects: initial, categories }: { subjects:
                       <div className="min-w-0 flex-1">
                         <h3 className="flex items-center gap-2 font-bold">
                           <span className="truncate">{subject.name}</span>
-                          <Badge variant={subject.status === 'published' ? 'success' : 'warning'}>
-                            {subject.status === 'published' ? 'منشور' : 'مسودة'}
+                          <Badge variant={subject.status === 'published' ? 'success' : subject.status === 'soon' ? 'accent' : 'warning'}>
+                            {subject.status === 'published' ? 'منشور' : subject.status === 'soon' ? 'قريباً' : 'مسودة'}
                           </Badge>
                         </h3>
                         {subject.description && <p className="text-sm text-muted line-clamp-1">{subject.description}</p>}

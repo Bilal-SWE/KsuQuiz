@@ -42,19 +42,21 @@ export function SubjectCover({ subject, className = '' }: { subject: Subject; cl
   );
 }
 
-export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?: boolean }) {
+export function SubjectCard({ subject, enrolled, soon }: { subject: Subject; enrolled?: boolean; soon?: boolean }) {
   const { t } = useI18n();
-  return (
-    <Link
-      href={`/subjects/${subject.id}`}
-      title={t.subjectCard.startStudying}
-      className="card card-hover group block overflow-hidden !rounded-2xl press"
-    >
+
+  const inner = (
+    <>
       <div className="relative aspect-[16/10] overflow-hidden">
-        <div className="h-full w-full transition-transform duration-500 group-hover:scale-105">
+        <div className={`h-full w-full transition-transform duration-500 ${soon ? 'grayscale' : 'group-hover:scale-105'}`}>
           <SubjectCover subject={subject} />
         </div>
-        {subject.question_count !== undefined && (
+        {soon && (
+          <span className="absolute inset-0 flex items-center justify-center bg-ink/40">
+            <span className="rounded-full bg-accent-light px-3 py-1 text-xs font-bold text-accent-ink shadow">قريباً</span>
+          </span>
+        )}
+        {!soon && subject.question_count !== undefined && (
           <span className="absolute top-1.5 start-1.5 inline-flex items-center gap-1 rounded-full bg-surface/95 px-2 py-0.5 text-[11px] font-bold text-ink shadow-sm backdrop-blur">
             <ListChecks className="h-3 w-3 text-primary-ink" />
             {fmt(t.subjectCard.questions, { n: subject.question_count })}
@@ -74,6 +76,24 @@ export function SubjectCard({ subject, enrolled }: { subject: Subject; enrolled?
           </p>
         )}
       </div>
+    </>
+  );
+
+  if (soon) {
+    return (
+      <div className="card group block overflow-hidden !rounded-2xl opacity-75 cursor-default">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/subjects/${subject.id}`}
+      title={t.subjectCard.startStudying}
+      className="card card-hover group block overflow-hidden !rounded-2xl press"
+    >
+      {inner}
     </Link>
   );
 }

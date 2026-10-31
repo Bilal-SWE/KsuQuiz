@@ -20,7 +20,7 @@ export default async function HomePage({
     supabase
       .from('subjects')
       .select('*')
-      .eq('status', 'published'),
+      .in('status', ['published', 'soon']),
     supabase
       .from('enrollments')
       .select('subject_id')
@@ -42,6 +42,7 @@ export default async function HomePage({
         cover_image: s.cover_image,
         category_id: s.category_id ?? null,
         question_count: questionCounts[s.id] ?? 0,
+        status: s.status as 'published' | 'soon',
       }))}
       categories={(categories as Category[]) ?? []}
       enrolledIds={[...enrolledIds]}

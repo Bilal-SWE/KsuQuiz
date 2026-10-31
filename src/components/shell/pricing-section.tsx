@@ -68,13 +68,13 @@ export async function PricingSection() {
       </div>
 
       <div className="mx-auto mt-4 max-w-2xl text-center sm:mt-6">
-        <Link
-          href="/auth/signup"
+        <a
+          href="#group"
           className="press inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-xs font-medium text-foreground hover:bg-surface-hover hover:border-primary/30 sm:px-5 sm:py-2.5 sm:text-sm"
         >
           <Users className="h-4 w-4 text-primary-ink" />
           اشتراك المجموعات
-        </Link>
+        </a>
       </div>
 
       <p className="mt-6 text-center text-xs text-muted">

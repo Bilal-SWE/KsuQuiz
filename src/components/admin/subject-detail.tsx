@@ -128,8 +128,8 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold">{subject.name}</h1>
-            <Badge variant={subject.status === 'published' ? 'success' : 'warning'}>
-              {subject.status === 'published' ? 'منشور' : 'مسودة'}
+            <Badge variant={subject.status === 'published' ? 'success' : subject.status === 'soon' ? 'accent' : 'warning'}>
+              {subject.status === 'published' ? 'منشور' : subject.status === 'soon' ? 'قريباً' : 'مسودة'}
             </Badge>
           </div>
           {subject.description && <p className="text-sm text-muted mt-1">{subject.description}</p>}

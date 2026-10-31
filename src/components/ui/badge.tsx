@@ -1,4 +1,4 @@
-type Variant = 'default' | 'primary' | 'success' | 'warning' | 'error';
+type Variant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'accent';
 
 const variants: Record<Variant, string> = {
   default: 'bg-surface-hover text-muted',
@@ -6,6 +6,7 @@ const variants: Record<Variant, string> = {
   success: 'bg-success-light text-success-ink',
   warning: 'bg-warning-light text-warning-ink',
   error: 'bg-error-light text-error',
+  accent: 'bg-accent-light text-accent-ink',
 };
 
 export function Badge({

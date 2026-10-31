@@ -132,7 +132,7 @@ export async function createSubject(data: {
       description: data.description ?? null,
       cover_image: data.cover_image ?? null,
       category_id: data.category_id || null,
-      status: (data.status as 'draft' | 'published') ?? 'draft',
+      status: (data.status as 'draft' | 'published' | 'soon') ?? 'draft',
       created_by: userId,
       updated_by: userId,
     })

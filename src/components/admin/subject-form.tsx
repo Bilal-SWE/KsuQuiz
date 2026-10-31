@@ -87,6 +87,7 @@ export function SubjectForm({ onSubmit, loading, initial }: Props) {
           <select id="status" value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
             <option value="draft">مسودة</option>
             <option value="published">منشور</option>
+            <option value="soon">قريباً</option>
           </select>
         </div>
       </div>

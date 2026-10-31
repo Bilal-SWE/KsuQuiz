@@ -17,6 +17,7 @@ type Subject = {
   cover_image: string | null;
   category_id: string | null;
   question_count?: number;
+  status?: 'published' | 'soon';
 };
 
 const UNCATEGORIZED = 'none';
@@ -79,21 +80,23 @@ export function ExploreSubjects({
         const isEnrolled = enrolled.has(subject.id);
         return (
           <div key={subject.id} className="relative">
-            <SubjectCard subject={subject} />
-            <button
-              type="button"
-              onClick={() => toggleEnroll(subject.id)}
-              title={isEnrolled ? E.inMySubjects : E.addToMySubjects}
-              aria-label={isEnrolled ? E.inMySubjects : E.addToMySubjects}
-              aria-pressed={isEnrolled}
-              className={`press absolute top-1.5 end-1.5 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full shadow-sm transition-colors ${
-                isEnrolled
-                  ? 'bg-primary text-on-primary hover:bg-primary-hover'
-                  : 'border border-border bg-surface text-primary-ink hover:bg-primary-light'
-              }`}
-            >
-              {isEnrolled ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-4 w-4" strokeWidth={3} />}
-            </button>
+            <SubjectCard subject={subject} soon={subject.status === 'soon'} />
+            {subject.status !== 'soon' && (
+              <button
+                type="button"
+                onClick={() => toggleEnroll(subject.id)}
+                title={isEnrolled ? E.inMySubjects : E.addToMySubjects}
+                aria-label={isEnrolled ? E.inMySubjects : E.addToMySubjects}
+                aria-pressed={isEnrolled}
+                className={`press absolute top-1.5 end-1.5 z-10 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full shadow-sm transition-colors ${
+                  isEnrolled
+                    ? 'bg-primary text-on-primary hover:bg-primary-hover'
+                    : 'border border-border bg-surface text-primary-ink hover:bg-primary-light'
+                }`}
+              >
+                {isEnrolled ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+              </button>
+            )}
           </div>
         );
       })}
