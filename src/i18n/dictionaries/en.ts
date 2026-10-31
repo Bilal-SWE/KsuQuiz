@@ -53,17 +53,7 @@ export const en: Dictionary = {
       invalidCredentials: 'Incorrect email or password',
       alreadyRegistered: 'This email is already registered',
       confirmEmail: 'Account created. Check your email to confirm it',
-      emailNotConfirmed: 'Please verify your account using the link sent to your email',
       generic: 'Something went wrong. Try again.',
-    },
-    verify: {
-      title: 'Check your email',
-      subtitle: 'We sent a verification link to your email. Click the link to activate your account.',
-      checkSpam: "If you don't see the email, check your spam folder.",
-      resendButton: 'Resend verification link',
-      resent: 'Verification link resent successfully!',
-      resendError: 'Failed to resend. Please try again.',
-      backToLogin: 'Back to login',
     },
   },
   landing: {

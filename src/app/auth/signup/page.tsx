@@ -43,7 +43,6 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName.trim() },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
@@ -54,14 +53,6 @@ export default function SignupPage() {
         setError(t.auth.errors.generic);
       }
       setLoading(false);
-      return;
-    }
-
-    const needsVerification = data.user && !data.user.identities?.length;
-    const emailUnconfirmed = data.user && !data.session;
-
-    if (needsVerification || emailUnconfirmed) {
-      router.push(`/auth/verify?email=${encodeURIComponent(email.trim())}`);
       return;
     }
 
