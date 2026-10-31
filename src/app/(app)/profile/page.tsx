@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BookMarked, ChevronDown, CircleCheck, KeyRound, LogOut, Mail, RotateCcw, UserRound } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, BookMarked, ChevronDown, CircleCheck, KeyRound, LogOut, Mail, RotateCcw, UserRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/supabase/auth-context';
 import { useI18n } from '@/i18n/client';
@@ -150,7 +151,10 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-4 animate-fade-up">
-      {/* Header */}
+      <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
+        <ArrowRight className="h-3.5 w-3.5" />
+        {t.nav.explore}
+      </Link>
       <section className="relative overflow-hidden rounded-[28px] border border-border bg-gradient-to-b from-primary-light to-surface px-5 pt-8 pb-5 text-center">
         <span className="pointer-events-none absolute -top-14 -end-14 h-40 w-40 rounded-full bg-primary/10" aria-hidden="true" />
         <div className="relative">

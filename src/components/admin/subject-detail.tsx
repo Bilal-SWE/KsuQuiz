@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { ArrowRight } from 'lucide-react';
 import {
   updateSubject,
   deleteSubject,
@@ -110,6 +111,10 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
   if (editing) {
     return (
       <div className="max-w-lg mx-auto">
+        <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink mb-4">
+          <ArrowRight className="h-3.5 w-3.5" />
+          لوحة التحكم
+        </Link>
         <h1 className="text-xl font-bold mb-6">تعديل المادة</h1>
         <SubjectForm
           onSubmit={handleUpdateSubject}
@@ -124,7 +129,11 @@ export function AdminSubjectDetail({ subject: initialSubject, lessons: initialLe
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
+        <ArrowRight className="h-3.5 w-3.5" />
+        لوحة التحكم
+      </Link>
+      <div className="flex items-center justify-between mb-6 mt-1">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold">{subject.name}</h1>

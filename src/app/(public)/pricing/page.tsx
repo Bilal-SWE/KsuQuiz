@@ -1,4 +1,4 @@
-import { Check, Crown, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, Check, Crown, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import { getI18n } from '@/i18n/server';
 
@@ -10,6 +10,10 @@ export default async function PricingPage() {
 
   return (
     <div className="flex flex-col items-center">
+      <Link href="/" className="mb-4 inline-flex items-center gap-1 self-start text-xs text-muted hover:text-primary-ink">
+        <ArrowRight className="h-3.5 w-3.5" />
+        {t.nav.explore}
+      </Link>
       <div className="mb-5 text-center sm:mb-8">
         <h1 className="text-xl font-extrabold sm:text-3xl">
           {t.pricing.title1} <span className="gradient-text">{t.pricing.title2}</span>

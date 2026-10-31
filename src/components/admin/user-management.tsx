@@ -1,6 +1,8 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { deleteUser, setUserRole } from '@/app/actions/admin';
@@ -76,7 +78,11 @@ export function UserManagement({
     <div className="animate-fade-up">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">إدارة المستخدمين</h1>
+          <Link href="/admin" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
+            <ArrowRight className="h-3.5 w-3.5" />
+            لوحة التحكم
+          </Link>
+          <h1 className="mt-1 text-2xl font-bold">إدارة المستخدمين</h1>
           <p className="text-sm text-muted">{users.length} مستخدم</p>
         </div>
         <input

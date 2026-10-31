@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { getI18n } from '@/i18n/server';
 
@@ -17,6 +19,10 @@ export async function LegalPage({
   const { t } = await getI18n();
   return (
     <div className="space-y-4 sm:space-y-6">
+      <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted hover:text-primary-ink">
+        <ArrowRight className="h-3.5 w-3.5" />
+        {t.nav.explore}
+      </Link>
       <section className="hero p-5 sm:p-8 animate-fade-up">
         <div className="relative z-10 flex items-center gap-4">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30">
